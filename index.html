@@ -259,6 +259,147 @@
   table.stand td.pts{font-weight:900; font-size:24px;}
   table.stand td.r{text-align:right;} table.stand th.r{text-align:right;}
 
+  /* ---------- Pools ---------- */
+  .poolbar{display:flex; gap:10px; padding:14px 0 0; flex-wrap:wrap;}
+  .poolbar button{
+    min-height:60px; padding:0 24px; border-radius:var(--radius);
+    background:#E7E3D9; color:var(--muted); font-size:19px; font-weight:800;
+  }
+  .poolbar button.sel{background:var(--table); color:#fff;}
+  .poolbar button .dot{
+    display:inline-block; width:10px; height:10px; border-radius:50%;
+    background:var(--ball); margin-left:10px; vertical-align:middle;
+  }
+  .poolbadge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:10px; flex:none;
+    background:var(--table); color:#fff; font-size:16px; font-weight:900;
+    margin-left:6px;
+  }
+  .plist .poolpick{
+    min-width:78px; height:60px; border-radius:12px; flex:none;
+    background:#E3EAF1; color:var(--table-dark); font-size:19px; font-weight:900;
+  }
+  .secthead{
+    display:flex; align-items:baseline; gap:12px;
+    margin:26px 0 10px; padding-bottom:8px;
+    border-bottom:3px solid var(--table);
+  }
+  .secthead:first-child{margin-top:4px;}
+  .secthead h3{margin:0; font-size:23px; font-weight:900; letter-spacing:.4px;}
+  .secthead span{font-size:16px; color:var(--muted); font-weight:600;}
+  .banner{
+    background:#FFF3E3; border:2px solid var(--ball);
+    border-radius:var(--radius); padding:16px 18px; margin-bottom:16px;
+    font-size:18px; font-weight:600;
+  }
+  .banner strong{display:block; font-size:20px; font-weight:900; margin-bottom:4px;}
+  .bigaction{
+    width:100%; min-height:76px; margin-top:8px;
+    border-radius:var(--radius); background:var(--ball); color:#fff;
+    font-size:22px; font-weight:900; box-shadow:0 4px 0 var(--ball-dark);
+  }
+  .bigaction:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ball-dark);}
+  .bigaction.ghost{background:#E7E3D9; color:var(--ink); box-shadow:0 4px 0 #CFC9BC;}
+  .bigaction.ghost:active{box-shadow:0 1px 0 #CFC9BC;}
+  .match .tag{
+    font-size:14px; font-weight:800; color:var(--muted);
+    letter-spacing:.5px; text-transform:uppercase;
+    min-width:120px;
+  }
+  .match .medal{font-size:26px; min-width:44px; text-align:center;}
+  .match.locked{opacity:.55;}
+  .match.locked .score{border-style:dashed;}
+
+  /* ---------- Bracket tree ----------
+     Every column is the same height (align-items:stretch) and every cell in a
+     column takes an equal share of it (flex:1 1 0). That alone makes round N+1
+     sit exactly between its two feeder matches — no per-round maths needed. */
+  .bracketscroll{overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px;}
+  .bracket{display:flex; align-items:stretch; padding:6px 0 22px; min-width:min-content;}
+  .bcol{display:flex; flex-direction:column; min-width:236px; padding-right:28px;}
+  .bcolhead{
+    font-size:14px; font-weight:900; letter-spacing:.8px; text-transform:uppercase;
+    color:var(--muted); text-align:center; padding-bottom:12px; flex:none;
+  }
+  .bcells{flex:1; display:flex; flex-direction:column;}
+  .bcell{
+    flex:1 1 0; display:flex; align-items:center; position:relative;
+    padding:7px 0;                       /* keeps neighbouring boxes apart */
+  }
+  /* arm out of every match, into the gutter */
+  .bcell::after{
+    content:""; position:absolute; right:-28px; top:50%;
+    width:28px; height:2px; background:var(--grid-line);
+  }
+  /* vertical joiner, drawn once per pair by the upper cell — and only when
+     there actually is a lower cell to join to (a lone final has no pair) */
+  .bcell:nth-child(odd):not(:last-child)::before{
+    content:""; position:absolute; right:-28px; top:50%;
+    width:2px; height:100%; background:var(--grid-line);
+  }
+  .bcol:last-child .bcell::after,
+  .bcol:last-child .bcell::before{display:none;}
+  .bmatch{
+    width:100%; background:var(--card);
+    border:2px solid var(--grid-line); border-radius:12px;
+    overflow:hidden;
+    /* every box is two rows tall, even a single-name one — cells then take
+       identical shares and the pair midpoints line up exactly */
+    min-height:104px;
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .bmatch.dim{opacity:.6; border-style:dashed;}
+  .bmatch.gold{border-color:var(--ball);}
+  /* seeded straight through — a confirmed entrant, not an unresolved slot */
+  .bmatch.bye{border-color:#B9CEE0; background:#F2F7FB;}
+  .byetag{
+    font-size:12px; font-weight:900; letter-spacing:.7px; text-transform:uppercase;
+    color:var(--table); background:#DCE9F3;
+    padding:5px 10px; border-radius:20px; white-space:nowrap;
+  }
+  .bmatch.champ{border-color:var(--ball); background:#FFF3E3;}
+  .brow{
+    display:flex; align-items:center; gap:10px;
+    min-height:52px; padding:0 14px;
+    font-size:18px; font-weight:700;
+    border-bottom:1px solid var(--grid-line);
+  }
+  .brow:last-child{border-bottom:none;}
+  .brow .bn{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .brow .bs{
+    font-weight:900; font-size:19px; color:var(--muted);
+    min-width:26px; text-align:right;
+  }
+  .brow.won{background:var(--win-bg);}
+  .brow.won .bn{font-weight:900;}
+  .brow.won .bs{color:var(--win-fg);}
+  .brow.pend .bn{color:var(--muted); font-weight:600; font-style:italic;}
+  .bcell:active .bmatch:not(.dim){border-color:var(--table);}
+
+  /* ---------- Placement ladder ---------- */
+  .ladder{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;}
+  .lcard{
+    border:2px solid var(--grid-line); border-radius:var(--radius);
+    background:var(--card); overflow:hidden;
+  }
+  .lcard .ltag{
+    background:#EEF1F4; color:var(--muted);
+    font-size:14px; font-weight:900; letter-spacing:.6px; text-transform:uppercase;
+    padding:10px 14px;
+  }
+  .lrow{
+    display:flex; align-items:center; gap:10px;
+    min-height:58px; padding:0 14px;
+    font-size:19px; font-weight:700;
+    border-top:1px solid var(--grid-line);
+  }
+  .lrow .ln{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lrow .ls{font-weight:900; color:var(--muted);}
+  .lrow.won{background:var(--win-bg);}
+  .lrow.won .ls{color:var(--win-fg);}
+  .lrow.pend .ln{color:var(--muted); font-weight:600; font-style:italic;}
+
   /* ---------- Modal ---------- */
   .overlay{
     position:fixed; inset:0; background:rgba(10,25,40,.6);
@@ -301,6 +442,13 @@
   .choices button small{display:block; font-size:15px; font-weight:600; color:var(--muted); margin-top:4px;}
   .choices button.sel{border-color:var(--ball); background:#FFF3E3;}
   .choices .drawbtn{grid-column:1 / -1; background:#FBF6E7; min-height:78px; font-size:30px;}
+  #shareBox{
+    width:100%; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:14px; line-height:1.45; padding:14px;
+    border:2px solid var(--grid-line); border-radius:var(--radius);
+    resize:none; word-break:break-all; background:#F8FAFB; color:var(--ink);
+    -webkit-user-select:text; user-select:text;
+  }
   .modalrow{display:flex; gap:12px; margin-top:18px;}
   .modalrow button{
     flex:1; min-height:70px; border-radius:var(--radius);
@@ -349,6 +497,36 @@
       <button data-fmt="bo5">Bäst av 5<small>först till 3 set</small></button>
     </div>
 
+    <h2>Antal pooler</h2>
+    <div class="seg" id="poolSeg">
+      <button data-pools="1">1 pool<small>alla möter alla</small></button>
+      <button data-pools="2">2 pooler<small>A och B</small></button>
+      <button data-pools="3">3 pooler<small>A, B, C</small></button>
+      <button data-pools="4">4 pooler<small>A–D</small></button>
+    </div>
+    <p class="hint" id="poolHint"></p>
+
+    <div id="finalsWrap" style="display:none;">
+      <h2>Efter poolspel</h2>
+      <div class="seg" id="finalsSeg">
+        <button data-finals="none">Inget slutspel<small>bara pooltabeller</small></button>
+        <button data-finals="place">Placeringsmatcher<small>1:a mot 1:a, 2:a mot 2:a…</small></button>
+        <button data-finals="ab">A- och B-slutspel<small>cup i två klasser</small></button>
+      </div>
+      <p class="hint" id="finalsHint"></p>
+
+      <div id="advWrap" style="display:none;">
+        <h2>Till A-slutspel</h2>
+        <div class="seg" id="advSeg">
+          <button data-adv="1">Poolettan<small>1 per pool</small></button>
+          <button data-adv="2">Topp 2<small>2 per pool</small></button>
+          <button data-adv="3">Topp 3<small>3 per pool</small></button>
+          <button data-adv="half">Halva fältet<small>efter seedning</small></button>
+        </div>
+        <p class="hint" id="advHint"></p>
+      </div>
+    </div>
+
     <h2>Spelare <span id="pcount" style="color:var(--muted); font-weight:600; font-size:18px;"></span></h2>
     <div class="addrow">
       <input id="nameInput" type="text" placeholder="Namn…" autocomplete="off" maxlength="24">
@@ -373,8 +551,11 @@
     <button class="tab active" data-view="grid">Tavla</button>
     <button class="tab" data-view="rounds">Ronder</button>
     <button class="tab" data-view="stand">Tabell</button>
+    <button class="tab" data-view="finals" id="tabFinals" style="display:none;">Slutspel</button>
+    <button class="tab" data-view="bracket" id="tabBracket" style="display:none;">Träd</button>
   </nav>
   <main>
+    <div class="poolbar" id="poolBar"></div>
     <div class="panel" id="paneGrid">
       <div class="gridwrap" id="gridWrap"></div>
     </div>
@@ -387,22 +568,37 @@
       <div id="roundList"></div>
     </div>
     <div class="panel" id="paneStand" style="display:none;">
-      <table class="stand">
-        <thead>
-          <tr>
-            <th></th><th>Spelare</th>
-            <th class="r">M</th><th class="r">V</th><th class="r">O</th><th class="r">F</th>
-            <th class="r">Set</th><th class="r">P</th>
-          </tr>
-        </thead>
-        <tbody id="standBody"></tbody>
-      </table>
-      <p class="hint" style="margin-top:14px;">Vinst 2 p · Oavgjort 1 p · Förlust 0 p. Vid lika poäng avgör setskillnad, sedan vunna set.</p>
+      <div id="standWrap"></div>
+      <p class="hint" style="margin-top:14px;">Vinst 2 p · Oavgjort 1 p · Förlust 0 p. Vid lika poäng avgör inbördes möte, sedan setskillnad och vunna set.</p>
+    </div>
+    <div class="panel" id="paneFinals" style="display:none;">
+      <div id="finalsBody"></div>
+    </div>
+    <div class="panel" id="paneBracket" style="display:none;">
+      <div class="bracketscroll"><div id="bracketBody"></div></div>
     </div>
   </main>
   <div class="footerbar">
+    <button class="btn-ghost" id="btnShare">Dela</button>
     <button class="btn-ghost" id="btnEdit">Ändra spelare</button>
     <button class="btn-danger" id="btnReset">Nollställ allt</button>
+  </div>
+</div>
+
+<!-- ================= SHARE MODAL ================= -->
+<div class="overlay" id="shareOverlay">
+  <div class="modal">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;">Dela tavlan</div>
+    <p class="hint" style="margin:0 0 14px;">
+      Hela tavlan ligger i länken. Den som öppnar den får en egen kopia –
+      resultat som skrivs in där syns inte här, och tvärtom.
+    </p>
+    <textarea id="shareBox" readonly rows="4"></textarea>
+    <p class="hint" id="shareLen" style="margin:8px 0 0;"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCloseShare">Stäng</button>
+      <button class="btn-close" id="btnCopyLink">Kopiera länk</button>
+    </div>
   </div>
 </div>
 
@@ -431,10 +627,16 @@ const KEY = "bergertavlan_v1";
 let state = {
   phase: "setup",          // setup | play
   format: "sets2",         // sets2 | bo3 | bo5
-  players: [],             // {id, name}
-  results: {},             // "minId_maxId" -> [setsForMin, setsForMax]
+  pools: 1,                // 1..4
+  finals: "none",          // none | place | ab
+  advance: 2,              // per-pool qualifiers for A-slutspel, or "half"
+  players: [],             // {id, name, pool}
+  results: {},             // "minId_maxId" -> [setsForMin, setsForMax]  (pool play)
+  fresults: {},            // playoff slot key -> [setsA, setsB]
   nextId: 1,
-  round: 0
+  round: 0,
+  view: "grid",
+  pool: 0                  // pool currently shown
 };
 
 const ROSTER_KEY = "bergertavlan_roster_v1";
@@ -465,8 +667,117 @@ async function kvSave(key, obj){
 
 const store = {
   load(){ return kvLoad(KEY); },
-  save(){ return kvSave(KEY, state); }
+  save(){ syncUrl(); return kvSave(KEY, state); }
 };
+
+/* ---------------- Shareable URL ----------------
+   The whole board is packed into the hash so a link is self-contained: no
+   server, no database. Kept tight on purpose — a pool result is one character,
+   because the set of legal results is fixed by the match format. */
+const FMT_LIST = ["sets2", "bo3", "bo5"];
+const FIN_LIST = ["none", "place", "ab"];
+
+function b64urlEncode(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlDecode(str){
+  const bin = atob(str.replace(/-/g, "+").replace(/_/g, "/"));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+
+function encodeState(st){
+  st = st || state;
+  const fmt = FORMATS[st.format] ? st.format : "sets2";
+  const opts = FORMATS[fmt].results;
+  const optIdx = (sa, sb) => opts.findIndex(o => o[0] === sa && o[1] === sb);
+  const head = "1" +
+    Math.max(0, FMT_LIST.indexOf(fmt)) +
+    (st.pools || 1) +
+    Math.max(0, FIN_LIST.indexOf(st.finals || "none")) +
+    (st.advance === "half" ? "h" : String(st.advance || 2)) +
+    (st.phase === "play" ? "p" : "s");
+
+  const ps = st.players || [];
+  const names = ps.map(p => p.name).join("\t");
+  const pools = ps.map(p => String(p.pool || 0)).join("");
+
+  let res = "";                                     // one char per in-pool pair
+  for (let i = 0; i < ps.length; i++)
+    for (let j = i + 1; j < ps.length; j++){
+      if ((ps[i].pool || 0) !== (ps[j].pool || 0)) continue;
+      const a = ps[i].id, b = ps[j].id;
+      const r = (st.results || {})[a < b ? a + "_" + b : b + "_" + a];
+      let k = -1;
+      if (r) k = a < b ? optIdx(r[0], r[1]) : optIdx(r[1], r[0]);
+      res += k < 0 ? "." : String.fromCharCode(48 + k);
+    }
+
+  const fr = Object.keys(st.fresults || {}).map(key => {
+    const v = st.fresults[key];
+    const k = optIdx(v[0], v[1]);
+    return k < 0 ? null : key + "=" + k;
+  }).filter(Boolean).join(",");
+
+  return b64urlEncode([head, names, pools, res, fr].join("\n"));
+}
+
+function decodeState(code){
+  try{
+    const parts = b64urlDecode(code).split("\n");
+    if (parts.length < 5 || parts[0][0] !== "1") return null;
+    const h = parts[0];
+    const format = FMT_LIST[+h[1]] || "sets2";
+    const pools  = Math.min(4, Math.max(1, +h[2] || 1));
+    const finals = FIN_LIST[+h[3]] || "none";
+    const advance = h[4] === "h" ? "half" : (+h[4] || 2);
+    const phase = h[5] === "p" ? "play" : "setup";
+
+    const names = parts[1] ? parts[1].split("\t") : [];
+    const poolStr = parts[2] || "";
+    const players = names.slice(0, 20).map((n, i) => ({
+      id: i + 1, name: n,
+      pool: Math.min(pools - 1, Math.max(0, +(poolStr[i] || 0) || 0))
+    }));
+
+    const opts = FORMATS[format].results;
+    const resStr = parts[3] || "";
+    const results = {};
+    let k = 0;
+    for (let i = 0; i < players.length; i++)
+      for (let j = i + 1; j < players.length; j++){
+        if (players[i].pool !== players[j].pool) continue;
+        const c = resStr[k++];
+        if (!c || c === ".") continue;
+        const o = opts[c.charCodeAt(0) - 48];
+        if (o) results[players[i].id + "_" + players[j].id] = [o[0], o[1]];
+      }
+
+    const fresults = {};
+    (parts[4] || "").split(",").filter(Boolean).forEach(tok => {
+      const bits = tok.split("=");
+      const o = opts[+bits[1]];
+      if (bits[0] && o) fresults[bits[0]] = [o[0], o[1]];
+    });
+
+    return { phase, format, pools, finals, advance, players, results, fresults,
+             nextId: players.length + 1, round: 0, view: "grid", pool: 0 };
+  }catch(e){ return null; }
+}
+
+function shareUrl(){
+  return location.origin + location.pathname + location.search + "#t=" + encodeState();
+}
+function syncUrl(){
+  try{
+    const h = "#t=" + encodeState();
+    if (location.hash !== h)
+      history.replaceState(null, "", location.pathname + location.search + h);
+  }catch(e){ /* file:// can refuse replaceState — sharing still works via the button */ }
+}
+
 
 /* ---------------- Helpers ---------------- */
 const $ = id => document.getElementById(id);
@@ -488,6 +799,9 @@ const norm = s => s.trim().toLowerCase();
 const inRoster = name => roster.some(r => norm(r) === norm(name));
 const inGame   = name => state.players.some(p => norm(p.name) === norm(name));
 
+/* tabs and newlines are the codec's separators — keep them out of names */
+const sanitizeName = n => n.replace(/[\t\r\n]+/g, " ").trim().slice(0, 24);
+
 function rosterRemember(name){
   if (!name.trim() || inRoster(name)) return;
   roster.push(name.trim());
@@ -504,6 +818,208 @@ const FORMATS = {
   bo3:   { label: "Bäst av 3", results: [[2,0],[2,1],[1,2],[0,2]] },
   bo5:   { label: "Bäst av 5", results: [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]] }
 };
+
+const POOL_NAMES = ["A","B","C","D"];
+const poolMembers = i => state.players.filter(p => (p.pool || 0) === i);
+
+/* Spread players across pools snake-style so seeding order stays balanced. */
+function autoAssignPools(){
+  const n = state.pools;
+  state.players.forEach((p, i) => {
+    const row = Math.floor(i / n);
+    const col = i % n;
+    p.pool = (row % 2 === 0) ? col : (n - 1 - col);
+  });
+}
+
+/* Standings for a set of players, using only results between them. */
+function computeStandings(players){
+  const rows = players.map(p => ({ p, m:0, w:0, d:0, l:0, sf:0, sa:0, pts:0 }));
+  const idx = {};
+  rows.forEach(r => idx[r.p.id] = r);
+  for (const k of Object.keys(state.results)){
+    const [a, b] = k.split("_").map(Number);
+    const ra = idx[a], rb = idx[b];
+    if (!ra || !rb) continue;                    // ignore cross-pool / removed players
+    const [sa, sb] = state.results[k];
+    ra.m++; rb.m++;
+    ra.sf += sa; ra.sa += sb;
+    rb.sf += sb; rb.sa += sa;
+    if (sa > sb){ ra.w++; rb.l++; }
+    else if (sa < sb){ rb.w++; ra.l++; }
+    else { ra.d++; rb.d++; }
+  }
+  rows.forEach(r => r.pts = r.w * 2 + r.d);
+  rows.sort((x, y) => {
+    if (y.pts !== x.pts) return y.pts - x.pts;
+    const h = getResult(x.p.id, y.p.id);          // head-to-head
+    if (h && h[0] !== h[1]) return h[1] - h[0];
+    const dx = x.sf - x.sa, dy = y.sf - y.sa;
+    if (dy !== dx) return dy - dx;
+    if (y.sf !== x.sf) return y.sf - x.sf;
+    return x.p.name.localeCompare(y.p.name, "sv");
+  });
+  return rows;
+}
+
+function poolComplete(i){
+  const ids = poolMembers(i).map(p => p.id);
+  if (ids.length < 2) return true;
+  for (let a = 0; a < ids.length; a++)
+    for (let b = a+1; b < ids.length; b++)
+      if (!getResult(ids[a], ids[b])) return false;
+  return true;
+}
+const allPoolsComplete = () => {
+  for (let i = 0; i < state.pools; i++) if (!poolComplete(i)) return false;
+  return true;
+};
+
+/* Playoff results are keyed by slot, so they survive a re-seed. */
+function getF(key){ return state.fresults[key] ? state.fresults[key].slice() : null; }
+function setF(key, sa, sb){ state.fresults[key] = [sa, sb]; }
+function clearF(key){ delete state.fresults[key]; }
+
+/* ---- Playoff construction ----------------------------------------------
+   Everything is built from bracket SLOTS, not from players. A slot knows its
+   source label ("A1", "B2") always; it only knows a player once the pools are
+   actually finished. That keeps provisional names off the screen. */
+
+function poolTables(){
+  const t = [];
+  for (let i = 0; i < state.pools; i++) t.push(computeStandings(poolMembers(i)));
+  return t;
+}
+
+/* Flattened seeding order across pools: A1, B1, C1 … then A2, B2, C2 … */
+function seededField(ready){
+  const tables = poolTables();
+  const field = [];
+  const depth = Math.max(0, ...tables.map(t => t.length));
+  for (let r = 0; r < depth; r++)
+    for (let i = 0; i < state.pools; i++)
+      if (tables[i][r]) field.push({
+        p: ready ? tables[i][r].p : null,          // no names until pools are done
+        label: POOL_NAMES[i] + (r + 1),
+        rank: r                                    // 0 = pool winner
+      });
+  return field;
+}
+
+function roundName(count, idx){
+  return count === 1 ? "Final"
+       : count === 2 ? "Semifinal"
+       : count === 4 ? "Kvartsfinal"
+       : count === 8 ? "Åttondelsfinal"
+       : "Omgång " + (idx + 1);
+}
+
+/* Full bracket tree for one class. Rounds are arrays of nodes:
+   {key, top, bot, bye, playable, winner, tag, medal} where top/bot are
+   {p, label} slots (p may be null) or null when the slot is dead. */
+function buildBracket(field, name, pre, ready){
+  if (field.length < 2) return null;
+  const size = Math.pow(2, Math.ceil(Math.log2(field.length)));   // pad to a power of two
+  const padded = [];
+  for (let i = 0; i < size; i++) padded.push(field[i] || null);
+  const order = seedOrder(size);                                  // 1v8, 4v5, 2v7, 3v6 …
+  let slots = order.map(i => padded[i] ? { s: padded[i], live: true } : { s: null, live: false });
+
+  const rounds = [];
+  let r = 0;
+  while (slots.length > 1){
+    const nodes = [], next = [];
+    const count = slots.length / 2;
+    for (let i = 0; i < slots.length; i += 2){
+      const top = slots[i], bot = slots[i+1];
+      const key = pre + r + "_" + (i/2);
+      const bye = top.live !== bot.live;                // only one side can ever be filled
+      const playable = top.live && bot.live;
+      let winner = null;
+      if (bye) winner = top.live ? top.s : bot.s;       // walkover carries straight through
+      else if (playable && top.s && bot.s && ready){
+        const res = getF(key);
+        if (res && res[0] !== res[1]) winner = res[0] > res[1] ? top.s : bot.s;
+      }
+      const rn = roundName(count, r);
+      nodes.push({
+        key,
+        top: top.live ? top.s : null,
+        bot: bot.live ? bot.s : null,
+        topFrom: top.from, botFrom: bot.from,
+        bye, playable,
+        tag: rn,
+        medal: rn === "Final" ? (pre === "a" ? "🏆" : "🥈") : ""
+      });
+      next.push({ s: winner, live: top.live || bot.live,
+                   from: "Vinnare " + rn.toLowerCase() + " " + (i/2 + 1) });
+    }
+    rounds.push({ name: roundName(count, r), nodes });
+    slots = next;
+    r++;
+  }
+  return { name, pre, rounds, champion: slots[0] ? slots[0].s : null };
+}
+
+/* Top-level playoff description consumed by both the list and the tree view. */
+function buildFinals(){
+  if (state.finals === "none" || state.pools < 2) return null;
+  const ready = allPoolsComplete();
+
+  if (state.finals === "place"){
+    const tables = poolTables();
+    const depth = Math.min(...tables.map(t => t.length));
+    const matches = [];
+    for (let r = 0; r < depth; r++){
+      const pos = r * 2 + 1;
+      matches.push({
+        key: "pl" + r,
+        top: { p: ready ? tables[0][r].p : null, label: POOL_NAMES[0] + (r+1) },
+        bot: { p: ready ? tables[1][r].p : null, label: POOL_NAMES[1] + (r+1) },
+        playable: true, bye: false,
+        tag: "Plats " + pos + "–" + (pos + 1),
+        medal: r === 0 ? "🏆" : (r === 1 ? "🥉" : "")
+      });
+    }
+    /* players with no counterpart in the other pool sit the placement round out */
+    const spare = [];
+    tables.forEach((t, i) => t.slice(depth).forEach(row =>
+      spare.push({ p: ready ? row.p : null, label: POOL_NAMES[i] + (t.indexOf(row)+1) })));
+    return { mode: "place", ready, matches, spare };
+  }
+
+  const field = seededField(ready);
+  let aField, bField;
+  if (state.advance === "half"){
+    const half = Math.ceil(field.length / 2);
+    aField = field.slice(0, half);
+    bField = field.slice(half);
+  } else {
+    /* placement in the pool decides the class, not the size of the field —
+       so the top N of every pool always make A regardless of pool count. */
+    const n = +state.advance || 2;
+    aField = field.filter(e => e.rank < n);
+    bField = field.filter(e => e.rank >= n);
+  }
+  /* a single qualifier can't play a bracket — hand them down so B still works */
+  if (aField.length === 1 && bField.length){ bField.unshift(aField[0]); aField = []; }
+  const brackets = [
+    buildBracket(aField, "A-slutspel", "a", ready),
+    buildBracket(bField, "B-slutspel", "b", ready)
+  ].filter(Boolean);
+  return { mode: "ab", ready, brackets, aCount: aField.length, bCount: bField.length };
+}
+
+/* Bracket seed order for a power-of-two field (1v8, 4v5, 2v7, 3v6 for 8). */
+function seedOrder(n){
+  let o = [0];
+  while (o.length < n){
+    const len = o.length * 2, next = [];
+    o.forEach(v => { next.push(v); next.push(len - 1 - v); });
+    o = next;
+  }
+  return o;
+}
 
 /* Berger / circle method schedule. Returns array of rounds; each round is
    an array of [idA, idB] pairs; a pair with null means the other player rests. */
@@ -527,16 +1043,80 @@ function makeRounds(ids){
 }
 
 /* ---------------- Setup view ---------------- */
+function maxPoolSize(){
+  let m = 0;
+  for (let i = 0; i < state.pools; i++) m = Math.max(m, poolMembers(i).length);
+  return m;
+}
+
+/* Plain-language preview of the A/B split, using pool sizes only. */
+function advPreview(){
+  if (state.finals !== "ab") return "";
+  const sizes = [];
+  for (let i = 0; i < state.pools; i++) sizes.push(poolMembers(i).length);
+  const total = sizes.reduce((a,b) => a+b, 0);
+  if (!total) return "";
+  if (state.advance === "half"){
+    const a = Math.ceil(total / 2);
+    return "A-slutspel: " + a + " spelare · B-slutspel: " + (total - a) +
+           ". Gränsen följer fältets storlek, så hur många från varje pool som går vidare kan variera.";
+  }
+  const n = +state.advance;
+  const a = sizes.reduce((sum, sz) => sum + Math.min(n, sz), 0);
+  if (a === total)
+    return "Alla spelare går till A-slutspel (topp " + n + " ur varje pool räcker för hela fältet) – inget B-slutspel spelas.";
+  return "A-slutspel: " + a + " spelare (topp " + n + " ur varje pool) · B-slutspel: " + (total - a) + ".";
+}
+
+function smallestPool(){
+  let best = 0, n = Infinity;
+  for (let i = 0; i < state.pools; i++){
+    const c = poolMembers(i).length;
+    if (c < n){ n = c; best = i; }
+  }
+  return best;
+}
+
 function renderSetup(){
   document.querySelectorAll("#formatSeg button").forEach(b => {
     b.classList.toggle("sel", b.dataset.fmt === state.format);
   });
+  document.querySelectorAll("#poolSeg button").forEach(b => {
+    b.classList.toggle("sel", +b.dataset.pools === state.pools);
+    b.disabled = state.players.length && state.players.length < +b.dataset.pools * 2;
+  });
+  document.querySelectorAll("#finalsSeg button").forEach(b => {
+    b.classList.toggle("sel", b.dataset.finals === state.finals);
+  });
+  $("finalsWrap").style.display = state.pools > 1 ? "" : "none";
+  $("finalsHint").textContent =
+    state.finals === "place" ? "Fungerar bäst med två pooler: etta möter etta, tvåa möter tvåa och så vidare."
+  : state.finals === "ab"    ? "Två separata cupspel. Du väljer nedan vilka som går till A."
+  : "";
+  $("advWrap").style.display = state.finals === "ab" ? "" : "none";
+  document.querySelectorAll("#advSeg button").forEach(b => {
+    b.classList.toggle("sel", String(state.advance) === b.dataset.adv);
+    b.disabled = b.dataset.adv !== "half" && +b.dataset.adv > maxPoolSize();
+  });
+  $("advHint").textContent = advPreview();
+  if (state.pools > 2 && state.finals === "place") state.finals = "ab";
+
   const ul = $("playerList");
   ul.innerHTML = "";
   state.players.forEach((p, i) => {
     const li = document.createElement("li");
     li.innerHTML = '<span class="num">' + (i+1) + '</span><span class="nm"></span>';
     li.querySelector(".nm").textContent = p.name;
+    if (state.pools > 1){
+      const pick = document.createElement("button");
+      pick.className = "poolpick";
+      pick.textContent = "Pool " + POOL_NAMES[p.pool || 0];
+      pick.addEventListener("click", () => {          // cycle through the pools
+        p.pool = ((p.pool || 0) + 1) % state.pools;
+        renderSetup(); store.save();
+      });
+      li.appendChild(pick);
+    }
     const del = document.createElement("button");
     del.textContent = "✕";
     del.addEventListener("click", () => {
@@ -553,9 +1133,23 @@ function renderSetup(){
   });
   const n = state.players.length;
   $("pcount").textContent = n ? "(" + n + " av max 20)" : "";
-  $("oddHint").textContent =
-    n >= 3 && n % 2 ? "Ojämnt antal – en spelare vilar varje rond." : "";
-  $("btnStart").disabled = n < 2;
+  let hint = "";
+  if (state.pools > 1){
+    const sizes = [];
+    for (let i = 0; i < state.pools; i++) sizes.push(POOL_NAMES[i] + ": " + poolMembers(i).length);
+    hint = sizes.join("  ·  ") + " spelare. Tryck på poolknappen för att flytta någon.";
+    const tooSmall = [];
+    for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) tooSmall.push(POOL_NAMES[i]);
+    if (tooSmall.length) hint += "  Pool " + tooSmall.join(", ") + " behöver minst 2 spelare.";
+  } else if (n >= 3 && n % 2){
+    hint = "Ojämnt antal – en spelare vilar varje rond.";
+  }
+  $("poolHint").textContent = state.pools > 1 ? hint : "";
+  $("oddHint").textContent = state.pools > 1 ? "" : hint;
+  let poolsOk = true;
+  for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) poolsOk = false;
+  $("btnStart").disabled = n < 2 || !poolsOk;
+  $("btnStart").textContent = state.pools > 1 ? "Starta poolspel" : "Starta rundpool";
   $("nameInput").disabled = n >= 20;
   $("btnAdd").disabled = n >= 20;
   renderRoster();
@@ -589,7 +1183,7 @@ function renderRoster(){
     b.disabled = !rosterEditMode && (used || state.players.length >= 20);
     b.addEventListener("click", () => {
       if (rosterEditMode){ rosterForget(nm); renderSetup(); return; }
-      state.players.push({ id: state.nextId++, name: nm });
+      state.players.push({ id: state.nextId++, name: nm, pool: smallestPool() });
       renderSetup(); store.save();
     });
     box.appendChild(b);
@@ -598,7 +1192,7 @@ function renderRoster(){
 
 function addPlayer(){
   const inp = $("nameInput");
-  const name = inp.value.trim();
+  const name = sanitizeName(inp.value);
   if (!name || state.players.length >= 20) return;
   if (inGame(name)){                       // same name already playing (case-insensitive)
     inp.value = "";
@@ -606,7 +1200,7 @@ function addPlayer(){
     return;
   }
   const known = roster.find(r => norm(r) === norm(name));  // reuse the saved spelling
-  state.players.push({ id: state.nextId++, name: known || name });
+  state.players.push({ id: state.nextId++, name: known || name, pool: smallestPool() });
   rosterRemember(name);
   inp.value = "";
   inp.focus();
@@ -621,11 +1215,12 @@ function resultClass(sa, sb){
 }
 
 function renderGrid(){
-  const ps = state.players;
+  const ps = state.pools > 1 ? poolMembers(state.pool) : state.players;
   const t = document.createElement("table");
   t.className = "berger";
   const thead = document.createElement("thead");
-  let hr = "<tr><th class='corner'>Rundpool</th>";
+  let hr = "<tr><th class='corner'>" +
+    (state.pools > 1 ? "Pool " + POOL_NAMES[state.pool] : "Rundpool") + "</th>";
   ps.forEach((p, i) => hr += "<th>" + (i+1) + "</th>");
   hr += "</tr>";
   thead.innerHTML = hr;
@@ -666,7 +1261,8 @@ function renderGrid(){
 
 /* ---------------- Rounds view ---------------- */
 function renderRounds(){
-  const rounds = makeRounds(state.players.map(p => p.id));
+  const ps = state.pools > 1 ? poolMembers(state.pool) : state.players;
+  const rounds = makeRounds(ps.map(p => p.id));
   if (!rounds.length){ $("roundList").innerHTML = ""; return; }
   if (state.round >= rounds.length) state.round = rounds.length - 1;
   if (state.round < 0) state.round = 0;
@@ -704,33 +1300,14 @@ function renderRounds(){
 }
 
 /* ---------------- Standings ---------------- */
-function renderStandings(){
-  const rows = state.players.map(p => ({
-    p, m:0, w:0, d:0, l:0, sf:0, sa:0, pts:0
-  }));
-  const idx = {};
-  rows.forEach(r => idx[r.p.id] = r);
-  for (const k of Object.keys(state.results)){
-    const [a, b] = k.split("_").map(Number);
-    const ra = idx[a], rb = idx[b];
-    if (!ra || !rb) continue;
-    const [sa, sb] = state.results[k];
-    ra.m++; rb.m++;
-    ra.sf += sa; ra.sa += sb;
-    rb.sf += sb; rb.sa += sa;
-    if (sa > sb){ ra.w++; rb.l++; }
-    else if (sa < sb){ rb.w++; ra.l++; }
-    else { ra.d++; rb.d++; }
-  }
-  rows.forEach(r => r.pts = r.w * 2 + r.d);
-  rows.sort((x, y) =>
-    y.pts - x.pts ||
-    (y.sf - y.sa) - (x.sf - x.sa) ||
-    y.sf - x.sf ||
-    x.p.name.localeCompare(y.p.name, "sv")
-  );
-  const tb = $("standBody");
-  tb.innerHTML = "";
+function standingsTable(rows){
+  const t = document.createElement("table");
+  t.className = "stand";
+  t.innerHTML =
+    "<thead><tr><th></th><th>Spelare</th>" +
+    "<th class='r'>M</th><th class='r'>V</th><th class='r'>O</th><th class='r'>F</th>" +
+    "<th class='r'>Set</th><th class='r'>P</th></tr></thead>";
+  const tb = document.createElement("tbody");
   rows.forEach((r, i) => {
     const tr = document.createElement("tr");
     if (i === 0 && r.m > 0) tr.className = "top";
@@ -747,18 +1324,259 @@ function renderStandings(){
     tr.children[1].textContent = r.p.name;
     tb.appendChild(tr);
   });
+  t.appendChild(tb);
+  return t;
+}
+
+function renderStandings(){
+  const wrap = $("standWrap");
+  wrap.innerHTML = "";
+  if (state.pools === 1){
+    wrap.appendChild(standingsTable(computeStandings(state.players)));
+    return;
+  }
+  for (let i = 0; i < state.pools; i++){
+    const head = document.createElement("div");
+    head.className = "secthead";
+    head.innerHTML = "<h3>Pool " + POOL_NAMES[i] + "</h3><span></span>";
+    head.querySelector("span").textContent =
+      poolComplete(i) ? "färdigspelad" : "pågår";
+    wrap.appendChild(head);
+    wrap.appendChild(standingsTable(computeStandings(poolMembers(i))));
+  }
+}
+
+/* ---------------- Pool bar ---------------- */
+function renderPoolBar(){
+  const bar = $("poolBar");
+  bar.innerHTML = "";
+  if (state.pools < 2 || state.view === "stand" || state.view === "finals" || state.view === "bracket"){
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "";
+  for (let i = 0; i < state.pools; i++){
+    const b = document.createElement("button");
+    b.innerHTML = "Pool " + POOL_NAMES[i] + (poolComplete(i) ? "<span class='dot'></span>" : "");
+    if (i === state.pool) b.classList.add("sel");
+    b.addEventListener("click", () => {
+      state.pool = i; state.round = 0;
+      renderGrid(); renderRounds(); renderPoolBar(); store.save();
+    });
+    bar.appendChild(b);
+  }
+}
+
+/* ---------------- Playoff (list view) ---------------- */
+
+/* A slot shows its player once known, otherwise the place it comes from. */
+function slotText(slot, from){
+  if (!slot) return from || "Vinnare";
+  return slot.p ? slot.p.name : slot.label;
+}
+function slotPending(slot){ return !slot || !slot.p; }
+
+function waitingBanner(){
+  const b = document.createElement("div");
+  b.className = "banner";
+  const left = [];
+  for (let i = 0; i < state.pools; i++) if (!poolComplete(i)) left.push(POOL_NAMES[i]);
+  b.innerHTML = "<strong>Lottas när poolspelet är klart</strong>";
+  b.appendChild(document.createTextNode(
+    "Väntar på pool " + left.join(", ") + ". Rutorna visar vilka placeringar som möts."));
+  return b;
+}
+
+function matchRow(node){
+  const div = document.createElement("div");
+  const res = getF(node.key);
+  const live = node.playable && node.top && node.bot && node.top.p && node.bot.p;
+  div.className = "match" + (live ? "" : " locked");
+  div.innerHTML =
+    "<div class='medal'></div>" +
+    "<div class='side'></div>" +
+    "<div class='score" + (res ? " done" : "") + "'>" +
+      (res ? res[0] + " – " + res[1] : "· – ·") + "</div>" +
+    "<div class='side right'></div>" +
+    "<div class='tag' style='text-align:right'></div>";
+  div.children[0].textContent = node.medal || "";
+  div.children[1].textContent = slotText(node.top, node.topFrom);
+  div.children[3].textContent = slotText(node.bot, node.botFrom);
+  div.children[4].textContent = node.tag;
+  if (slotPending(node.top)) div.children[1].style.color = "var(--muted)";
+  if (slotPending(node.bot)) div.children[3].style.color = "var(--muted)";
+  if (live) div.addEventListener("click", () => openModal(node.top.p.id, node.bot.p.id, node.key));
+  return div;
+}
+
+function sectionHead(title, note){
+  const h = document.createElement("div");
+  h.className = "secthead";
+  h.innerHTML = "<h3></h3><span></span>";
+  h.querySelector("h3").textContent = title;
+  h.querySelector("span").textContent = note || "";
+  return h;
+}
+
+function renderFinals(){
+  const body = $("finalsBody");
+  body.innerHTML = "";
+  const f = buildFinals();
+  if (!f){ body.appendChild(document.createTextNode("Inget slutspel valt.")); return; }
+  if (!f.ready) body.appendChild(waitingBanner());
+
+  if (f.mode === "place"){
+    body.appendChild(sectionHead("Placeringsmatcher"));
+    f.matches.forEach(m => body.appendChild(matchRow(m)));
+    if (f.spare.length){
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.style.marginTop = "12px";
+      p.textContent = "Utan motståndare (ojämna pooler): " +
+        f.spare.map(sl => slotText(sl)).join(", ") + ".";
+      body.appendChild(p);
+    }
+    return;
+  }
+
+  f.brackets.forEach(br => {
+    br.rounds.forEach(rd => {
+      const real = rd.nodes.filter(n => n.playable);      // walkovers aren't matches
+      if (!real.length) return;
+      body.appendChild(sectionHead(br.name + " – " + rd.name));
+      real.forEach(n => body.appendChild(matchRow(n)));
+    });
+    const byes = br.rounds[0].nodes.filter(n => n.bye);
+    if (byes.length){
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.style.marginTop = "12px";
+      p.textContent = "Direktkvalificerade till nästa omgång: " +
+        byes.map(n => slotText(n.top || n.bot)).join(", ") + ".";
+      body.appendChild(p);
+    }
+  });
+}
+
+/* ---------------- Playoff (bracket tree) ---------------- */
+function renderBracket(){
+  const body = $("bracketBody");
+  body.innerHTML = "";
+  const f = buildFinals();
+  if (!f){ body.appendChild(document.createTextNode("Inget slutspel valt.")); return; }
+  if (!f.ready) body.appendChild(waitingBanner());
+
+  if (f.mode === "place"){
+    body.appendChild(sectionHead("Placeringsmatcher"));
+    const ladder = document.createElement("div");
+    ladder.className = "ladder";
+    f.matches.forEach(m => {
+      const res = getF(m.key);
+      let wTop = false, wBot = false;
+      if (res && res[0] !== res[1]){ wTop = res[0] > res[1]; wBot = !wTop; }
+      const card = document.createElement("div");
+      card.className = "lcard";
+      card.innerHTML =
+        "<div class='ltag'></div>" +
+        "<div class='lrow'><span class='ln'></span><span class='ls'></span></div>" +
+        "<div class='lrow'><span class='ln'></span><span class='ls'></span></div>";
+      card.children[0].textContent = (m.medal ? m.medal + " " : "") + m.tag;
+      const rows = [card.children[1], card.children[2]];
+      [[m.top, wTop, res ? res[0] : null], [m.bot, wBot, res ? res[1] : null]]
+        .forEach(([slot, win, sc], i) => {
+          rows[i].children[0].textContent = slotText(slot);
+          rows[i].children[1].textContent = sc === null ? "–" : sc;
+          if (slotPending(slot)) rows[i].classList.add("pend");
+          if (win) rows[i].classList.add("won");
+        });
+      if (m.top.p && m.bot.p)
+        card.addEventListener("click", () => openModal(m.top.p.id, m.bot.p.id, m.key));
+      ladder.appendChild(card);
+    });
+    body.appendChild(ladder);
+    return;
+  }
+
+  f.brackets.forEach(br => {
+    body.appendChild(sectionHead(br.name,
+      br.champion && br.champion.p ? "Vinnare: " + br.champion.p.name : ""));
+    const wrap = document.createElement("div");
+    wrap.className = "bracket";
+    br.rounds.forEach((rd, ri) => {
+      const col = document.createElement("div");
+      col.className = "bcol";
+      const head = document.createElement("div");
+      head.className = "bcolhead";
+      head.textContent = rd.name;
+      col.appendChild(head);
+      const cells = document.createElement("div");
+      cells.className = "bcells";
+      col.appendChild(cells);
+
+      rd.nodes.forEach(n => {
+        const cell = document.createElement("div");
+        cell.className = "bcell";
+        if (n.bye){
+          const sl = n.top || n.bot;
+          cell.innerHTML = "<div class='bmatch bye'><div class='brow'><span class='bn'></span>" +
+                           "<span class='byetag'>Direkt vidare</span></div></div>";
+          cell.querySelector(".bn").textContent = slotText(sl);
+          if (slotPending(sl)) cell.querySelector(".brow").classList.add("pend");
+          cells.appendChild(cell);
+          return;
+        }
+        const res = getF(n.key);
+        let wTop = false, wBot = false;
+        if (res && res[0] !== res[1]){ wTop = res[0] > res[1]; wBot = !wTop; }
+        const live = n.top && n.bot && n.top.p && n.bot.p;
+        cell.innerHTML =
+          "<div class='bmatch" + (live ? "" : " dim") + (n.medal ? " gold" : "") + "'>" +
+          "<div class='brow'><span class='bn'></span><span class='bs'></span></div>" +
+          "<div class='brow'><span class='bn'></span><span class='bs'></span></div>" +
+          "</div>";
+        const box = cell.firstChild;
+        const rows = [box.children[0], box.children[1]];
+        [[n.top, wTop, res ? res[0] : null, n.topFrom],
+         [n.bot, wBot, res ? res[1] : null, n.botFrom]]
+          .forEach(([slot, win, sc, from], i) => {
+            rows[i].children[0].textContent = slotText(slot, from);
+            rows[i].children[1].textContent = sc === null ? "–" : sc;
+            if (slotPending(slot)) rows[i].classList.add("pend");
+            if (win) rows[i].classList.add("won");
+          });
+        if (live) cell.addEventListener("click", () => openModal(n.top.p.id, n.bot.p.id, n.key));
+        cells.appendChild(cell);
+      });
+      wrap.appendChild(col);
+    });
+    /* trophy column */
+    const last = document.createElement("div");
+    last.className = "bcol";
+    last.innerHTML = "<div class='bcolhead'>" + (br.pre === "a" ? "🏆 Segrare" : "🥈 B-segrare") + "</div>" +
+                     "<div class='bcells'></div>";
+    const champ = document.createElement("div");
+    champ.className = "bcell";
+    champ.innerHTML = "<div class='bmatch champ'><div class='brow'><span class='bn'></span></div></div>";
+    champ.querySelector(".bn").textContent =
+      br.champion && br.champion.p ? br.champion.p.name : "—";
+    if (!(br.champion && br.champion.p)) champ.querySelector(".brow").classList.add("pend");
+    last.querySelector(".bcells").appendChild(champ);
+    wrap.appendChild(last);
+    body.appendChild(wrap);
+  });
 }
 
 /* ---------------- Modal ---------------- */
-let modalA = null, modalB = null;
+let modalA = null, modalB = null, modalKey = null;
 
-function openModal(a, b){
-  modalA = a; modalB = b;
+function openModal(a, b, fkey){
+  modalA = a; modalB = b; modalKey = fkey || null;
   const pa = byId(a), pb = byId(b);
   $("mNameA").textContent = pa.name;
   $("mNameB").textContent = pb.name;
-  $("mSub").textContent = "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
-  const cur = getResult(a, b);
+  $("mSub").textContent = (modalKey ? "Slutspelsmatch – måste ha en vinnare · " : "") +
+    "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
+  const cur = modalKey ? getF(modalKey) : getResult(a, b);
   const box = $("mChoices");
   box.innerHTML = "";
 
@@ -766,14 +1584,14 @@ function openModal(a, b){
   const margin = r => Math.abs(r[0] - r[1]);
   const aWins = all.filter(r => r[0] > r[1]).sort((x,y) => margin(y) - margin(x));
   const bWins = all.filter(r => r[0] < r[1]).sort((x,y) => margin(y) - margin(x));
-  const draws = all.filter(r => r[0] === r[1]);
+  const draws = modalKey ? [] : all.filter(r => r[0] === r[1]);   // no draws in a knockout
 
   function makeBtn(sa, sb){
     const btn = document.createElement("button");
     btn.textContent = sa + " – " + sb;
     if (cur && cur[0] === sa && cur[1] === sb) btn.classList.add("sel");
     btn.addEventListener("click", () => {
-      setResult(a, b, sa, sb);
+      if (modalKey) setF(modalKey, sa, sb); else setResult(a, b, sa, sb);
       closeModal();
       refresh(); store.save();
     });
@@ -804,7 +1622,8 @@ function openModal(a, b){
 function closeModal(){ $("overlay").classList.remove("open"); }
 
 $("btnClear").addEventListener("click", () => {
-  if (modalA !== null){ clearResult(modalA, modalB); }
+  if (modalKey) clearF(modalKey);
+  else if (modalA !== null) clearResult(modalA, modalB);
   closeModal(); refresh(); store.save();
 });
 $("btnCloseModal").addEventListener("click", closeModal);
@@ -822,20 +1641,35 @@ function refresh(){
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "";
   $("subTitle").textContent =
-    state.players.length + " spelare · " + FORMATS[state.format].label;
+    state.players.length + " spelare · " +
+    (state.pools > 1 ? state.pools + " pooler · " : "") +
+    FORMATS[state.format].label;
+  const hasFinals = state.pools > 1 && state.finals !== "none";
+  $("tabFinals").style.display = hasFinals ? "" : "none";
+  $("tabBracket").style.display = hasFinals ? "" : "none";
+  if (!hasFinals && (state.view === "finals" || state.view === "bracket")) setView("grid");
+  if (state.pool >= state.pools) state.pool = 0;
+  renderPoolBar();
   renderGrid();
   renderRounds();
   renderStandings();
+  if (hasFinals){ renderFinals(); renderBracket(); }
+}
+
+function setView(v){
+  state.view = v;
+  document.querySelectorAll(".tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.view === v));
+  $("paneGrid").style.display   = v === "grid"   ? "" : "none";
+  $("paneRounds").style.display = v === "rounds" ? "" : "none";
+  $("paneStand").style.display  = v === "stand"  ? "" : "none";
+  $("paneFinals").style.display = v === "finals" ? "" : "none";
+  $("paneBracket").style.display = v === "bracket" ? "" : "none";
+  renderPoolBar();
 }
 
 document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    $("paneGrid").style.display   = tab.dataset.view === "grid"   ? "" : "none";
-    $("paneRounds").style.display = tab.dataset.view === "rounds" ? "" : "none";
-    $("paneStand").style.display  = tab.dataset.view === "stand"  ? "" : "none";
-  });
+  tab.addEventListener("click", () => { setView(tab.dataset.view); store.save(); });
 });
 
 /* ---------------- Wiring ---------------- */
@@ -847,6 +1681,41 @@ $("formatSeg").addEventListener("click", e => {
       !confirm("Byte av matchform rensar inspelade resultat. Fortsätt?")) return;
   if (b.dataset.fmt !== state.format) state.results = {};
   state.format = b.dataset.fmt;
+  renderSetup(); store.save();
+});
+$("poolSeg").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.disabled) return;
+  const n = +b.dataset.pools;
+  if (n === state.pools) return;
+  if (Object.keys(state.fresults).length &&
+      !confirm("Ändrat antal pooler rensar slutspelsresultaten. Fortsätt?")) return;
+  state.pools = n;
+  state.fresults = {};
+  state.pool = 0;
+  if (n === 1) state.players.forEach(p => p.pool = 0);
+  else autoAssignPools();
+  if (n > 2 && state.finals === "place") state.finals = "ab";
+  renderSetup(); store.save();
+});
+$("advSeg").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.disabled) return;
+  const v = b.dataset.adv === "half" ? "half" : +b.dataset.adv;
+  if (v === state.advance) return;
+  state.advance = v;
+  state.fresults = {};
+  renderSetup(); store.save();
+});
+$("finalsSeg").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.finals === "place" && state.pools !== 2){
+    alert("Placeringsmatcher kräver exakt 2 pooler.");
+    return;
+  }
+  if (b.dataset.finals !== state.finals) state.fresults = {};
+  state.finals = b.dataset.finals;
   renderSetup(); store.save();
 });
 $("btnAdd").addEventListener("click", addPlayer);
@@ -861,6 +1730,8 @@ $("btnStart").addEventListener("click", () => {
   if (state.players.length < 2) return;
   state.phase = "play";
   state.round = 0;
+  state.pool = 0;
+  state.view = "grid";
   refresh(); store.save();
 });
 $("btnEdit").addEventListener("click", () => {
@@ -869,11 +1740,38 @@ $("btnEdit").addEventListener("click", () => {
 });
 $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
-  state = { phase:"setup", format:state.format, players:[], results:{}, nextId:1, round:0 };
+  state = { phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
+            advance:state.advance,
+            players:[], results:{}, fresults:{}, nextId:1, round:0, view:"grid", pool:0 };
   refresh(); store.save();
 });
 $("btnPrevR").addEventListener("click", () => { state.round--; renderRounds(); store.save(); });
 $("btnNextR").addEventListener("click", () => { state.round++; renderRounds(); store.save(); });
+
+$("btnShare").addEventListener("click", () => {
+  const url = shareUrl();
+  $("shareBox").value = url;
+  $("shareLen").textContent = url.length + " tecken" +
+    (url.length > 2000 ? " – lång länk, vissa appar kan kapa den." : "");
+  $("btnCopyLink").textContent = "Kopiera länk";
+  $("shareOverlay").classList.add("open");
+});
+$("btnCloseShare").addEventListener("click", () => $("shareOverlay").classList.remove("open"));
+$("shareOverlay").addEventListener("click", e => {
+  if (e.target === $("shareOverlay")) $("shareOverlay").classList.remove("open");
+});
+$("btnCopyLink").addEventListener("click", async () => {
+  const box = $("shareBox");
+  let ok = false;
+  try{
+    await navigator.clipboard.writeText(box.value);
+    ok = true;
+  }catch(e){
+    box.focus(); box.select();                 // http:// and file:// block the clipboard API
+    try{ ok = document.execCommand("copy"); }catch(e2){}
+  }
+  $("btnCopyLink").textContent = ok ? "Kopierad!" : "Markera och kopiera själv";
+});
 
 $("btnFullscreen").addEventListener("click", () => {
   try{
@@ -883,16 +1781,50 @@ $("btnFullscreen").addEventListener("click", () => {
 });
 
 /* ---------------- Boot ---------------- */
+function adoptShared(code, ask){
+  const inc = decodeState(code);
+  if (!inc) return false;
+  if (ask && !confirm("Öppna delad tavla? Den ersätter tavlan som ligger på den här skärmen."))
+    return false;
+  state = Object.assign(state, inc);
+  state.players.forEach(p => rosterRemember(p.name));
+  return true;
+}
+
+window.addEventListener("hashchange", () => {
+  const code = location.hash.startsWith("#t=") ? location.hash.slice(3) : "";
+  if (!code || code === encodeState()) return;      // our own write-back, ignore
+  if (adoptShared(code, true)){ refresh(); setView(state.view || "grid"); store.save(); }
+});
+
 (async function boot(){
   const savedRoster = await kvLoad(ROSTER_KEY);
   if (Array.isArray(savedRoster)) roster = savedRoster.filter(x => typeof x === "string");
 
   const saved = await store.load();
+  const code = location.hash.startsWith("#t=") ? location.hash.slice(3) : "";
+  const localBusy = !!(saved && Array.isArray(saved.players) && saved.players.length);
+  /* a link only asks before overwriting when it differs from what is stored */
+  if (code && adoptShared(code, localBusy && encodeState(saved) !== code)){
+    store.save();
+    refresh();
+    if (state.phase === "play") setView(state.view || "grid");
+    return;
+  }
+
   if (saved && Array.isArray(saved.players)){
     state = Object.assign(state, saved);
-    state.players.forEach(p => rosterRemember(p.name));   // backfill from an in-progress pool
+    state.players.forEach(p => {
+      rosterRemember(p.name);                              // backfill from an in-progress pool
+      if (typeof p.pool !== "number") p.pool = 0;          // saves made before pools existed
+    });
+    if (!state.fresults) state.fresults = {};
+    if (!state.pools) state.pools = 1;
+    if (!state.finals) state.finals = "none";
+    if (state.advance === undefined) state.advance = 2;
   }
   refresh();
+  if (state.phase === "play") setView(state.view || "grid");
 })();
 </script>
 </body>
