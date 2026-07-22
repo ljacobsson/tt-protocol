@@ -450,6 +450,39 @@
     resize:none; word-break:break-all; background:#F8FAFB; color:var(--ink);
     -webkit-user-select:text; user-select:text;
   }
+  /* ---------- Ball-point picker ---------- */
+  .pgrid{grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .phalf{min-width:0;}
+  .pcols{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
+  .pcol{display:flex; flex-direction:column; gap:6px;}
+  .pbtn{
+    min-height:56px; border-radius:12px; background:#EEF1F4;
+    font-size:19px; font-weight:800; border:2px solid transparent;
+  }
+  .pbtn:active{background:#DCE9F3; border-color:var(--table);}
+  .deucebtn{
+    grid-column:1 / -1; min-height:60px; margin-top:2px;
+    border-radius:var(--radius); background:#FBF6E7; color:var(--ink);
+    font-size:17px; font-weight:800;
+  }
+  .setstrip{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .setchip{
+    display:inline-flex; align-items:baseline; gap:8px;
+    min-height:52px; padding:0 14px; border-radius:12px;
+    font-size:19px; font-weight:900; border:2px solid var(--grid-line);
+    background:#fff;
+  }
+  .setchip .n{font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase;}
+  .setchip.a{background:var(--win-bg); border-color:#A9D6B6; color:var(--win-fg);}
+  .setchip.b{background:var(--loss-bg); border-color:#E4B7B1; color:var(--loss-fg);}
+  /* set scores shown under a match row */
+  .match.hassets{flex-wrap:wrap;}
+  .setline{
+    flex-basis:100%; font-size:14px; font-weight:700; color:var(--muted);
+    letter-spacing:.4px; padding-top:2px;
+  }
+  td.cell.partial{font-style:italic; opacity:.75;}
+
   .modalrow{display:flex; gap:12px; margin-top:18px;}
   .modalrow button{
     flex:1; min-height:70px; border-radius:var(--radius);
@@ -553,6 +586,13 @@
     .choices button{min-height:74px; font-size:27px;}
     .choices .colhead{font-size:13px;}
     .choices .drawbtn{min-height:64px; font-size:24px;}
+    .pgrid{gap:8px;}
+    .pcols{gap:5px;}
+    .pcol{gap:5px;}
+    .pbtn{min-height:50px; font-size:16px;}
+    .deucebtn{min-height:54px; font-size:15px;}
+    .setchip{min-height:46px; padding:0 10px; font-size:16px;}
+    .setline{font-size:13px;}
     .modalrow{gap:8px;}
     .modalrow button{min-height:58px; font-size:16px;}
 
@@ -592,7 +632,14 @@
 <!-- ================= SETUP ================= -->
 <div id="viewSetup" class="setup">
   <div class="panel" style="border-radius:var(--radius);">
-    <h2 style="margin-top:0;">Matchform</h2>
+    <h2 style="margin-top:0;">Vad skrivs in</h2>
+    <div class="seg" id="scoringSeg">
+      <button data-sc="sets">Setsiffror<small>t.ex. 2–1</small></button>
+      <button data-sc="points">Bollpoäng<small>t.ex. 11–4, 9–11, 11–7</small></button>
+    </div>
+    <p class="hint" id="scoringHint"></p>
+
+    <h2>Matchform</h2>
     <div class="seg" id="formatSeg">
       <button data-fmt="sets2">2 set<small>oavgjort 1–1 tillåtet</small></button>
       <button data-fmt="bo3">Bäst av 3<small>först till 2 set</small></button>
@@ -671,7 +718,7 @@
     </div>
     <div class="panel" id="paneStand" style="display:none;">
       <div id="standWrap"></div>
-      <p class="hint" style="margin-top:14px;">Vinst 2 p · Oavgjort 1 p · Förlust 0 p. Vid lika poäng avgör inbördes möte, sedan setskillnad och vunna set.</p>
+      <p class="hint" style="margin-top:14px;" id="standNote"></p>
     </div>
     <div class="panel" id="paneFinals" style="display:none;">
       <div id="finalsBody"></div>
@@ -733,6 +780,7 @@ let state = {
   pools: 1,                // 1..4
   finals: "none",          // none | place | ab
   advance: 2,              // per-pool qualifiers for A-slutspel, or "half"
+  scoring: "sets",         // sets | points (ball points per set)
   players: [],             // {id, name, pool}
   results: {},             // "minId_maxId" -> [setsForMin, setsForMax]  (pool play)
   fresults: {},            // playoff slot key -> [setsA, setsB]
@@ -792,6 +840,23 @@ function b64urlDecode(str){
   return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
 }
 
+/* A legal set is 11-x (x<=9) or a deuce won by two, so the loser's score plus
+   which side won describes it completely — one character per set. */
+function encSets(sets){
+  return sets.map(g => {
+    const win = g[0] > g[1] ? 0 : 1;
+    const lose = Math.min(30, Math.max(0, Math.min(g[0], g[1])));
+    return String.fromCharCode(48 + lose * 2 + win);
+  }).join("");
+}
+function decSets(str){
+  return str.split("").map(ch => {
+    const v = ch.charCodeAt(0) - 48;
+    const lose = v >> 1, win = lose <= 9 ? 11 : lose + 2;
+    return (v & 1) === 0 ? [win, lose] : [lose, win];
+  });
+}
+
 function encodeState(st){
   st = st || state;
   const fmt = FORMATS[st.format] ? st.format : "sets2";
@@ -802,25 +867,32 @@ function encodeState(st){
     (st.pools || 1) +
     Math.max(0, FIN_LIST.indexOf(st.finals || "none")) +
     (st.advance === "half" ? "h" : String(st.advance || 2)) +
-    (st.phase === "play" ? "p" : "s");
+    (st.phase === "play" ? "p" : "s") +
+    (st.scoring === "points" ? "P" : "S");
 
   const ps = st.players || [];
   const names = ps.map(p => p.name).join("\t");
   const pools = ps.map(p => String(p.pool || 0)).join("");
 
-  let res = "";                                     // one char per in-pool pair
+  const pts = st.scoring === "points";
+  const chunks = [];
   for (let i = 0; i < ps.length; i++)
     for (let j = i + 1; j < ps.length; j++){
       if ((ps[i].pool || 0) !== (ps[j].pool || 0)) continue;
       const a = ps[i].id, b = ps[j].id;
-      const r = (st.results || {})[a < b ? a + "_" + b : b + "_" + a];
-      let k = -1;
-      if (r) k = a < b ? optIdx(r[0], r[1]) : optIdx(r[1], r[0]);
-      res += k < 0 ? "." : String.fromCharCode(48 + k);
+      let r = (st.results || {})[a < b ? a + "_" + b : b + "_" + a];
+      if (r && a > b) r = flipResult(r);
+      if (pts){ chunks.push(r ? encSets(r) : ""); }
+      else {
+        const k = r ? optIdx(r[0], r[1]) : -1;
+        chunks.push(k < 0 ? "." : String.fromCharCode(48 + k));
+      }
     }
+  const res = pts ? chunks.join(",") : chunks.join("");
 
   const fr = Object.keys(st.fresults || {}).map(key => {
     const v = st.fresults[key];
+    if (pts) return isPoints(v) ? key + "=" + encSets(v) : null;
     const k = optIdx(v[0], v[1]);
     return k < 0 ? null : key + "=" + k;
   }).filter(Boolean).join(",");
@@ -838,6 +910,7 @@ function decodeState(code){
     const finals = FIN_LIST[+h[3]] || "none";
     const advance = h[4] === "h" ? "half" : (+h[4] || 2);
     const phase = h[5] === "p" ? "play" : "setup";
+    const scoring = h[6] === "P" ? "points" : "sets";   // links made before this default to sets
 
     const names = parts[1] ? parts[1].split("\t") : [];
     const poolStr = parts[2] || "";
@@ -848,25 +921,30 @@ function decodeState(code){
 
     const opts = FORMATS[format].results;
     const resStr = parts[3] || "";
+    const pts = scoring === "points";
+    const chunks = pts ? resStr.split(",") : resStr.split("");
     const results = {};
     let k = 0;
     for (let i = 0; i < players.length; i++)
       for (let j = i + 1; j < players.length; j++){
         if (players[i].pool !== players[j].pool) continue;
-        const c = resStr[k++];
+        const c = chunks[k++];
         if (!c || c === ".") continue;
-        const o = opts[c.charCodeAt(0) - 48];
-        if (o) results[players[i].id + "_" + players[j].id] = [o[0], o[1]];
+        const key = players[i].id + "_" + players[j].id;
+        if (pts) results[key] = decSets(c);
+        else { const o = opts[c.charCodeAt(0) - 48]; if (o) results[key] = [o[0], o[1]]; }
       }
 
     const fresults = {};
     (parts[4] || "").split(",").filter(Boolean).forEach(tok => {
-      const bits = tok.split("=");
-      const o = opts[+bits[1]];
-      if (bits[0] && o) fresults[bits[0]] = [o[0], o[1]];
+      const at = tok.indexOf("=");
+      if (at < 1) return;
+      const key = tok.slice(0, at), val = tok.slice(at + 1);
+      if (pts){ if (val) fresults[key] = decSets(val); }
+      else { const o = opts[+val]; if (o) fresults[key] = [o[0], o[1]]; }
     });
 
-    return { phase, format, pools, finals, advance, players, results, fresults,
+    return { phase, format, pools, finals, advance, scoring, players, results, fresults,
              nextId: players.length + 1, round: 0, view: "grid", pool: 0 };
   }catch(e){ return null; }
 }
@@ -888,15 +966,58 @@ const $ = id => document.getElementById(id);
 const byId = id => state.players.find(p => p.id === id);
 const rkey = (a,b) => a < b ? a+"_"+b : b+"_"+a;
 
-function getResult(a, b){           // returns [setsA, setsB] oriented to (a,b), or null
-  const k = rkey(a,b), r = state.results[k];
+/* ---- Result shapes -------------------------------------------------------
+   A stored result is one of two things, depending on state.scoring:
+     "sets"   -> [setsA, setsB]                e.g. [2, 1]
+     "points" -> [[a,b], [a,b], ...] per set   e.g. [[11,4],[8,11],[11,9]]
+   Everything downstream goes through setsOf()/ballsOf() so it never has to
+   care which one it is. */
+const isPoints = r => !!r && Array.isArray(r[0]);
+
+function flipResult(r){
   if (!r) return null;
-  return (a < b) ? r.slice() : [r[1], r[0]];
+  return isPoints(r) ? r.map(g => [g[1], g[0]]) : [r[1], r[0]];
 }
-function setResult(a, b, sa, sb){   // oriented to (a,b)
-  const k = rkey(a,b);
-  state.results[k] = (a < b) ? [sa, sb] : [sb, sa];
+function cloneResult(r){
+  if (!r) return null;
+  return isPoints(r) ? r.map(g => g.slice()) : r.slice();
 }
+
+/* sets won, from either shape */
+function setsOf(r){
+  if (!r) return null;
+  if (!isPoints(r)) return [r[0], r[1]];
+  let a = 0, b = 0;
+  r.forEach(g => { if (g[0] > g[1]) a++; else if (g[1] > g[0]) b++; });
+  return [a, b];
+}
+/* total ball points, or null when the match was only recorded as sets */
+function ballsOf(r){
+  if (!isPoints(r)) return null;
+  let a = 0, b = 0;
+  r.forEach(g => { a += g[0]; b += g[1]; });
+  return [a, b];
+}
+/* how many sets the current format needs before a match is over */
+const setsToWin = () => state.format === "bo5" ? 3 : 2;
+function matchDecided(r, needWinner){
+  const s = setsOf(r);
+  if (!s) return false;
+  if (state.format === "sets2")
+    return needWinner ? (s[0] + s[1] >= 2 && s[0] !== s[1]) : s[0] + s[1] >= 2;
+  return s[0] >= setsToWin() || s[1] >= setsToWin();
+}
+
+function getResult(a, b){           // stored result oriented to (a,b), or null
+  const r = state.results[rkey(a,b)];
+  if (!r) return null;
+  return (a < b) ? cloneResult(r) : flipResult(r);
+}
+function getSets(a, b){ return setsOf(getResult(a, b)); }
+function setResultRaw(a, b, res){   // res oriented to (a,b)
+  state.results[rkey(a,b)] = (a < b) ? cloneResult(res) : flipResult(res);
+}
+function setResult(a, b, sa, sb){ setResultRaw(a, b, [sa, sb]); }
 function clearResult(a, b){ delete state.results[rkey(a,b)]; }
 
 const norm = s => s.trim().toLowerCase();
@@ -938,17 +1059,21 @@ function autoAssignPools(){
 
 /* Standings for a set of players, using only results between them. */
 function computeStandings(players){
-  const rows = players.map(p => ({ p, m:0, w:0, d:0, l:0, sf:0, sa:0, pts:0 }));
+  const rows = players.map(p => ({ p, m:0, w:0, d:0, l:0, sf:0, sa:0, bf:0, ba:0, pts:0 }));
   const idx = {};
   rows.forEach(r => idx[r.p.id] = r);
   for (const k of Object.keys(state.results)){
     const [a, b] = k.split("_").map(Number);
     const ra = idx[a], rb = idx[b];
     if (!ra || !rb) continue;                    // ignore cross-pool / removed players
-    const [sa, sb] = state.results[k];
+    const raw = state.results[k];
+    if (!matchDecided(raw)) continue;            // half-entered matches don't count yet
+    const [sa, sb] = setsOf(raw);
     ra.m++; rb.m++;
     ra.sf += sa; ra.sa += sb;
     rb.sf += sb; rb.sa += sa;
+    const bp = ballsOf(raw);
+    if (bp){ ra.bf += bp[0]; ra.ba += bp[1]; rb.bf += bp[1]; rb.ba += bp[0]; }
     if (sa > sb){ ra.w++; rb.l++; }
     else if (sa < sb){ rb.w++; ra.l++; }
     else { ra.d++; rb.d++; }
@@ -956,11 +1081,13 @@ function computeStandings(players){
   rows.forEach(r => r.pts = r.w * 2 + r.d);
   rows.sort((x, y) => {
     if (y.pts !== x.pts) return y.pts - x.pts;
-    const h = getResult(x.p.id, y.p.id);          // head-to-head
+    const h = getSets(x.p.id, y.p.id);            // head-to-head
     if (h && h[0] !== h[1]) return h[1] - h[0];
     const dx = x.sf - x.sa, dy = y.sf - y.sa;
     if (dy !== dx) return dy - dx;
     if (y.sf !== x.sf) return y.sf - x.sf;
+    const bx = x.bf - x.ba, by = y.bf - y.ba;     // ball difference, when recorded
+    if (by !== bx) return by - bx;
     return x.p.name.localeCompare(y.p.name, "sv");
   });
   return rows;
@@ -971,7 +1098,7 @@ function poolComplete(i){
   if (ids.length < 2) return true;
   for (let a = 0; a < ids.length; a++)
     for (let b = a+1; b < ids.length; b++)
-      if (!getResult(ids[a], ids[b])) return false;
+      if (!matchDecided(getResult(ids[a], ids[b]))) return false;
   return true;
 }
 const allPoolsComplete = () => {
@@ -980,8 +1107,10 @@ const allPoolsComplete = () => {
 };
 
 /* Playoff results are keyed by slot, so they survive a re-seed. */
-function getF(key){ return state.fresults[key] ? state.fresults[key].slice() : null; }
+function getF(key){ return cloneResult(state.fresults[key]); }
+function getFSets(key){ return setsOf(getF(key)); }
 function setF(key, sa, sb){ state.fresults[key] = [sa, sb]; }
+function setFRaw(key, res){ state.fresults[key] = cloneResult(res); }
 function clearF(key){ delete state.fresults[key]; }
 
 /* ---- Playoff construction ----------------------------------------------
@@ -1043,7 +1172,8 @@ function buildBracket(field, name, pre, ready){
       if (bye) winner = top.live ? top.s : bot.s;       // walkover carries straight through
       else if (playable && top.s && bot.s && ready){
         const res = getF(key);
-        if (res && res[0] !== res[1]) winner = res[0] > res[1] ? top.s : bot.s;
+        const st = matchDecided(res, true) ? setsOf(res) : null;
+        if (st && st[0] !== st[1]) winner = st[0] > st[1] ? top.s : bot.s;
       }
       const rn = roundName(count, r);
       nodes.push({
@@ -1185,6 +1315,12 @@ function renderSetup(){
   document.querySelectorAll("#formatSeg button").forEach(b => {
     b.classList.toggle("sel", b.dataset.fmt === state.format);
   });
+  document.querySelectorAll("#scoringSeg button").forEach(b => {
+    b.classList.toggle("sel", b.dataset.sc === state.scoring);
+  });
+  $("scoringHint").textContent = state.scoring === "points"
+    ? "Poängen per set skrivs in och set, ställning och bollkvot räknas ut automatiskt. Fler tryck per match."
+    : "Snabbast: ett tryck per match. Ingen bollstatistik.";
   document.querySelectorAll("#poolSeg button").forEach(b => {
     b.classList.toggle("sel", +b.dataset.pools === state.pools);
     b.disabled = state.players.length && state.players.length < +b.dataset.pools * 2;
@@ -1346,8 +1482,12 @@ function renderGrid(){
         td.className = "cell";
         const r = getResult(p.id, q.id);
         if (r){
-          td.textContent = r[0] + "–" + r[1];
-          td.classList.add(resultClass(r[0], r[1]));
+          const st = setsOf(r);
+          td.textContent = st[0] + "–" + st[1];
+          td.classList.add(resultClass(st[0], st[1]));
+          if (!matchDecided(r)) td.classList.add("partial");
+          const bp = ballsOf(r);
+          if (bp) td.title = r.map(g => g[0] + "–" + g[1]).join(", ");
         } else {
           td.classList.add("empty");
         }
@@ -1373,7 +1513,7 @@ function renderRounds(){
   const r = rounds[state.round];
 
   $("rTitle").textContent = "Rond " + (state.round + 1) + " av " + rounds.length;
-  const done = r.filter(([a,b]) => a !== null && b !== null && getResult(a,b)).length;
+  const done = r.filter(([a,b]) => a !== null && b !== null && matchDecided(getResult(a,b))).length;
   const tot  = r.filter(([a,b]) => a !== null && b !== null).length;
   $("rSub").textContent = done + " av " + tot + " matcher klara";
   $("btnPrevR").disabled = state.round === 0;
@@ -1390,13 +1530,22 @@ function renderRounds(){
     } else {
       const pa = byId(a), pb = byId(b);
       const res = getResult(a, b);
+      const st = setsOf(res);
       div.className = "match";
       div.innerHTML =
         "<div class='side'></div>" +
-        "<div class='score" + (res ? " done" : "") + "'>" + (res ? res[0] + " – " + res[1] : "· – ·") + "</div>" +
+        "<div class='score" + (res ? " done" : "") + "'>" + (st ? st[0] + " – " + st[1] : "· – ·") + "</div>" +
         "<div class='side right'></div>";
       div.children[0].textContent = pa.name;
       div.children[2].textContent = pb.name;
+      const gm = res && ballsOf(res);
+      if (gm){                                  // show the set scores under the row
+        const sub = document.createElement("div");
+        sub.className = "setline";
+        sub.textContent = res.map(g => g[0] + "–" + g[1]).join("  ");
+        div.classList.add("hassets");
+        div.appendChild(sub);
+      }
       div.addEventListener("click", () => openModal(a, b));
     }
     list.appendChild(div);
@@ -1407,10 +1556,12 @@ function renderRounds(){
 function standingsTable(rows){
   const t = document.createElement("table");
   t.className = "stand";
+  const showBalls = state.scoring === "points";
   t.innerHTML =
     "<thead><tr><th></th><th>Spelare</th>" +
     "<th class='r'>M</th><th class='r'>V</th><th class='r'>O</th><th class='r'>F</th>" +
-    "<th class='r'>Set</th><th class='r'>P</th></tr></thead>";
+    "<th class='r'>Set</th>" + (showBalls ? "<th class='r'>Bollar</th>" : "") +
+    "<th class='r'>P</th></tr></thead>";
   const tb = document.createElement("tbody");
   rows.forEach((r, i) => {
     const tr = document.createElement("tr");
@@ -1424,6 +1575,7 @@ function standingsTable(rows){
       "<td class='r'>" + r.d + "</td>" +
       "<td class='r'>" + r.l + "</td>" +
       "<td class='r'>" + r.sf + "–" + r.sa + (diff ? " (" + (diff>0?"+":"") + diff + ")" : "") + "</td>" +
+      (showBalls ? "<td class='r'>" + r.bf + "–" + r.ba + "</td>" : "") +
       "<td class='r pts'>" + r.pts + "</td>";
     tr.children[1].textContent = r.p.name;
     tb.appendChild(tr);
@@ -1433,6 +1585,9 @@ function standingsTable(rows){
 }
 
 function renderStandings(){
+  $("standNote").textContent =
+    "Vinst 2 p · Oavgjort 1 p · Förlust 0 p. Vid lika poäng avgör inbördes möte, sedan setskillnad" +
+    (state.scoring === "points" ? ", vunna set och bollkvot." : " och vunna set.");
   const wrap = $("standWrap");
   wrap.innerHTML = "";
   if (state.pools === 1){
@@ -1494,13 +1649,14 @@ function waitingBanner(){
 function matchRow(node){
   const div = document.createElement("div");
   const res = getF(node.key);
+  const st = setsOf(res);
   const live = node.playable && node.top && node.bot && node.top.p && node.bot.p;
   div.className = "match" + (live ? "" : " locked");
   div.innerHTML =
     "<div class='medal'></div>" +
     "<div class='side'></div>" +
     "<div class='score" + (res ? " done" : "") + "'>" +
-      (res ? res[0] + " – " + res[1] : "· – ·") + "</div>" +
+      (st ? st[0] + " – " + st[1] : "· – ·") + "</div>" +
     "<div class='side right'></div>" +
     "<div class='tag' style='text-align:right'></div>";
   div.children[0].textContent = node.medal || "";
@@ -1509,6 +1665,14 @@ function matchRow(node){
   div.children[4].textContent = node.tag;
   if (slotPending(node.top)) div.children[1].style.color = "var(--muted)";
   if (slotPending(node.bot)) div.children[3].style.color = "var(--muted)";
+  const gm = res && ballsOf(res);
+  if (gm){
+    const sub = document.createElement("div");
+    sub.className = "setline";
+    sub.textContent = res.map(g => g[0] + "–" + g[1]).join("  ");
+    div.classList.add("hassets");
+    div.appendChild(sub);
+  }
   if (live) div.addEventListener("click", () => openModal(node.top.p.id, node.bot.p.id, node.key));
   return div;
 }
@@ -1575,7 +1739,7 @@ function renderBracket(){
     const ladder = document.createElement("div");
     ladder.className = "ladder";
     f.matches.forEach(m => {
-      const res = getF(m.key);
+      const res = setsOf(getF(m.key));
       let wTop = false, wBot = false;
       if (res && res[0] !== res[1]){ wTop = res[0] > res[1]; wBot = !wTop; }
       const card = document.createElement("div");
@@ -1629,7 +1793,7 @@ function renderBracket(){
           cells.appendChild(cell);
           return;
         }
-        const res = getF(n.key);
+        const res = setsOf(getF(n.key));
         let wTop = false, wBot = false;
         if (res && res[0] !== res[1]){ wTop = res[0] > res[1]; wBot = !wTop; }
         const live = n.top && n.bot && n.top.p && n.bot.p;
@@ -1672,32 +1836,47 @@ function renderBracket(){
 
 /* ---------------- Modal ---------------- */
 let modalA = null, modalB = null, modalKey = null;
+let modalSets = null, deuceMode = false;
 
 function openModal(a, b, fkey){
   modalA = a; modalB = b; modalKey = fkey || null;
+  modalSets = null; deuceMode = false;
+  const cur = modalKey ? getF(modalKey) : getResult(a, b);
+  if (state.scoring === "points") modalSets = (cur && isPoints(cur)) ? cloneResult(cur) : [];
+  renderModal();
+  $("overlay").classList.add("open");
+}
+
+function renderModal(){
+  const a = modalA, b = modalB;
   const pa = byId(a), pb = byId(b);
   $("mNameA").textContent = pa.name;
   $("mNameB").textContent = pb.name;
-  $("mSub").textContent = (modalKey ? "Slutspelsmatch – måste ha en vinnare · " : "") +
-    "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
-  const cur = modalKey ? getF(modalKey) : getResult(a, b);
   const box = $("mChoices");
   box.innerHTML = "";
+  if (state.scoring === "points") return renderPointsModal(pa, pb, box);
+  return renderSetsModal(pa, pb, box);
+}
+
+/* ---- one tap per match: pick the final set score ---- */
+function renderSetsModal(pa, pb, box){
+  const cur = modalKey ? getF(modalKey) : getResult(modalA, modalB);
+  $("mSub").textContent = (modalKey ? "Slutspelsmatch – måste ha en vinnare · " : "") +
+    "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
 
   const all = FORMATS[state.format].results;
   const margin = r => Math.abs(r[0] - r[1]);
   const aWins = all.filter(r => r[0] > r[1]).sort((x,y) => margin(y) - margin(x));
   const bWins = all.filter(r => r[0] < r[1]).sort((x,y) => margin(y) - margin(x));
-  const draws = modalKey ? [] : all.filter(r => r[0] === r[1]);   // no draws in a knockout
+  const draws = modalKey ? [] : all.filter(r => r[0] === r[1]);
 
   function makeBtn(sa, sb){
     const btn = document.createElement("button");
     btn.textContent = sa + " – " + sb;
     if (cur && cur[0] === sa && cur[1] === sb) btn.classList.add("sel");
     btn.addEventListener("click", () => {
-      if (modalKey) setF(modalKey, sa, sb); else setResult(a, b, sa, sb);
-      closeModal();
-      refresh(); store.save();
+      if (modalKey) setF(modalKey, sa, sb); else setResult(modalA, modalB, sa, sb);
+      closeModal(); refresh(); store.save();
     });
     return btn;
   }
@@ -1711,7 +1890,6 @@ function openModal(a, b, fkey){
     list.forEach(([sa, sb]) => col.appendChild(makeBtn(sa, sb)));
     return col;
   }
-
   box.appendChild(makeCol(pa.name, aWins));
   box.appendChild(makeCol(pb.name, bWins));
   draws.forEach(([sa, sb]) => {
@@ -1721,8 +1899,117 @@ function openModal(a, b, fkey){
     box.appendChild(btn);
   });
   $("btnClear").style.display = cur ? "" : "none";
-  $("overlay").classList.add("open");
 }
+
+/* ---- set by set: pick who won and how many the loser got ---- */
+const MAX_SETS = () =>
+  state.format === "bo5" ? 5
+  : state.format === "bo3" ? 3
+  : (modalKey ? 3 : 2);            // 2-set format, but a knockout needs a winner
+
+function pointsDone(sets){
+  const s = setsOf(sets.length ? sets : null) || [0, 0];
+  if (state.format === "sets2"){
+    if (!modalKey) return sets.length >= 2;          // 1–1 is a legal pool result
+    return sets.length >= 2 && s[0] !== s[1];        // play on until someone leads
+  }
+  return s[0] >= setsToWin() || s[1] >= setsToWin();
+}
+
+function commitPoints(){
+  if (modalKey) setFRaw(modalKey, modalSets);
+  else setResultRaw(modalA, modalB, modalSets);
+  store.save();
+}
+
+function renderPointsModal(pa, pb, box){
+  const done = pointsDone(modalSets);
+  const s = setsOf(modalSets.length ? modalSets : null) || [0, 0];
+  $("mSub").textContent = done
+    ? "Klart: " + s[0] + "–" + s[1] + " i set"
+    : "Set " + (modalSets.length + 1) + " av högst " + MAX_SETS() +
+      " · ställning " + s[0] + "–" + s[1];
+
+  /* sets entered so far — tap one to redo from there */
+  if (modalSets.length){
+    const strip = document.createElement("div");
+    strip.className = "setstrip";
+    modalSets.forEach((g, i) => {
+      const chip = document.createElement("button");
+      chip.className = "setchip" + (g[0] > g[1] ? " a" : " b");
+      chip.innerHTML = "<span class='n'>Set " + (i+1) + "</span>" + g[0] + "–" + g[1];
+      chip.title = "Tryck för att skriva om från och med det här setet";
+      chip.addEventListener("click", () => {
+        modalSets = modalSets.slice(0, i);       // redo this set and everything after
+        deuceMode = false;
+        commitPoints(); renderModal(); refresh();
+      });
+      strip.appendChild(chip);
+    });
+    box.appendChild(strip);
+  }
+
+  if (done){
+    const okBtn = document.createElement("button");
+    okBtn.className = "bigaction";
+    okBtn.style.gridColumn = "1 / -1";
+    okBtn.textContent = "Klar";
+    okBtn.addEventListener("click", () => { closeModal(); refresh(); });
+    box.appendChild(okBtn);
+    $("btnClear").style.display = "";
+    return;
+  }
+
+  /* the winner's score follows from the loser's: 11, or loser+2 in a deuce */
+  const pick = (winner, lose) => {
+    const win = lose <= 9 ? 11 : lose + 2;
+    modalSets.push(winner === 0 ? [win, lose] : [lose, win]);
+    deuceMode = false;
+    commitPoints();
+    if (pointsDone(modalSets)){ closeModal(); refresh(); }
+    else { renderModal(); refresh(); }
+  };
+
+  const grid = document.createElement("div");
+  grid.className = "pgrid";
+  [pa, pb].forEach((pl, side) => {
+    const half = document.createElement("div");
+    half.className = "phalf";
+    const h = document.createElement("div");
+    h.className = "colhead";
+    h.textContent = pl.name + " vann setet";
+    half.appendChild(h);
+    const cols = document.createElement("div");
+    cols.className = "pcols";
+    const losers = deuceMode ? [10,11,12,13,14] : [0,1,2,3,4,5,6,7,8,9];
+    const per = deuceMode ? 5 : 5;
+    for (let c = 0; c < losers.length / per; c++){
+      const col = document.createElement("div");
+      col.className = "pcol";
+      losers.slice(c*per, c*per+per).forEach(lose => {
+        const win = lose <= 9 ? 11 : lose + 2;
+        const btn = document.createElement("button");
+        btn.className = "pbtn";
+        btn.textContent = side === 0 ? win + "–" + lose : lose + "–" + win;
+        btn.addEventListener("click", () => pick(side, lose));
+        col.appendChild(btn);
+      });
+      cols.appendChild(col);
+    }
+    half.appendChild(cols);
+    grid.appendChild(half);
+  });
+  box.appendChild(grid);
+
+  const dz = document.createElement("button");
+  dz.className = "deucebtn";
+  dz.textContent = deuceMode ? "◀ Vanliga siffror" : "Förlängning (över 10–10)";
+  dz.addEventListener("click", () => { deuceMode = !deuceMode; renderModal(); });
+  box.appendChild(dz);
+
+  $("btnClear").style.display = modalSets.length ? "" : "none";
+}
+
 function closeModal(){ $("overlay").classList.remove("open"); }
 
 $("btnClear").addEventListener("click", () => {
@@ -1787,6 +2074,15 @@ $("formatSeg").addEventListener("click", e => {
   state.format = b.dataset.fmt;
   renderSetup(); store.save();
 });
+$("scoringSeg").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.dataset.sc === state.scoring) return;
+  if ((Object.keys(state.results).length || Object.keys(state.fresults).length) &&
+      !confirm("Byte av inmatningssätt rensar inskrivna resultat. Fortsätt?")) return;
+  state.scoring = b.dataset.sc;
+  state.results = {}; state.fresults = {};
+  renderSetup(); store.save();
+});
 $("poolSeg").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b || b.disabled) return;
@@ -1845,7 +2141,7 @@ $("btnEdit").addEventListener("click", () => {
 $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
   state = { phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
-            advance:state.advance,
+            advance:state.advance, scoring:state.scoring,
             players:[], results:{}, fresults:{}, nextId:1, round:0, view:"grid", pool:0 };
   refresh(); store.save();
 });
@@ -1937,6 +2233,7 @@ window.addEventListener("hashchange", () => {
     if (!state.pools) state.pools = 1;
     if (!state.finals) state.finals = "none";
     if (state.advance === undefined) state.advance = 2;
+    if (!state.scoring) state.scoring = "sets";
   }
   refresh();
   if (state.phase === "play") setView(state.view || "grid");
