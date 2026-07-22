@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Bergertavlan – Rundpool</title>
+<title>Matchprotokollet</title>
 <style>
   :root{
     --table:#0E5A9C;
@@ -54,17 +54,17 @@
     position:absolute; left:0; right:0; bottom:6px; height:3px;
     background:var(--line); opacity:.85;
   }
-  .brand{display:flex; align-items:baseline; gap:12px; flex:1; min-width:0;}
+  .brand{display:flex; align-items:baseline; gap:12px; flex:1; min-width:0; overflow:hidden;}
   .brand h1{
-    margin:0; font-size:26px; font-weight:800; letter-spacing:.5px;
-    white-space:nowrap;
+    margin:0; font-size:clamp(15px, 4.4vw, 26px); font-weight:800; letter-spacing:.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
   }
   .brand .ball{
     display:inline-block; width:16px; height:16px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #FFC069, var(--ball) 65%);
     box-shadow:0 1px 3px rgba(0,0,0,.4);
   }
-  .brand small{font-size:15px; opacity:.85; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .brand small{font-size:15px; opacity:.85; font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .hbtn{
     background:rgba(255,255,255,.14); color:#fff;
     border:2px solid rgba(255,255,255,.5);
@@ -80,7 +80,8 @@
     max-width:1400px; margin:0 auto;
   }
   .tab{
-    flex:1; min-height:64px;
+    flex:1 1 0; min-width:0; min-height:64px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     background:#E7E3D9; color:var(--muted);
     border-radius:var(--radius) var(--radius) 0 0;
     font-size:21px; font-weight:800; letter-spacing:.3px;
@@ -131,7 +132,7 @@
   .rosterhead button.on{background:#F3E1DE; color:var(--danger);}
   .chips{display:flex; flex-wrap:wrap; gap:10px;}
   .chip{
-    display:inline-flex; align-items:center; gap:8px;
+    display:inline-flex; align-items:center; gap:8px; max-width:100%;
     min-height:60px; padding:0 20px;
     border-radius:30px; border:2px solid var(--grid-line);
     background:#fff; color:var(--ink);
@@ -157,7 +158,7 @@
     display:flex; align-items:center; justify-content:center;
     font-size:18px; font-weight:800; flex:none;
   }
-  .plist .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .plist .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .plist button{
     width:60px; height:60px; border-radius:12px; flex:none;
     background:#ECD9D6; color:var(--danger); font-size:26px; font-weight:800;
@@ -224,7 +225,7 @@
     background:var(--table); color:#fff; font-size:30px; font-weight:900;
   }
   .roundnav button:disabled{opacity:.3;}
-  .roundnav .rlabel{flex:1; text-align:center; font-size:26px; font-weight:900;}
+  .roundnav .rlabel{flex:1; min-width:0; text-align:center; font-size:26px; font-weight:900;}
   .roundnav .rlabel small{display:block; font-size:16px; font-weight:600; color:var(--muted);}
   .match{
     display:flex; align-items:center; gap:12px;
@@ -233,7 +234,7 @@
     font-size:22px; font-weight:700;
   }
   .match:active{background:#E8EEF4;}
-  .match .side{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .match .side{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .match .side.right{text-align:right;}
   .match .score{
     min-width:110px; text-align:center;
@@ -366,7 +367,7 @@
     border-bottom:1px solid var(--grid-line);
   }
   .brow:last-child{border-bottom:none;}
-  .brow .bn{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .brow .bn{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .brow .bs{
     font-weight:900; font-size:19px; color:var(--muted);
     min-width:26px; text-align:right;
@@ -394,7 +395,7 @@
     font-size:19px; font-weight:700;
     border-top:1px solid var(--grid-line);
   }
-  .lrow .ln{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lrow .ln{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .lrow .ls{font-weight:900; color:var(--muted);}
   .lrow.won{background:var(--win-bg);}
   .lrow.won .ls{color:var(--win-fg);}
@@ -416,7 +417,7 @@
     display:flex; align-items:center; gap:14px; margin-bottom:6px;
   }
   .modal .vs .pname{
-    flex:1; font-size:24px; font-weight:900; text-align:center;
+    flex:1; min-width:0; font-size:24px; font-weight:900; text-align:center;
     overflow:hidden; text-overflow:ellipsis;
   }
   .modal .vs .vstxt{
@@ -467,12 +468,113 @@
   .footerbar button{
     min-height:58px; padding:0 20px; border-radius:var(--radius);
     font-size:17px; font-weight:800;
+    min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .btn-ghost{background:#E7E3D9; color:var(--ink);}
+  .narrow{display:none;}
   .btn-danger{background:#F3E1DE; color:var(--danger);}
-  @media (max-width:640px){
-    .brand h1{font-size:21px;}
-    table.berger td.name{min-width:140px; font-size:17px;}
+  /* ---------- Phones ----------
+     Fixed pixel widths are what push things off-screen, so the rules below
+     mostly relax them and let flex do the sharing. */
+  @media (max-width:760px){
+    body{font-size:17px;}
+    header{padding:10px 12px; gap:10px;}
+    .brand{gap:8px;}
+    .brand small{display:none;}                 /* the tabs already say where you are */
+    .hbtn{min-height:48px; min-width:48px; padding:0 12px; font-size:16px;}
+
+    nav{gap:4px; padding:10px 8px 0;}
+    .tab{min-height:54px; font-size:13px; padding:0 4px; letter-spacing:0;}
+    main{padding:0 8px 92px;}
+    .panel{padding:12px 10px;}
+
+    /* setup */
+    .setup{margin:12px auto;}
+    .setup h2{font-size:19px; margin:16px 0 8px;}
+    .seg{gap:8px;}
+    .seg button{min-width:calc(50% - 4px); min-height:66px; font-size:16px; padding:0 6px;}
+    .seg button small{font-size:12px;}
+    .addrow{gap:8px;}
+    .addrow input{font-size:18px; min-height:60px; padding:0 12px;}
+    .addrow button{min-width:96px; min-height:60px; font-size:17px;}
+    .plist li{font-size:17px; gap:8px; padding-left:12px;}
+    .plist .num{width:32px; height:32px; font-size:15px;}
+    .plist .poolpick{min-width:62px; height:52px; font-size:15px;}
+    .plist button{width:52px; height:52px; font-size:22px;}
+    .chip{min-height:52px; padding:0 14px; font-size:16px;}
+    .bigstart{min-height:72px; font-size:21px;}
+    .rosterhead h3{font-size:15px;}
+    .rosterhead button{min-height:44px; font-size:14px; padding:0 12px;}
+
+    /* board + rounds */
+    .poolbar{gap:8px; padding-top:10px;}
+    .poolbar button{min-height:52px; padding:0 16px; font-size:16px;}
+    table.berger td.name, table.berger thead th.corner{min-width:132px; font-size:15px; padding:0 8px;}
+    table.berger td.name .rownum{width:24px; height:24px; font-size:12px; margin-right:6px;}
+    table.berger thead th{min-width:56px; height:48px; font-size:16px;}
+    table.berger td.cell{min-width:56px; height:58px; font-size:17px;}
+    .gridwrap{max-height:calc(100vh - 250px);}
+
+    .roundnav{gap:8px; margin-bottom:12px;}
+    .roundnav button{min-width:58px; min-height:58px; font-size:24px;}
+    .roundnav .rlabel{font-size:19px;}
+    .roundnav .rlabel small{font-size:13px;}
+
+    .match{min-height:70px; font-size:16px; gap:8px; padding:8px 10px;}
+    .match .score{min-width:76px; font-size:18px; padding:8px 4px;}
+    .match .tag{display:none;}                  /* the section heading already names the round */
+    .match .medal{min-width:26px; font-size:19px;}
+
+    /* standings */
+    .secthead{margin:18px 0 8px;}
+    .secthead h3{font-size:18px;}
+    .secthead span{font-size:13px;}
+    table.stand th{font-size:12px; padding:6px 4px;}
+    table.stand td{font-size:15px; padding:10px 4px;}
+    table.stand td.pos{width:34px;}
+    table.stand td.pts{font-size:18px;}
+
+    /* playoff */
+    .banner{padding:12px 14px; font-size:16px;}
+    .banner strong{font-size:17px;}
+    .ladder{grid-template-columns:1fr;}
+    .bcol{min-width:196px; padding-right:22px;}
+    .bcell::after{right:-22px; width:22px;}
+    .bcell:nth-child(odd):not(:last-child)::before{right:-22px;}
+    .bmatch{min-height:92px;}
+    .brow{min-height:46px; font-size:16px; padding:0 10px;}
+    .byetag{font-size:11px; padding:4px 8px;}
+
+    /* modals */
+    .modal{padding:16px; border-radius:16px;}
+    .modal .vs .pname{font-size:19px;}
+    .modal .vs .vstxt{width:42px; height:42px; font-size:14px;}
+    .choices{gap:8px;}
+    .choices button{min-height:74px; font-size:27px;}
+    .choices .colhead{font-size:13px;}
+    .choices .drawbtn{min-height:64px; font-size:24px;}
+    .modalrow{gap:8px;}
+    .modalrow button{min-height:58px; font-size:16px;}
+
+    /* footer */
+    .footerbar{padding:8px; gap:8px;}
+    .footerbar button{flex:1 1 0; padding:0 6px; font-size:14px; min-height:52px;}
+    .wide{display:none;} .narrow{display:inline;}
+  }
+
+  /* very narrow phones */
+  @media (max-width:380px){
+    .tab{font-size:11.5px; padding:0 2px;}
+    .footerbar button{font-size:13px;}
+    .seg button{min-width:100%;}
+  }
+
+  /* landscape phone: keep vertical chrome small so the board still fits */
+  @media (max-height:520px) and (orientation:landscape){
+    header{padding:6px 12px;}
+    .tab{min-height:46px;}
+    .gridwrap{max-height:calc(100vh - 190px);}
+    .footerbar button{min-height:46px;}
   }
 </style>
 </head>
@@ -481,7 +583,7 @@
 <header>
   <div class="brand">
     <span class="ball"></span>
-    <h1>BERGERTAVLAN</h1>
+    <h1>MATCHPROTOKOLLET</h1>
     <small id="subTitle"></small>
   </div>
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
@@ -580,8 +682,8 @@
   </main>
   <div class="footerbar">
     <button class="btn-ghost" id="btnShare">Dela</button>
-    <button class="btn-ghost" id="btnEdit">Ändra spelare</button>
-    <button class="btn-danger" id="btnReset">Nollställ allt</button>
+    <button class="btn-ghost" id="btnEdit"><span class="wide">Ändra spelare</span><span class="narrow">Spelare</span></button>
+    <button class="btn-danger" id="btnReset"><span class="wide">Nollställ allt</span><span class="narrow">Nollställ</span></button>
   </div>
 </div>
 
@@ -623,7 +725,8 @@
 "use strict";
 
 /* ---------------- State & storage ---------------- */
-const KEY = "bergertavlan_v1";
+const KEY = "matchprotokollet_v1";
+const OLD_KEY = "bergertavlan_v1";        // pre-rename saves
 let state = {
   phase: "setup",          // setup | play
   format: "sets2",         // sets2 | bo3 | bo5
@@ -639,7 +742,8 @@ let state = {
   pool: 0                  // pool currently shown
 };
 
-const ROSTER_KEY = "bergertavlan_roster_v1";
+const ROSTER_KEY = "matchprotokollet_roster_v1";
+const OLD_ROSTER_KEY = "bergertavlan_roster_v1";
 let roster = [];              // remembered names, original casing preserved
 let rosterEditMode = false;
 
@@ -1798,10 +1902,20 @@ window.addEventListener("hashchange", () => {
 });
 
 (async function boot(){
-  const savedRoster = await kvLoad(ROSTER_KEY);
+  let savedRoster = await kvLoad(ROSTER_KEY);
+  let migrated = false;
+  if (!savedRoster){                                  // saved before the rename
+    savedRoster = await kvLoad(OLD_ROSTER_KEY);
+    if (savedRoster) migrated = true;
+  }
   if (Array.isArray(savedRoster)) roster = savedRoster.filter(x => typeof x === "string");
+  if (migrated) kvSave(ROSTER_KEY, roster);
 
-  const saved = await store.load();
+  let saved = await store.load();
+  if (!saved){
+    saved = await kvLoad(OLD_KEY);
+    if (saved) migrated = true;
+  }
   const code = location.hash.startsWith("#t=") ? location.hash.slice(3) : "";
   const localBusy = !!(saved && Array.isArray(saved.players) && saved.players.length);
   /* a link only asks before overwriting when it differs from what is stored */
@@ -1814,6 +1928,7 @@ window.addEventListener("hashchange", () => {
 
   if (saved && Array.isArray(saved.players)){
     state = Object.assign(state, saved);
+    if (migrated) store.save();                       // rewrite under the new key
     state.players.forEach(p => {
       rosterRemember(p.name);                              // backfill from an in-progress pool
       if (typeof p.pool !== "number") p.pool = 0;          // saves made before pools existed
