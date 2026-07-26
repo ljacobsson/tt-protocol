@@ -66,3 +66,21 @@ test("draft tournaments do not affect ranking until finalized", () => {
   const finalized = calculateRanking({a: "Ada", b: "Bo"}, [tournament]);
   assert.deepEqual(finalized.players.map(player => player.rating), [1010, 990]);
 });
+
+test("a decided pool match counts even if legacy data marked it unranked", () => {
+  const result = calculateRanking(
+    {a: "Ada", b: "Bo"},
+    [{
+      tournamentId: "pool",
+      playedAt: "2026-07-26",
+      status: "finalized",
+      matches: [{
+        matchId: "pool:1_2",
+        winnerId: "a",
+        loserId: "b",
+        ranked: false,
+      }],
+    }],
+  );
+  assert.deepEqual(result.players.map(player => player.rating), [1010, 990]);
+});

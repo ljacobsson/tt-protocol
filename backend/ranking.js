@@ -92,7 +92,9 @@ export function calculateRanking(players, tournaments) {
     const period = rankingPeriod(playedAt);
     if (!eventsByPeriod.has(period)) eventsByPeriod.set(period, []);
     for (const match of tournament.matches || []) {
-      if (match.ranked === false || match.draw) continue;
+      /* A played pool match counts when it has a winner. Only an actual draw
+         is excluded, even when the pool format permits a 1-1 result. */
+      if (match.draw) continue;
       const {winnerId, loserId} = match;
       if (!(winnerId in names) || !(loserId in names) || winnerId === loserId) continue;
       eventsByPeriod.get(period).push({

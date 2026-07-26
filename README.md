@@ -11,8 +11,8 @@ klubbar, flera tävlingar per klubb och beständig spelarranking.
   rankingen.
 - En krypterad DynamoDB-tabell med point-in-time recovery lagrar klubbmetadata,
   tävlingar och spelare. Varje klubb är en egen partition.
-- Klubbens administratörslänk innehåller ett slumpat klubb-id och en 256-bitars
-  hemlighet. Endast SHA-256-hashen av hemligheten lagras.
+- Klubbens administratörslänk innehåller ett slumpat 128-bitars klubb-id som
+  fungerar som länkelhemlighet. Äldre separata länktokens stöds fortsatt.
 
 ## Driftsättning
 
@@ -41,6 +41,15 @@ DynamoDB och tillägg eller borttagning synkas automatiskt, så samma sparade
 namn visas på alla enheter som använder klubbens administratörslänk. Utan
 klubblänk används fortsatt webbläsarens lokala namnlista.
 
+Klubbens baslänk öppnar en egen klubbsida i stället för en modal. Där visas
+pågående och tidigare tävlingar separat, avslutade tävlingar länkar direkt till
+sin publika slutresultatvy och klubbens spelare listas i rankingordning med
+aktuella poäng. En spelare kan öppnas för individuell statistik med antal
+rankingmatcher, vinster och förluster samt en matchlista som visar motståndare,
+tävling, datum och exakt rankingförändring. Om periodtaket ±250 påverkat den
+faktiska förändringen framgår det separat. Oavgjorda matcher visas i samma
+historik som **±0** och räknas i spelarens match- och oavgjortstatistik.
+
 När en backendansluten tävling delas skapas en publik, skrivskyddad länk med
 klubb- och tävlings-id. Länken innehåller aldrig administratörshemligheten.
 Varje omladdning hämtar tävlingens senaste resultat från API:t med cache
@@ -52,10 +61,22 @@ förvalt. Spelarna sorteras efter ranking och fördelas snake-vis över poolerna
 klubbspelare räknas som 1000 poäng. Checkboxen kan stängas av och
 poolplaceringarna kan alltid justeras manuellt.
 
+En färdig lokal tävling kan flyttas in i en klubb via **Importera tävling** i
+klubbportalen. Använd den lokala tävlingens vanliga delningslänk och ange namn
+och speldatum. Importen matchar befintliga klubbspelare via namn, återskapar
+rankinggrundande pool- och slutspelsmatcher, sparar tävlingen som avslutad och
+räknar om klubbens ranking omedelbart.
+
+Avslutade tävlingar får fliken **Slutresultat** i både administratörs- och
+publik vy. Cupförlorare som åker ut i samma omgång delar placering (till
+exempel delad tredjeplats för semifinalförlorarna), och nästa platsnummer
+hoppas över enligt competition-ranking. Poolresultat med helt lika
+skiljekriterier visas också som delade placeringar.
+
 ## API
 
-Alla klubb-anrop utom skapandet använder
-`Authorization: Bearer <hemligheten-från-klubblänken>`.
+Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
+Äldre länkar med en separat token stöds fortsatt.
 
 - `POST /clubs`
 - `GET /clubs/{clubId}`
@@ -77,8 +98,8 @@ Alla spelare börjar på 1000 poäng. Beräkningen följer SBTF:s poängtabell:
 vinnaren får plus och förloraren lika mycket minus beroende på skillnaden vid
 rankingperiodens början. SM/RM/DM ger 1,5 gånger poängen (avrundat nedåt),
 WO begränsas till 10 poäng och periodförändringen begränsas till ±250.
-Matcher som kan sluta oavgjort rankas inte; därför är poolspelets format
-**2 set** inte rankinggrundande, medan dess avgjorda slutspelsmatcher är det.
+Faktiskt oavgjorda matcher rankas inte. En avgjord poolmatch, exempelvis 2–0,
+är rankinggrundande även när poolformatet också tillåter resultatet 1–1.
 
 Rankingperioden avgränsas av månadens första måndag, eller nästa vardag när
 dagen är en svensk helgdag. SBTF:s årliga normalisering och inaktivitetsregler

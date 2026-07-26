@@ -56,6 +56,8 @@ async function authorize(event, clubId) {
     ConsistentRead: true,
   }));
   if (!meta || !token) return null;
+  /* The unguessable club id is also the credential for the canonical link. */
+  if (token === clubId) return meta;
   const actual = Buffer.from(meta.tokenHash, "hex");
   const supplied = Buffer.from(tokenHash(token), "hex");
   return actual.length === supplied.length && crypto.timingSafeEqual(actual, supplied)
@@ -90,12 +92,103 @@ function publicClub(items) {
   const savedNames = Object.hasOwn(meta, "savedNames")
     ? meta.savedNames
     : players.map(player => player.name);
+  const names = Object.fromEntries(players.map(player => [player.playerId, player.name]));
+  const ranking = calculateRanking(names, tournaments);
+  const tournamentById = Object.fromEntries(
+    tournaments.map(tournament => [tournament.tournamentId, tournament]),
+  );
+  const playerDetails = Object.fromEntries(ranking.players.map(player => [
+    player.playerId,
+    {
+      ...player,
+      matches: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      totalChange: player.rating - START_RATING,
+      rankingMatches: [],
+      periods: [],
+    },
+  ]));
+  for (const period of ranking.periods) {
+    for (const [playerId, change] of Object.entries(period.changes)) {
+      if (playerDetails[playerId]) {
+        playerDetails[playerId].periods.push({period: period.period, change});
+      }
+    }
+    for (const match of period.matches) {
+      const tournament = tournamentById[match.tournamentId] || {};
+      const winner = playerDetails[match.winnerId];
+      const loser = playerDetails[match.loserId];
+      if (winner && loser) {
+        winner.matches++;
+        winner.wins++;
+        loser.matches++;
+        loser.losses++;
+        winner.rankingMatches.push({
+          matchId: match.matchId,
+          tournamentId: match.tournamentId,
+          tournamentName: tournament.name || "Tävling",
+          playedAt: tournament.playedAt,
+          period: period.period,
+          opponentId: loser.playerId,
+          opponentName: loser.name,
+          outcome: "win",
+          change: match.points,
+        });
+        loser.rankingMatches.push({
+          matchId: match.matchId,
+          tournamentId: match.tournamentId,
+          tournamentName: tournament.name || "Tävling",
+          playedAt: tournament.playedAt,
+          period: period.period,
+          opponentId: winner.playerId,
+          opponentName: winner.name,
+          outcome: "loss",
+          change: -match.points,
+        });
+      }
+    }
+  }
+  for (const tournament of tournaments.filter(item => item.status === "finalized")) {
+    for (const match of tournament.matches || []) {
+      if (!match.draw) continue;
+      const playerA = playerDetails[match.playerAId];
+      const playerB = playerDetails[match.playerBId];
+      if (!playerA || !playerB) continue;
+      playerA.matches++;
+      playerA.draws++;
+      playerB.matches++;
+      playerB.draws++;
+      playerA.rankingMatches.push({
+        matchId: match.matchId,
+        tournamentId: tournament.tournamentId,
+        tournamentName: tournament.name,
+        playedAt: tournament.playedAt,
+        opponentId: playerB.playerId,
+        opponentName: playerB.name,
+        outcome: "draw",
+        change: 0,
+      });
+      playerB.rankingMatches.push({
+        matchId: match.matchId,
+        tournamentId: tournament.tournamentId,
+        tournamentName: tournament.name,
+        playedAt: tournament.playedAt,
+        opponentId: playerA.playerId,
+        opponentName: playerA.name,
+        outcome: "draw",
+        change: 0,
+      });
+    }
+  }
   return {
     clubId: meta.clubId,
     name: meta.name,
     createdAt: meta.createdAt,
     savedNames,
     players,
+    playerDetails,
     tournaments,
   };
 }
@@ -113,15 +206,41 @@ function normalizeTournament(payload, tournamentId, existing = {}) {
   const status = payload.status || existing.status || "draft";
   if (!["draft", "finalized"].includes(status)) throw new Error("Ogiltig tävlingsstatus");
   const timestamp = now();
+  const state = structuredClone(payload.state || {});
+  const matches = structuredClone(payload.matches || []);
+  const knownMatchIds = new Set(matches.map(match => match.matchId));
+  const playerByLocalId = Object.fromEntries(
+    (state.players || []).map(player => [String(player.id), player]),
+  );
+  for (const [key, result] of Object.entries(state.results || {})) {
+    const sets = Array.isArray(result?.[0])
+      ? result.reduce(([a, b], set) => [
+          a + (set[0] > set[1] ? 1 : 0),
+          b + (set[1] > set[0] ? 1 : 0),
+        ], [0, 0])
+      : result;
+    const matchId = `pool:${key}`;
+    if (!sets || sets[0] !== sets[1] || knownMatchIds.has(matchId)) continue;
+    const [a, b] = key.split("_");
+    const playerA = playerByLocalId[a], playerB = playerByLocalId[b];
+    if (!playerA?.clubPlayerId || !playerB?.clubPlayerId) continue;
+    matches.push({
+      matchId,
+      playerAId: playerA.clubPlayerId,
+      playerBId: playerB.clubPlayerId,
+      draw: true,
+      ranked: false,
+    });
+  }
   return {
     tournamentId,
     name,
     playedAt,
     type,
     status,
-    state: structuredClone(payload.state || {}),
+    state,
     participants: structuredClone(payload.participants || []),
-    matches: structuredClone(payload.matches || []),
+    matches,
     createdAt: existing.createdAt || timestamp,
     updatedAt: timestamp,
   };
