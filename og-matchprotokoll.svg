@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#07375f"/>
+      <stop offset="1" stop-color="#1475be"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#052c4b" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1080" cy="80" r="220" fill="#ff8a00" opacity=".13"/>
+  <circle cx="70" cy="67" r="13" fill="#ff8a00"/>
+  <text x="96" y="78" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="700">Matchprotokoll by Pingis.net</text>
+  <text x="70" y="220" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="70" font-weight="800">Spela mer.</text>
+  <text x="70" y="300" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="58" font-weight="800">Administrera mindre.</text>
+  <text x="72" y="362" fill="#dcecf8" font-family="Arial,Helvetica,sans-serif" font-size="28">Poolspel, slutspel, live-resultat och ranking.</text>
+  <rect x="70" y="412" width="350" height="62" rx="15" fill="#ff8a00"/>
+  <text x="245" y="452" fill="#fff" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700">Ingen registrering</text>
+  <g filter="url(#shadow)">
+    <rect x="690" y="140" width="430" height="360" rx="24" fill="#f4f7f9"/>
+    <text x="720" y="185" fill="#17202a" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700">Solvikens BTK · A-slutspel</text>
+    <rect x="720" y="225" width="180" height="88" rx="12" fill="#fff" stroke="#c9d2da" stroke-width="2"/>
+    <rect x="720" y="340" width="180" height="88" rx="12" fill="#fff" stroke="#c9d2da" stroke-width="2"/>
+    <rect x="940" y="282" width="150" height="88" rx="12" fill="#fff0dc" stroke="#ff8a00" stroke-width="2"/>
+    <path d="M900 269h20v115h20M920 326h20" fill="none" stroke="#aebdca" stroke-width="3"/>
+    <text x="738" y="257" fill="#155f34" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">Alva Lind</text>
+    <text x="876" y="257" fill="#155f34" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">2</text>
+    <text x="738" y="293" fill="#526879" font-family="Arial,Helvetica,sans-serif" font-size="17">Elias Holm</text>
+    <text x="876" y="293" fill="#526879" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17">0</text>
+    <text x="738" y="372" fill="#526879" font-family="Arial,Helvetica,sans-serif" font-size="17">Mira Sjö</text>
+    <text x="876" y="372" fill="#526879" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17">1</text>
+    <text x="738" y="408" fill="#155f34" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">Noah Berg</text>
+    <text x="876" y="408" fill="#155f34" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">2</text>
+    <text x="958" y="317" fill="#8f4800" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">Alva Lind</text>
+    <text x="1070" y="317" fill="#8f4800" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">2</text>
+    <text x="958" y="353" fill="#526879" font-family="Arial,Helvetica,sans-serif" font-size="17">Noah Berg</text>
+    <text x="1070" y="353" fill="#526879" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="17">1</text>
+  </g>
+</svg>
