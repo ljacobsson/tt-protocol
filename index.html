@@ -898,6 +898,7 @@ let clubSession = null;    // {clubId, token, name, tournaments, players}
 let publicSession = null;  // read-only backend tournament
 let activeTournament = null;
 let remoteSaveTimer = null;
+let clubRosterSaveTimer = null;
 const API_BASE = (window.MATCHPROTOKOLLET_API || "").replace(/\/$/, "");
 const playerUuid = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() :
   Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -1173,10 +1174,12 @@ function rosterRemember(name){
   roster.push(name.trim());
   roster.sort((a,b) => a.localeCompare(b, "sv", {sensitivity:"base"}));
   kvSave(ROSTER_KEY, roster);
+  scheduleClubRosterSave();
 }
 function rosterForget(name){
   roster = roster.filter(r => norm(r) !== norm(name));
   kvSave(ROSTER_KEY, roster);
+  scheduleClubRosterSave();
 }
 
 const FORMATS = {
@@ -2303,6 +2306,25 @@ async function saveRemoteTournament(){
   renderClubPortal();
 }
 
+function scheduleClubRosterSave(){
+  if (!clubSession || !API_BASE) return;
+  clearTimeout(clubRosterSaveTimer);
+  clubRosterSaveTimer = setTimeout(async () => {
+    try{
+      const data = await api(
+        "/clubs/" + clubSession.clubId + "/saved-names",
+        {method:"PUT", body:JSON.stringify({names:roster})}
+      );
+      roster = data.savedNames;
+      clubSession.savedNames = data.savedNames;
+      kvSave(ROSTER_KEY, roster);
+    }catch(error){
+      $("clubStatus").textContent = "Kunde inte spara namnlistan: " + error.message;
+      $("clubStatus").style.color = "var(--danger)";
+    }
+  }, 400);
+}
+
 function blankTournamentState(){
   return {
     phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
@@ -2370,7 +2392,11 @@ async function loadClubFromLink(){
   try{
     const data = await api("/clubs/" + clubId, {method:"GET"});
     clubSession = Object.assign(data, {token});
-    data.players.forEach(player => rosterRemember(player.name));
+    const hasBackendNames = Array.isArray(data.savedNames);
+    const backendNames = hasBackendNames ? data.savedNames : data.players.map(player => player.name);
+    roster = backendNames.slice().sort((a,b) => a.localeCompare(b, "sv", {sensitivity:"base"}));
+    kvSave(ROSTER_KEY, roster);
+    if (!hasBackendNames) scheduleClubRosterSave();
     renderClubPortal();
     if (data.tournaments.length) openTournament(data.tournaments[0]);
     return true;
@@ -2428,19 +2454,34 @@ $("btnCreateClub").addEventListener("click", async () => {
   try{
     const data = await api("/clubs", {method:"POST", body:JSON.stringify({name})});
     clubSession = {
-      clubId:data.clubId, token:data.accessToken, name:data.name, tournaments:[], players:[]
+      clubId:data.clubId, token:data.accessToken, name:data.name,
+      tournaments:[], players:[], savedNames:[]
     };
     localStorage.setItem("matchprotokollet_club_token_" + data.clubId, data.accessToken);
     history.replaceState(null, "", "?club=" + encodeURIComponent(data.clubId) +
       "#clubToken=" + encodeURIComponent(data.accessToken));
     $("clubStatus").textContent = "Klubben är skapad. Spara klubblänken.";
     renderClubPortal();
+    scheduleClubRosterSave();
   }catch(error){
     $("clubStatus").textContent = error.message;
     $("clubStatus").style.color = "var(--danger)";
   }
 });
-$("btnNewTournament").addEventListener("click", () => {
+$("btnNewTournament").addEventListener("click", async () => {
+  if (activeTournament){
+    clearTimeout(remoteSaveTimer);
+    $("clubStatus").textContent = "Sparar föregående tävling…";
+    try{
+      remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+      await remoteSaveChain;
+    }catch(error){
+      remoteSaveChain = Promise.resolve();
+      $("clubStatus").textContent = "Kunde inte spara föregående tävling: " + error.message;
+      $("clubStatus").style.color = "var(--danger)";
+      return;
+    }
+  }
   $("tournamentName").value = "";
   $("tournamentDate").value = new Date().toISOString().slice(0,10);
   $("tournamentError").textContent = "";

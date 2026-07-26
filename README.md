@@ -36,6 +36,11 @@ API-adressen är tom fungerar appen i sitt tidigare lokala läge. Knappen
 **Klubb** skapar en klubb och visar dess unika länk. Via samma dialog går det
 att skapa och öppna flera tävlingar samt se klubbens ranking.
 
+Namnchipsen är klubbdata när appen öppnas via en klubblänk. Listan läses från
+DynamoDB och tillägg eller borttagning synkas automatiskt, så samma sparade
+namn visas på alla enheter som använder klubbens administratörslänk. Utan
+klubblänk används fortsatt webbläsarens lokala namnlista.
+
 När en backendansluten tävling delas skapas en publik, skrivskyddad länk med
 klubb- och tävlings-id. Länken innehåller aldrig administratörshemligheten.
 Varje omladdning hämtar tävlingens senaste resultat från API:t med cache
@@ -54,6 +59,7 @@ Alla klubb-anrop utom skapandet använder
 
 - `POST /clubs`
 - `GET /clubs/{clubId}`
+- `PUT /clubs/{clubId}/saved-names`
 - `GET /clubs/{clubId}/tournaments/{tournamentId}/public` (ingen hemlighet krävs)
 - `POST /clubs/{clubId}/tournaments`
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}`

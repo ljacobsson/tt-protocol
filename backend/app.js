@@ -10,6 +10,7 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 import {START_RATING, calculateRanking} from "./ranking.js";
@@ -86,10 +87,14 @@ function publicClub(items) {
     .filter(item => item.SK.startsWith("PLAYER#"))
     .map(withoutKeys)
     .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name, "sv"));
+  const savedNames = Object.hasOwn(meta, "savedNames")
+    ? meta.savedNames
+    : players.map(player => player.name);
   return {
     clubId: meta.clubId,
     name: meta.name,
     createdAt: meta.createdAt,
+    savedNames,
     players,
     tournaments,
   };
@@ -204,6 +209,7 @@ export async function handler(event) {
           clubId,
           name,
           tokenHash: tokenHash(token),
+          savedNames: [],
           createdAt: now(),
         },
         ConditionExpression: "attribute_not_exists(PK)",
@@ -245,6 +251,28 @@ export async function handler(event) {
     if (resource === "/clubs/{clubId}" && method === "GET") {
       return response(200, publicClub(await queryClub(clubId)));
     }
+    if (resource === "/clubs/{clubId}/saved-names" && method === "PUT") {
+      const input = bodyOf(event).names;
+      if (!Array.isArray(input)) return response(400, {message: "Ogiltig namnlista"});
+      const seen = new Set();
+      const names = [];
+      for (const value of input.slice(0, 200)) {
+        const name = String(value).replace(/[\t\r\n]+/g, " ").trim().slice(0, 80);
+        const key = name.toLocaleLowerCase("sv");
+        if (name && !seen.has(key)) {
+          seen.add(key);
+          names.push(name);
+        }
+      }
+      names.sort((a, b) => a.localeCompare(b, "sv", {sensitivity: "base"}));
+      await db.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {PK: clubPk(clubId), SK: "META"},
+        UpdateExpression: "SET savedNames = :names, updatedAt = :updatedAt",
+        ExpressionAttributeValues: {":names": names, ":updatedAt": now()},
+      }));
+      return response(200, {savedNames: names});
+    }
     if (resource === "/clubs/{clubId}/tournaments" && method === "POST") {
       return response(201, await saveTournament(clubId, bodyOf(event)));
     }
@@ -268,6 +296,7 @@ export async function handler(event) {
       "Ogiltigt speldatum",
       "Ogiltig tävlingstyp",
       "Ogiltig tävlingsstatus",
+      "Ogiltig namnlista",
     ].includes(error.message)) {
       return response(400, {message: error.message});
     }

@@ -59,6 +59,9 @@ Resources:
         GetClub:
           Type: Api
           Properties: {Path: "/clubs/{clubId}", Method: GET}
+        SaveClubNames:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/saved-names", Method: PUT}
         GetPublicTournament:
           Type: Api
           Properties:
