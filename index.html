@@ -555,7 +555,8 @@
     border-radius:50%; background:#fff; color:var(--table-dark); font-size:12px;
   }
   .landingerror{min-height:24px; margin:9px 4px 0; color:#FFD2C8; font-size:15px; font-weight:700;}
-  .nopass{display:flex; flex-wrap:wrap; gap:18px; margin-top:10px; font-size:14px; color:rgba(255,255,255,.8);}
+  .landingerror:empty{display:none;}
+  .nopass{display:flex; flex-wrap:wrap; gap:18px; margin-top:14px; font-size:14px; color:rgba(255,255,255,.8);}
   .nopass span::before{content:"✓"; color:#8EE5A7; font-weight:900; margin-right:6px;}
   .productcard{
     position:relative; padding:18px; border-radius:26px; color:var(--ink);
@@ -678,7 +679,6 @@
   .landingcta h3{margin:0 0 10px; font-size:clamp(30px,5vw,48px);}
   .landingcta p{margin:0 0 24px; color:rgba(255,255,255,.82);}
   .landingcta button{min-height:62px; padding:0 28px; border-radius:12px; background:var(--ball); color:#fff; font-size:18px; font-weight:900;}
-  .locallink{display:block; margin:20px auto 0; background:transparent; color:rgba(255,255,255,.78); text-decoration:underline; font-size:14px;}
   .demooverlay{
     position:fixed; inset:0; z-index:1000; display:flex;
     align-items:center; justify-content:center; background:#02070b;
@@ -3948,9 +3948,6 @@ document.addEventListener("keydown", event => {
 $("btnLandingCreateBottom").addEventListener("click", () => {
   $("landingClubName").scrollIntoView({behavior:"smooth", block:"center"});
   setTimeout(() => $("landingClubName").focus(), 350);
-});
-$("btnOpenLocal").addEventListener("click", () => {
-  location.href = location.pathname + "?local=1";
 });
 $("btnNewTournament").addEventListener("click", async () => {
   if (activeTournament){
