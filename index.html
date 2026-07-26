@@ -514,6 +514,41 @@
   }
   .featurecard h4{margin:18px 0 8px; font-size:22px;}
   .featurecard p{margin:0; color:var(--muted); line-height:1.55;}
+  .bracketgallery{display:grid; grid-template-columns:1.12fr .88fr; gap:22px;}
+  .appscreenshot{
+    overflow:hidden; border:1px solid #dbe3e9; border-radius:22px; background:#f7f8f9;
+    box-shadow:0 20px 46px rgba(13,48,75,.13);
+  }
+  .screenshotbar{
+    display:flex; align-items:center; gap:7px; min-height:46px; padding:0 16px;
+    border-bottom:1px solid #dbe3e9; background:#fff;
+  }
+  .screenshotbar i{width:9px; height:9px; border-radius:50%; background:#dce3e8;}
+  .screenshotbar i:first-child{background:#ff8a00;}
+  .screenshotbar strong{margin-left:6px; color:#526879; font-size:13px;}
+  .shotbody{padding:20px; background:linear-gradient(180deg,#f8fafb,#eef2f4);}
+  .shothead{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:15px;}
+  .shothead h4{margin:0; font-size:19px;}
+  .shotlive{
+    padding:5px 9px; border-radius:999px; background:#dff3e4;
+    color:#16723b; font-size:11px; font-weight:900;
+  }
+  .minibracket{display:grid; grid-template-columns:1fr 24px 1fr; align-items:center; gap:0;}
+  .miniround{display:flex; flex-direction:column; gap:10px;}
+  .miniround.final{justify-content:center;}
+  .miniconnect{height:52%; border-top:2px solid #bdcbd5; border-bottom:2px solid #bdcbd5; border-right:2px solid #bdcbd5;}
+  .minimatch{overflow:hidden; border:1px solid #d4dee5; border-radius:10px; background:#fff;}
+  .miniplayer{display:flex; justify-content:space-between; gap:8px; padding:8px 10px; font-size:12px; font-weight:750;}
+  .miniplayer + .miniplayer{border-top:1px solid #e4e9ed;}
+  .miniplayer.winner{background:#e6f5ea; color:#155f34; font-weight:900;}
+  .miniplayer.champion{background:#fff0dc; color:#8f4800;}
+  .miniroundlabel{
+    margin-bottom:7px; color:#718595; text-align:center;
+    font-size:10px; font-weight:900; letter-spacing:.7px; text-transform:uppercase;
+  }
+  .shotcaption{padding:18px 20px 20px; background:#fff;}
+  .shotcaption strong{display:block; margin-bottom:5px; font-size:17px;}
+  .shotcaption p{margin:0; color:var(--muted); font-size:14px; line-height:1.45;}
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:0; counter-reset:step;}
   .step{position:relative; padding:22px 34px 22px 0; counter-increment:step;}
   .step::before{
@@ -536,7 +571,7 @@
   @media (max-width:850px){
     .herogrid{grid-template-columns:1fr; gap:42px;}
     .productcard{max-width:560px; transform:none;}
-    .featuregrid,.steps{grid-template-columns:1fr;}
+    .featuregrid,.steps,.bracketgallery{grid-template-columns:1fr;}
     .step:not(:last-child)::after{display:none;}
   }
   @media (max-width:560px){
@@ -979,6 +1014,87 @@
         <div class="featureicon">⌁</div>
         <h4>Smart seedning</h4>
         <p>Sprid topprankade spelare mellan poolerna och få jämnare, roligare tävlingar automatiskt.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="landingsection" style="padding-top:20px;">
+    <div class="sectionintro">
+      <span class="kicker">Tävlingen i ett ögonkast</span>
+      <h3>Slutspelet som alla kan följa</h3>
+      <p>Tydliga slutspelsträd visar vägen från första utslagsmatchen till vinnaren – live på alla skärmar.</p>
+    </div>
+    <div class="bracketgallery">
+      <article class="appscreenshot" aria-label="Exempel på A-slutspel">
+        <div class="screenshotbar"><i></i><i></i><i></i><strong>Solvikens BTK · Sommarcup</strong></div>
+        <div class="shotbody">
+          <div class="shothead"><h4>A-slutspel</h4><span class="shotlive">● LIVE</span></div>
+          <div class="minibracket">
+            <div>
+              <div class="miniroundlabel">Semifinal</div>
+              <div class="miniround">
+                <div class="minimatch">
+                  <div class="miniplayer winner"><span>Alva Lind</span><b>2</b></div>
+                  <div class="miniplayer"><span>Elias Holm</span><b>0</b></div>
+                </div>
+                <div class="minimatch">
+                  <div class="miniplayer"><span>Mira Sjö</span><b>1</b></div>
+                  <div class="miniplayer winner"><span>Noah Berg</span><b>2</b></div>
+                </div>
+              </div>
+            </div>
+            <div class="miniconnect"></div>
+            <div>
+              <div class="miniroundlabel">Final</div>
+              <div class="miniround final">
+                <div class="minimatch">
+                  <div class="miniplayer champion"><span>Alva Lind</span><b>2</b></div>
+                  <div class="miniplayer"><span>Noah Berg</span><b>1</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="shotcaption">
+          <strong>Vägen till guldet</strong>
+          <p>Vinnare, resultat och nästa match uppdateras direkt när ett resultat sparas.</p>
+        </div>
+      </article>
+
+      <article class="appscreenshot" aria-label="Exempel på B-slutspel">
+        <div class="screenshotbar"><i></i><i></i><i></i><strong>Solvikens BTK · Sommarcup</strong></div>
+        <div class="shotbody">
+          <div class="shothead"><h4>B-slutspel</h4><span class="shotlive">● LIVE</span></div>
+          <div class="minibracket">
+            <div>
+              <div class="miniroundlabel">Semifinal</div>
+              <div class="miniround">
+                <div class="minimatch">
+                  <div class="miniplayer winner"><span>Vera Ek</span><b>2</b></div>
+                  <div class="miniplayer"><span>Leo Falk</span><b>1</b></div>
+                </div>
+                <div class="minimatch">
+                  <div class="miniplayer winner"><span>Olle Vik</span><b>2</b></div>
+                  <div class="miniplayer"><span>Elsa Borg</span><b>0</b></div>
+                </div>
+              </div>
+            </div>
+            <div class="miniconnect"></div>
+            <div>
+              <div class="miniroundlabel">Final</div>
+              <div class="miniround final">
+                <div class="minimatch">
+                  <div class="miniplayer"><span>Vera Ek</span><b>0</b></div>
+                  <div class="miniplayer champion"><span>Olle Vik</span><b>2</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="shotcaption">
+          <strong>Fler får spela vidare</strong>
+          <p>Separata A- och B-slutspel ger jämnare matcher och en roligare tävlingsdag.</p>
+        </div>
       </article>
     </div>
   </section>
