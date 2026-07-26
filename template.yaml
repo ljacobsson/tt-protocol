@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Matchprotokollet club, tournament and ranking API
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: Frontend origin allowed by CORS
+
+Globals:
+  Function:
+    Runtime: nodejs24.x
+    Architectures: [arm64]
+    Timeout: 15
+    MemorySize: 256
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref MatchProtocolTable
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: !Sub "'${AllowedOrigin}'"
+
+Resources:
+  MatchProtocolTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: app.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MatchProtocolTable
+      Events:
+        CreateClub:
+          Type: Api
+          Properties: {Path: "/clubs", Method: POST}
+        GetClub:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}", Method: GET}
+        GetPublicTournament:
+          Type: Api
+          Properties:
+            Path: "/clubs/{clubId}/tournaments/{tournamentId}/public"
+            Method: GET
+        CreateTournament:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/tournaments", Method: POST}
+        UpdateTournament:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/tournaments/{tournamentId}", Method: PUT}
+        DeleteTournament:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/tournaments/{tournamentId}", Method: DELETE}
+
+Outputs:
+  ApiUrl:
+    Description: Set this as window.MATCHPROTOKOLLET_API in config.js
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod"
+  TableName:
+    Value: !Ref MatchProtocolTable

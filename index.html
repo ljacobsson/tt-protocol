@@ -73,6 +73,38 @@
     font-size:18px; font-weight:700;
   }
   .hbtn:active{background:rgba(255,255,255,.3);}
+  .clubbtn{max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .clubstatus{font-size:16px; color:var(--muted); min-height:24px;}
+  .clublist{display:grid; gap:8px; margin:14px 0; max-height:42vh; overflow:auto;}
+  .clubitem{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    padding:12px 14px; border-radius:12px; background:#EEF1F4; color:var(--ink);
+    font-size:17px; font-weight:700;
+  }
+  .clubitem span{flex:1;}
+  .clubitem small{color:var(--muted); font-weight:600;}
+  .rankingrow{display:grid; grid-template-columns:42px 1fr auto; gap:10px; padding:8px 4px; border-bottom:1px solid var(--grid-line);}
+  .rankingrow strong:last-child{color:var(--table);}
+  body.viewer .cell, body.viewer .match:not(.bye), body.viewer .lcard,
+  body.viewer #viewSetup button, body.viewer #viewSetup input{pointer-events:none;}
+  .viewerbadge{
+    background:#FFF3E3; color:#8A4D00; border-radius:999px;
+    padding:6px 12px; font-size:14px; font-weight:900;
+  }
+  .formfield{display:grid; gap:6px; margin:14px 0;}
+  .formfield label{font-size:16px; font-weight:800; color:var(--muted);}
+  .formfield input{
+    width:100%; min-height:60px; padding:0 14px; border:2px solid var(--grid-line);
+    border-radius:12px; font:inherit; font-size:19px;
+  }
+  .checkrow{
+    display:flex; align-items:center; gap:12px; margin:12px 0 4px;
+    padding:14px 16px; border-radius:12px; background:#EEF1F4;
+    font-size:18px; font-weight:800; cursor:pointer;
+  }
+  .checkrow input{width:24px; height:24px; accent-color:var(--table); flex:none;}
+  .checkrow span{display:block;}
+  .checkrow small{display:block; color:var(--muted); font-size:14px; font-weight:600;}
 
   /* ---------- Tabs ---------- */
   nav{
@@ -626,6 +658,7 @@
     <h1>MATCHPROTOKOLLET</h1>
     <small id="subTitle"></small>
   </div>
+  <button class="hbtn clubbtn" id="btnClub">Klubb</button>
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
 </header>
 
@@ -654,6 +687,12 @@
       <button data-pools="4">4 pooler<small>A–D</small></button>
     </div>
     <p class="hint" id="poolHint"></p>
+    <label class="checkrow" id="seedWrap" style="display:none;">
+      <input id="seedCheckbox" type="checkbox" checked>
+      <span>Använd ranking för seedning
+        <small>Sprider de högst rankade spelarna mellan poolerna</small>
+      </span>
+    </label>
 
     <div id="finalsWrap" style="display:none;">
       <h2>Efter poolspel</h2>
@@ -681,14 +720,14 @@
       <input id="nameInput" type="text" placeholder="Namn…" autocomplete="off" maxlength="24">
       <button id="btnAdd">Lägg till</button>
     </div>
-    <ul class="plist" id="playerList"></ul>
-    <p class="hint" id="oddHint"></p>
-
     <div class="rosterhead">
       <h3 id="rosterTitle">SPARADE NAMN</h3>
       <button id="btnRosterEdit">Ta bort namn</button>
     </div>
     <div class="chips" id="rosterChips"></div>
+
+    <ul class="plist" id="playerList" style="margin-top:16px;"></ul>
+    <p class="hint" id="oddHint"></p>
 
     <button class="bigstart" id="btnStart" disabled>Starta rundpool</button>
   </div>
@@ -729,6 +768,7 @@
   </main>
   <div class="footerbar">
     <button class="btn-ghost" id="btnShare">Dela</button>
+    <button class="btn-ghost" id="btnFinishTournament" style="display:none;">Avsluta tävling</button>
     <button class="btn-ghost" id="btnEdit"><span class="wide">Ändra spelare</span><span class="narrow">Spelare</span></button>
     <button class="btn-danger" id="btnReset"><span class="wide">Nollställ allt</span><span class="narrow">Nollställ</span></button>
   </div>
@@ -739,8 +779,7 @@
   <div class="modal">
     <div style="font-size:24px; font-weight:900; margin-bottom:6px;">Dela tavlan</div>
     <p class="hint" style="margin:0 0 14px;">
-      Hela tavlan ligger i länken. Den som öppnar den får en egen kopia –
-      resultat som skrivs in där syns inte här, och tvärtom.
+      <span id="shareHelp">Hela tavlan ligger i länken. Den som öppnar den får en egen kopia.</span>
     </p>
     <textarea id="shareBox" readonly rows="4"></textarea>
     <p class="hint" id="shareLen" style="margin:8px 0 0;"></p>
@@ -768,6 +807,70 @@
   </div>
 </div>
 
+<!-- ================= CLUB MODAL ================= -->
+<div class="overlay" id="clubOverlay">
+  <div class="modal">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="clubTitle">Klubb</div>
+    <p class="clubstatus" id="clubStatus"></p>
+    <div id="clubCreate">
+      <div class="addrow">
+        <input id="clubName" type="text" placeholder="Klubbnamn…" maxlength="80">
+        <button id="btnCreateClub">Skapa</button>
+      </div>
+      <p class="hint">Klubben får en unik administratörslänk. Spara länken – den är nyckeln till klubbens data.</p>
+    </div>
+    <div id="clubPortal" style="display:none;">
+      <div class="modalrow" style="margin-top:8px;">
+        <button class="btn-close" id="btnNewTournament">Ny tävling</button>
+        <button class="btn-clear" id="btnCopyClubLink">Kopiera klubblänk</button>
+      </div>
+      <h3>Tävlingar</h3>
+      <div class="clublist" id="tournamentList"></div>
+      <h3>Ranking</h3>
+      <div id="rankingList"></div>
+    </div>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCloseClub">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= NEW TOURNAMENT MODAL ================= -->
+<div class="overlay" id="tournamentOverlay">
+  <div class="modal">
+    <div style="font-size:24px; font-weight:900;">Ny tävling</div>
+    <div class="formfield">
+      <label for="tournamentName">Namn</label>
+      <input id="tournamentName" maxlength="80" placeholder="Till exempel Klubbmästerskap">
+    </div>
+    <div class="formfield">
+      <label for="tournamentDate">Speldatum</label>
+      <input id="tournamentDate" type="date">
+    </div>
+    <p class="clubstatus" id="tournamentError"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCancelTournament">Avbryt</button>
+      <button class="btn-close" id="btnCreateTournament">Skapa tävling</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FINISH TOURNAMENT MODAL ================= -->
+<div class="overlay" id="finishOverlay">
+  <div class="modal">
+    <div style="font-size:24px; font-weight:900;">Avsluta tävlingen?</div>
+    <p class="hint" style="margin-top:10px;">
+      Tävlingen markeras som avslutad och klubbens ranking räknas om direkt.
+    </p>
+    <p class="clubstatus" id="finishStatus"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCancelFinish">Fortsätt spela</button>
+      <button class="btn-close" id="btnConfirmFinish">Avsluta och uppdatera</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
 <script>
 "use strict";
 
@@ -781,6 +884,7 @@ let state = {
   finals: "none",          // none | place | ab
   advance: 2,              // per-pool qualifiers for A-slutspel, or "half"
   scoring: "sets",         // sets | points (ball points per set)
+  useSeeding: true,
   players: [],             // {id, name, pool}
   results: {},             // "minId_maxId" -> [setsForMin, setsForMax]  (pool play)
   fresults: {},            // playoff slot key -> [setsA, setsB]
@@ -789,6 +893,14 @@ let state = {
   view: "grid",
   pool: 0                  // pool currently shown
 };
+
+let clubSession = null;    // {clubId, token, name, tournaments, players}
+let publicSession = null;  // read-only backend tournament
+let activeTournament = null;
+let remoteSaveTimer = null;
+const API_BASE = (window.MATCHPROTOKOLLET_API || "").replace(/\/$/, "");
+const playerUuid = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() :
+  Date.now().toString(36) + Math.random().toString(36).slice(2);
 
 const ROSTER_KEY = "matchprotokollet_roster_v1";
 const OLD_ROSTER_KEY = "bergertavlan_roster_v1";
@@ -819,7 +931,12 @@ async function kvSave(key, obj){
 
 const store = {
   load(){ return kvLoad(KEY); },
-  save(){ syncUrl(); return kvSave(KEY, state); }
+  save(){
+    syncUrl();
+    const local = kvSave(KEY, state);
+    scheduleRemoteSave();
+    return local;
+  }
 };
 
 /* ---------------- Shareable URL ----------------
@@ -861,7 +978,9 @@ function encodeState(st){
   st = st || state;
   const fmt = FORMATS[st.format] ? st.format : "sets2";
   const opts = FORMATS[fmt].results;
+  const fopts = playoffResults(fmt);
   const optIdx = (sa, sb) => opts.findIndex(o => o[0] === sa && o[1] === sb);
+  const foptIdx = (sa, sb) => fopts.findIndex(o => o[0] === sa && o[1] === sb);
   const head = "1" +
     Math.max(0, FMT_LIST.indexOf(fmt)) +
     (st.pools || 1) +
@@ -893,7 +1012,7 @@ function encodeState(st){
   const fr = Object.keys(st.fresults || {}).map(key => {
     const v = st.fresults[key];
     if (pts) return isPoints(v) ? key + "=" + encSets(v) : null;
-    const k = optIdx(v[0], v[1]);
+    const k = foptIdx(v[0], v[1]);
     return k < 0 ? null : key + "=" + k;
   }).filter(Boolean).join(",");
 
@@ -920,6 +1039,7 @@ function decodeState(code){
     }));
 
     const opts = FORMATS[format].results;
+    const fopts = playoffResults(format);
     const resStr = parts[3] || "";
     const pts = scoring === "points";
     const chunks = pts ? resStr.split(",") : resStr.split("");
@@ -941,7 +1061,7 @@ function decodeState(code){
       if (at < 1) return;
       const key = tok.slice(0, at), val = tok.slice(at + 1);
       if (pts){ if (val) fresults[key] = decSets(val); }
-      else { const o = opts[+val]; if (o) fresults[key] = [o[0], o[1]]; }
+      else { const o = fopts[+val]; if (o) fresults[key] = [o[0], o[1]]; }
     });
 
     return { phase, format, pools, finals, advance, scoring, players, results, fresults,
@@ -950,9 +1070,16 @@ function decodeState(code){
 }
 
 function shareUrl(){
+  if (publicSession) return location.origin + location.pathname + location.search;
+  if (clubSession && activeTournament && activeTournament.tournamentId){
+    return location.origin + location.pathname +
+      "?club=" + encodeURIComponent(clubSession.clubId) +
+      "&tournament=" + encodeURIComponent(activeTournament.tournamentId);
+  }
   return location.origin + location.pathname + location.search + "#t=" + encodeState();
 }
 function syncUrl(){
+  if (clubSession || publicSession) return;  // preserve backend links
   try{
     const h = "#t=" + encodeState();
     if (location.hash !== h)
@@ -1016,13 +1143,27 @@ function getResult(a, b){           // stored result oriented to (a,b), or null
 function getSets(a, b){ return setsOf(getResult(a, b)); }
 function setResultRaw(a, b, res){   // res oriented to (a,b)
   state.results[rkey(a,b)] = (a < b) ? cloneResult(res) : flipResult(res);
+  syncRankingMatch("pool:" + rkey(a,b), a, b, res, false);
 }
 function setResult(a, b, sa, sb){ setResultRaw(a, b, [sa, sb]); }
-function clearResult(a, b){ delete state.results[rkey(a,b)]; }
+function clearResult(a, b){
+  delete state.results[rkey(a,b)];
+  if (state.rankingMatches) delete state.rankingMatches["pool:" + rkey(a,b)];
+}
 
 const norm = s => s.trim().toLowerCase();
 const inRoster = name => roster.some(r => norm(r) === norm(name));
 const inGame   = name => state.players.some(p => norm(p.name) === norm(name));
+const clubPlayerIdFor = name => {
+  const found = clubSession && (clubSession.players || []).find(p => norm(p.name) === norm(name));
+  return found ? found.playerId : playerUuid();
+};
+const playerRating = player => {
+  if (!clubSession) return null;
+  const ranked = (clubSession.players || []).find(candidate =>
+    candidate.playerId === player.clubPlayerId || norm(candidate.name) === norm(player.name));
+  return ranked && Number.isFinite(Number(ranked.rating)) ? Number(ranked.rating) : 1000;
+};
 
 /* tabs and newlines are the codec's separators — keep them out of names */
 const sanitizeName = n => n.replace(/[\t\r\n]+/g, " ").trim().slice(0, 24);
@@ -1044,13 +1185,29 @@ const FORMATS = {
   bo5:   { label: "Bäst av 5", results: [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]] }
 };
 
+/* Keep the first three entries compatible with older shared links. In a
+   2-set playoff, a 1–1 score is followed by a deciding third set. */
+function playoffResults(format){
+  if (format === "sets2") return [[2,0],[1,1],[0,2],[2,1],[1,2]];
+  return FORMATS[format].results;
+}
+
 const POOL_NAMES = ["A","B","C","D"];
 const poolMembers = i => state.players.filter(p => (p.pool || 0) === i);
 
 /* Spread players across pools snake-style so seeding order stays balanced. */
 function autoAssignPools(){
   const n = state.pools;
-  state.players.forEach((p, i) => {
+  const ranked = state.useSeeding !== false &&
+    state.players.some(player => playerRating(player) !== null);
+  const players = ranked ? state.players.slice().sort((a, b) => {
+    const ar = playerRating(a), br = playerRating(b);
+    if (ar === null && br === null) return state.players.indexOf(a) - state.players.indexOf(b);
+    if (ar === null) return 1;
+    if (br === null) return -1;
+    return br - ar || state.players.indexOf(a) - state.players.indexOf(b);
+  }) : state.players;
+  players.forEach((p, i) => {
     const row = Math.floor(i / n);
     const col = i % n;
     p.pool = (row % 2 === 0) ? col : (n - 1 - col);
@@ -1109,9 +1266,43 @@ const allPoolsComplete = () => {
 /* Playoff results are keyed by slot, so they survive a re-seed. */
 function getF(key){ return cloneResult(state.fresults[key]); }
 function getFSets(key){ return setsOf(getF(key)); }
-function setF(key, sa, sb){ state.fresults[key] = [sa, sb]; }
-function setFRaw(key, res){ state.fresults[key] = cloneResult(res); }
-function clearF(key){ delete state.fresults[key]; }
+function setF(key, sa, sb){
+  state.fresults[key] = [sa, sb];
+  syncRankingMatch("final:" + key, modalA, modalB, [sa, sb], true);
+}
+function setFRaw(key, res){
+  state.fresults[key] = cloneResult(res);
+  syncRankingMatch("final:" + key, modalA, modalB, res, true);
+}
+function clearF(key){
+  delete state.fresults[key];
+  if (state.rankingMatches) delete state.rankingMatches["final:" + key];
+}
+
+function syncRankingMatch(matchId, a, b, result, isFinal){
+  if (!state.rankingMatches) state.rankingMatches = {};
+  const pa = byId(a), pb = byId(b);
+  const sets = setsOf(result);
+  if (!pa || !pb || !sets || sets[0] === sets[1]){
+    delete state.rankingMatches[matchId];
+    return;
+  }
+  if (!pa.clubPlayerId) pa.clubPlayerId = playerUuid();
+  if (!pb.clubPlayerId) pb.clubPlayerId = playerUuid();
+  const aWon = sets[0] > sets[1];
+  state.rankingMatches[matchId] = {
+    matchId,
+    winnerId: aWon ? pa.clubPlayerId : pb.clubPlayerId,
+    loserId: aWon ? pb.clubPlayerId : pa.clubPlayerId,
+    ranked: isFinal || state.format !== "sets2"
+  };
+}
+function clearFinalRankingMatches(){
+  if (!state.rankingMatches) return;
+  Object.keys(state.rankingMatches).forEach(key => {
+    if (key.startsWith("final:")) delete state.rankingMatches[key];
+  });
+}
 
 /* ---- Playoff construction ----------------------------------------------
    Everything is built from bracket SLOTS, not from players. A slot knows its
@@ -1312,6 +1503,7 @@ function smallestPool(){
 }
 
 function renderSetup(){
+  if (state.useSeeding === undefined) state.useSeeding = true;
   document.querySelectorAll("#formatSeg button").forEach(b => {
     b.classList.toggle("sel", b.dataset.fmt === state.format);
   });
@@ -1325,6 +1517,9 @@ function renderSetup(){
     b.classList.toggle("sel", +b.dataset.pools === state.pools);
     b.disabled = state.players.length && state.players.length < +b.dataset.pools * 2;
   });
+  const hasRanking = state.players.some(player => playerRating(player) !== null);
+  $("seedWrap").style.display = state.pools > 1 && hasRanking ? "" : "none";
+  $("seedCheckbox").checked = state.useSeeding !== false;
   document.querySelectorAll("#finalsSeg button").forEach(b => {
     b.classList.toggle("sel", b.dataset.finals === state.finals);
   });
@@ -1363,9 +1558,15 @@ function renderSetup(){
       const played = Object.keys(state.results).some(k => k.split("_").map(Number).includes(p.id));
       if (played && !confirm(p.name + " har inspelade resultat. Ta bort ändå?")) return;
       state.players = state.players.filter(x => x.id !== p.id);
+      Object.keys(state.rankingMatches || {}).forEach(key => {
+        const match = state.rankingMatches[key];
+        if (match.winnerId === p.clubPlayerId || match.loserId === p.clubPlayerId)
+          delete state.rankingMatches[key];
+      });
       for (const k of Object.keys(state.results)){
         if (k.split("_").map(Number).includes(p.id)) delete state.results[k];
       }
+      if (state.pools > 1 && state.useSeeding !== false) autoAssignPools();
       renderSetup(); store.save();
     });
     li.appendChild(del);
@@ -1423,7 +1624,10 @@ function renderRoster(){
     b.disabled = !rosterEditMode && (used || state.players.length >= 20);
     b.addEventListener("click", () => {
       if (rosterEditMode){ rosterForget(nm); renderSetup(); return; }
-      state.players.push({ id: state.nextId++, name: nm, pool: smallestPool() });
+      state.players.push({
+        id: state.nextId++, name: nm, pool: smallestPool(), clubPlayerId: clubPlayerIdFor(nm)
+      });
+      if (state.pools > 1 && state.useSeeding !== false) autoAssignPools();
       renderSetup(); store.save();
     });
     box.appendChild(b);
@@ -1440,7 +1644,11 @@ function addPlayer(){
     return;
   }
   const known = roster.find(r => norm(r) === norm(name));  // reuse the saved spelling
-  state.players.push({ id: state.nextId++, name: known || name, pool: smallestPool() });
+  state.players.push({
+    id: state.nextId++, name: known || name, pool: smallestPool(),
+    clubPlayerId: clubPlayerIdFor(known || name)
+  });
+  if (state.pools > 1 && state.useSeeding !== false) autoAssignPools();
   rosterRemember(name);
   inp.value = "";
   inp.focus();
@@ -1505,50 +1713,59 @@ function renderGrid(){
 
 /* ---------------- Rounds view ---------------- */
 function renderRounds(){
-  const ps = state.pools > 1 ? poolMembers(state.pool) : state.players;
-  const rounds = makeRounds(ps.map(p => p.id));
-  if (!rounds.length){ $("roundList").innerHTML = ""; return; }
-  if (state.round >= rounds.length) state.round = rounds.length - 1;
+  const groups = Array.from({length: state.pools}, (_, pool) => {
+    const players = state.pools > 1 ? poolMembers(pool) : state.players;
+    return {pool, rounds: makeRounds(players.map(p => p.id))};
+  });
+  const roundCount = Math.max(0, ...groups.map(g => g.rounds.length));
+  if (!roundCount){ $("roundList").innerHTML = ""; return; }
+  if (state.round >= roundCount) state.round = roundCount - 1;
   if (state.round < 0) state.round = 0;
-  const r = rounds[state.round];
 
-  $("rTitle").textContent = "Rond " + (state.round + 1) + " av " + rounds.length;
-  const done = r.filter(([a,b]) => a !== null && b !== null && matchDecided(getResult(a,b))).length;
-  const tot  = r.filter(([a,b]) => a !== null && b !== null).length;
+  const current = groups.map(g => g.rounds[state.round] || []);
+  $("rTitle").textContent = "Rond " + (state.round + 1) + " av " + roundCount;
+  const matches = current.flat();
+  const done = matches.filter(([a,b]) => a !== null && b !== null && matchDecided(getResult(a,b))).length;
+  const tot  = matches.filter(([a,b]) => a !== null && b !== null).length;
   $("rSub").textContent = done + " av " + tot + " matcher klara";
   $("btnPrevR").disabled = state.round === 0;
-  $("btnNextR").disabled = state.round === rounds.length - 1;
+  $("btnNextR").disabled = state.round === roundCount - 1;
 
   const list = $("roundList");
   list.innerHTML = "";
-  r.forEach(([a, b]) => {
-    const div = document.createElement("div");
-    if (a === null || b === null){
-      const p = byId(a === null ? b : a);
-      div.className = "match bye";
-      div.textContent = (p ? p.name : "?") + " vilar denna rond";
-    } else {
-      const pa = byId(a), pb = byId(b);
-      const res = getResult(a, b);
-      const st = setsOf(res);
-      div.className = "match";
-      div.innerHTML =
-        "<div class='side'></div>" +
-        "<div class='score" + (res ? " done" : "") + "'>" + (st ? st[0] + " – " + st[1] : "· – ·") + "</div>" +
-        "<div class='side right'></div>";
-      div.children[0].textContent = pa.name;
-      div.children[2].textContent = pb.name;
-      const gm = res && ballsOf(res);
-      if (gm){                                  // show the set scores under the row
-        const sub = document.createElement("div");
-        sub.className = "setline";
-        sub.textContent = res.map(g => g[0] + "–" + g[1]).join("  ");
-        div.classList.add("hassets");
-        div.appendChild(sub);
+  groups.forEach((group, gi) => {
+    const r = current[gi];
+    if (!r.length) return;
+    if (state.pools > 1) list.appendChild(sectionHead("Pool " + POOL_NAMES[group.pool]));
+    r.forEach(([a, b]) => {
+      const div = document.createElement("div");
+      if (a === null || b === null){
+        const p = byId(a === null ? b : a);
+        div.className = "match bye";
+        div.textContent = (p ? p.name : "?") + " vilar denna rond";
+      } else {
+        const pa = byId(a), pb = byId(b);
+        const res = getResult(a, b);
+        const st = setsOf(res);
+        div.className = "match";
+        div.innerHTML =
+          "<div class='side'></div>" +
+          "<div class='score" + (res ? " done" : "") + "'>" + (st ? st[0] + " – " + st[1] : "· – ·") + "</div>" +
+          "<div class='side right'></div>";
+        div.children[0].textContent = pa.name;
+        div.children[2].textContent = pb.name;
+        const gm = res && ballsOf(res);
+        if (gm){                                // show the set scores under the row
+          const sub = document.createElement("div");
+          sub.className = "setline";
+          sub.textContent = res.map(g => g[0] + "–" + g[1]).join("  ");
+          div.classList.add("hassets");
+          div.appendChild(sub);
+        }
+        div.addEventListener("click", () => openModal(a, b));
       }
-      div.addEventListener("click", () => openModal(a, b));
-    }
-    list.appendChild(div);
+      list.appendChild(div);
+    });
   });
 }
 
@@ -1609,7 +1826,8 @@ function renderStandings(){
 function renderPoolBar(){
   const bar = $("poolBar");
   bar.innerHTML = "";
-  if (state.pools < 2 || state.view === "stand" || state.view === "finals" || state.view === "bracket"){
+  if (state.pools < 2 || state.view === "rounds" || state.view === "stand" ||
+      state.view === "finals" || state.view === "bracket"){
     bar.style.display = "none";
     return;
   }
@@ -1864,7 +2082,7 @@ function renderSetsModal(pa, pb, box){
   $("mSub").textContent = (modalKey ? "Slutspelsmatch – måste ha en vinnare · " : "") +
     "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
 
-  const all = FORMATS[state.format].results;
+  const all = modalKey ? playoffResults(state.format) : FORMATS[state.format].results;
   const margin = r => Math.abs(r[0] - r[1]);
   const aWins = all.filter(r => r[0] > r[1]).sort((x,y) => margin(y) - margin(x));
   const bWins = all.filter(r => r[0] < r[1]).sort((x,y) => margin(y) - margin(x));
@@ -2020,6 +2238,243 @@ $("btnClear").addEventListener("click", () => {
 $("btnCloseModal").addEventListener("click", closeModal);
 $("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
 
+/* ---------------- Club backend ---------------- */
+let remoteSaveChain = Promise.resolve();
+
+async function api(path, options){
+  if (!API_BASE) throw new Error("API-adressen saknas i config.js");
+  const headers = {"Content-Type":"application/json"};
+  if (clubSession && clubSession.token) headers.Authorization = "Bearer " + clubSession.token;
+  const res = await fetch(API_BASE + path, Object.assign({}, options, {headers}));
+  let data = {};
+  try{ data = await res.json(); }catch(e){}
+  if (!res.ok) throw new Error(data.message || "Serverfel (" + res.status + ")");
+  return data;
+}
+
+function clubLink(){
+  return location.origin + location.pathname + "?club=" + encodeURIComponent(clubSession.clubId) +
+    "#clubToken=" + encodeURIComponent(clubSession.token);
+}
+
+function tournamentPayload(){
+  state.players.forEach(p => {
+    if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name);
+  });
+  return {
+    name: activeTournament.name,
+    playedAt: activeTournament.playedAt,
+    type: activeTournament.type || "normal",
+    status: activeTournament.status || "draft",
+    state,
+    participants: state.players.map(p => ({playerId:p.clubPlayerId, name:p.name})),
+    matches: Object.values(state.rankingMatches || {})
+  };
+}
+
+function scheduleRemoteSave(){
+  if (!clubSession || !activeTournament || !API_BASE) return;
+  clearTimeout(remoteSaveTimer);
+  remoteSaveTimer = setTimeout(() => {
+    remoteSaveChain = remoteSaveChain.then(saveRemoteTournament).catch(error => {
+      $("clubStatus").textContent = "Kunde inte spara: " + error.message;
+      $("clubStatus").style.color = "var(--danger)";
+    });
+  }, 700);
+}
+
+async function saveRemoteTournament(){
+  $("clubStatus").textContent = "Sparar…";
+  const exists = !!activeTournament.tournamentId;
+  const path = "/clubs/" + clubSession.clubId + "/tournaments" +
+    (exists ? "/" + activeTournament.tournamentId : "");
+  const data = await api(path, {
+    method: exists ? "PUT" : "POST",
+    body: JSON.stringify(tournamentPayload())
+  });
+  activeTournament = data.tournament;
+  const ix = (clubSession.tournaments || []).findIndex(
+    t => t.tournamentId === activeTournament.tournamentId);
+  if (ix < 0) clubSession.tournaments.unshift(activeTournament);
+  else clubSession.tournaments[ix] = activeTournament;
+  clubSession.players = data.ranking.players;
+  $("clubStatus").textContent = "Sparad";
+  $("clubStatus").style.color = "var(--muted)";
+  renderClubPortal();
+}
+
+function blankTournamentState(){
+  return {
+    phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
+    advance:state.advance, scoring:state.scoring, players:[], results:{}, fresults:{},
+    rankingMatches:{}, useSeeding:true, nextId:1, round:0, view:"grid", pool:0
+  };
+}
+
+function openTournament(tournament){
+  activeTournament = tournament;
+  state = Object.assign(blankTournamentState(), tournament.state || {});
+  if (!state.rankingMatches) state.rankingMatches = {};
+  state.players.forEach(p => {
+    if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name);
+    rosterRemember(p.name);
+  });
+  kvSave(KEY, state);
+  closeClub();
+  refresh();
+  if (state.phase === "play") setView(state.view || "grid");
+}
+
+function renderClubPortal(){
+  const connected = !!clubSession;
+  $("clubCreate").style.display = connected ? "none" : "";
+  $("clubPortal").style.display = connected ? "" : "none";
+  $("btnClub").textContent = connected ? clubSession.name : "Klubb";
+  $("clubTitle").textContent = connected ? clubSession.name : "Skapa klubb";
+  if (!connected) return;
+  const list = $("tournamentList");
+  list.innerHTML = "";
+  (clubSession.tournaments || []).forEach(tournament => {
+    const button = document.createElement("button");
+    button.className = "clubitem";
+    button.innerHTML = "<span></span><small></small>";
+    button.children[0].textContent = tournament.name;
+    button.children[1].textContent = tournament.playedAt +
+      (tournament.status === "finalized" ? " · avslutad" : " · pågår");
+    button.addEventListener("click", () => openTournament(tournament));
+    list.appendChild(button);
+  });
+  if (!list.children.length) list.innerHTML = "<p class='hint'>Ingen tävling ännu.</p>";
+  const ranking = $("rankingList");
+  ranking.innerHTML = "";
+  (clubSession.players || []).forEach((player, i) => {
+    const row = document.createElement("div");
+    row.className = "rankingrow";
+    row.innerHTML = "<span></span><span></span><strong></strong>";
+    row.children[0].textContent = i + 1 + ".";
+    row.children[1].textContent = player.name;
+    row.children[2].textContent = player.rating;
+    ranking.appendChild(row);
+  });
+  if (!ranking.children.length) ranking.innerHTML = "<p class='hint'>Rankingen visas när resultat har sparats.</p>";
+}
+
+async function loadClubFromLink(){
+  const clubId = new URLSearchParams(location.search).get("club");
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const token = hash.get("clubToken") ||
+    (clubId ? localStorage.getItem("matchprotokollet_club_token_" + clubId) : "");
+  if (!clubId || !token || !API_BASE) return false;
+  clubSession = {clubId, token, name:"Klubb", tournaments:[], players:[]};
+  localStorage.setItem("matchprotokollet_club_token_" + clubId, token);
+  try{
+    const data = await api("/clubs/" + clubId, {method:"GET"});
+    clubSession = Object.assign(data, {token});
+    data.players.forEach(player => rosterRemember(player.name));
+    renderClubPortal();
+    if (data.tournaments.length) openTournament(data.tournaments[0]);
+    return true;
+  }catch(error){
+    clubSession = null;
+    $("clubStatus").textContent = error.message;
+    $("clubStatus").style.color = "var(--danger)";
+    return false;
+  }
+}
+
+async function loadPublicTournamentFromLink(){
+  const query = new URLSearchParams(location.search);
+  const clubId = query.get("club");
+  const tournamentId = query.get("tournament");
+  if (!clubId || !tournamentId || !API_BASE) return false;
+  try{
+    const data = await api(
+      "/clubs/" + encodeURIComponent(clubId) + "/tournaments/" +
+      encodeURIComponent(tournamentId) + "/public",
+      {method:"GET", cache:"no-store"}
+    );
+    publicSession = data;
+    activeTournament = data.tournament;
+    state = Object.assign(blankTournamentState(), data.tournament.state || {});
+    document.body.classList.add("viewer");
+    $("btnClub").textContent = "Uppdatera";
+    refresh();
+    if (state.phase === "play") setView(state.view || "grid");
+    return true;
+  }catch(error){
+    $("clubStatus").textContent = "Kunde inte hämta tävlingen: " + error.message;
+    $("clubStatus").style.color = "var(--danger)";
+    $("clubOverlay").classList.add("open");
+    return false;
+  }
+}
+
+function closeClub(){ $("clubOverlay").classList.remove("open"); }
+$("btnClub").addEventListener("click", () => {
+  if (publicSession){
+    location.reload();
+    return;
+  }
+  renderClubPortal();
+  $("clubOverlay").classList.add("open");
+});
+$("btnCloseClub").addEventListener("click", closeClub);
+$("clubOverlay").addEventListener("click", e => {
+  if (e.target === $("clubOverlay")) closeClub();
+});
+$("btnCreateClub").addEventListener("click", async () => {
+  const name = $("clubName").value.trim();
+  if (!name) return;
+  try{
+    const data = await api("/clubs", {method:"POST", body:JSON.stringify({name})});
+    clubSession = {
+      clubId:data.clubId, token:data.accessToken, name:data.name, tournaments:[], players:[]
+    };
+    localStorage.setItem("matchprotokollet_club_token_" + data.clubId, data.accessToken);
+    history.replaceState(null, "", "?club=" + encodeURIComponent(data.clubId) +
+      "#clubToken=" + encodeURIComponent(data.accessToken));
+    $("clubStatus").textContent = "Klubben är skapad. Spara klubblänken.";
+    renderClubPortal();
+  }catch(error){
+    $("clubStatus").textContent = error.message;
+    $("clubStatus").style.color = "var(--danger)";
+  }
+});
+$("btnNewTournament").addEventListener("click", () => {
+  $("tournamentName").value = "";
+  $("tournamentDate").value = new Date().toISOString().slice(0,10);
+  $("tournamentError").textContent = "";
+  $("tournamentOverlay").classList.add("open");
+  setTimeout(() => $("tournamentName").focus(), 0);
+});
+function closeTournamentModal(){ $("tournamentOverlay").classList.remove("open"); }
+$("btnCancelTournament").addEventListener("click", closeTournamentModal);
+$("tournamentOverlay").addEventListener("click", e => {
+  if (e.target === $("tournamentOverlay")) closeTournamentModal();
+});
+$("btnCreateTournament").addEventListener("click", () => {
+  const name = $("tournamentName").value.trim();
+  const playedAt = $("tournamentDate").value;
+  if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(playedAt)){
+    $("tournamentError").textContent = "Fyll i tävlingens namn och speldatum.";
+    $("tournamentError").style.color = "var(--danger)";
+    return;
+  }
+  activeTournament = {name, playedAt, type:"normal", status:"draft"};
+  state = blankTournamentState();
+  kvSave(KEY, state);
+  closeTournamentModal(); closeClub(); refresh(); scheduleRemoteSave();
+});
+$("btnCopyClubLink").addEventListener("click", async () => {
+  try{
+    await navigator.clipboard.writeText(clubLink());
+    $("btnCopyClubLink").textContent = "Kopierad!";
+  }catch(e){
+    $("clubStatus").textContent = "Kunde inte kopiera automatiskt. Öppna Dela och kopiera länken där.";
+    $("clubStatus").style.color = "var(--danger)";
+  }
+});
+
 /* ---------------- View switching ---------------- */
 function refresh(){
   if (state.phase === "setup"){
@@ -2032,9 +2487,14 @@ function refresh(){
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "";
   $("subTitle").textContent =
-    state.players.length + " spelare · " +
+    (publicSession ? "LIVE · " : "") + state.players.length + " spelare · " +
     (state.pools > 1 ? state.pools + " pooler · " : "") +
     FORMATS[state.format].label;
+  $("btnFinishTournament").style.display =
+    !publicSession && clubSession && activeTournament &&
+    activeTournament.status !== "finalized" ? "" : "none";
+  $("btnEdit").style.display = publicSession ? "none" : "";
+  $("btnReset").style.display = publicSession ? "none" : "";
   const hasFinals = state.pools > 1 && state.finals !== "none";
   $("tabFinals").style.display = hasFinals ? "" : "none";
   $("tabBracket").style.display = hasFinals ? "" : "none";
@@ -2070,7 +2530,11 @@ $("formatSeg").addEventListener("click", e => {
   if (Object.keys(state.results).length &&
       b.dataset.fmt !== state.format &&
       !confirm("Byte av matchform rensar inspelade resultat. Fortsätt?")) return;
-  if (b.dataset.fmt !== state.format) state.results = {};
+  if (b.dataset.fmt !== state.format){
+    state.results = {};
+    state.fresults = {};
+    state.rankingMatches = {};
+  }
   state.format = b.dataset.fmt;
   renderSetup(); store.save();
 });
@@ -2080,7 +2544,7 @@ $("scoringSeg").addEventListener("click", e => {
   if ((Object.keys(state.results).length || Object.keys(state.fresults).length) &&
       !confirm("Byte av inmatningssätt rensar inskrivna resultat. Fortsätt?")) return;
   state.scoring = b.dataset.sc;
-  state.results = {}; state.fresults = {};
+  state.results = {}; state.fresults = {}; state.rankingMatches = {};
   renderSetup(); store.save();
 });
 $("poolSeg").addEventListener("click", e => {
@@ -2092,10 +2556,16 @@ $("poolSeg").addEventListener("click", e => {
       !confirm("Ändrat antal pooler rensar slutspelsresultaten. Fortsätt?")) return;
   state.pools = n;
   state.fresults = {};
+  clearFinalRankingMatches();
   state.pool = 0;
   if (n === 1) state.players.forEach(p => p.pool = 0);
   else autoAssignPools();
   if (n > 2 && state.finals === "place") state.finals = "ab";
+  renderSetup(); store.save();
+});
+$("seedCheckbox").addEventListener("change", () => {
+  state.useSeeding = $("seedCheckbox").checked;
+  if (state.pools > 1) autoAssignPools();
   renderSetup(); store.save();
 });
 $("advSeg").addEventListener("click", e => {
@@ -2105,6 +2575,7 @@ $("advSeg").addEventListener("click", e => {
   if (v === state.advance) return;
   state.advance = v;
   state.fresults = {};
+  clearFinalRankingMatches();
   renderSetup(); store.save();
 });
 $("finalsSeg").addEventListener("click", e => {
@@ -2114,7 +2585,10 @@ $("finalsSeg").addEventListener("click", e => {
     alert("Placeringsmatcher kräver exakt 2 pooler.");
     return;
   }
-  if (b.dataset.finals !== state.finals) state.fresults = {};
+  if (b.dataset.finals !== state.finals){
+    state.fresults = {};
+    clearFinalRankingMatches();
+  }
   state.finals = b.dataset.finals;
   renderSetup(); store.save();
 });
@@ -2142,14 +2616,70 @@ $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
   state = { phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
             advance:state.advance, scoring:state.scoring,
-            players:[], results:{}, fresults:{}, nextId:1, round:0, view:"grid", pool:0 };
+            players:[], results:{}, fresults:{}, rankingMatches:{}, useSeeding:state.useSeeding,
+            nextId:1, round:0, view:"grid", pool:0 };
   refresh(); store.save();
+});
+$("btnFinishTournament").addEventListener("click", () => {
+  if (!clubSession || !activeTournament || activeTournament.status === "finalized") return;
+  $("finishStatus").textContent = "";
+  $("finishStatus").style.color = "var(--muted)";
+  $("btnCancelFinish").textContent = "Fortsätt spela";
+  $("btnConfirmFinish").style.display = "";
+  $("finishOverlay").classList.add("open");
+});
+function closeFinishModal(){ $("finishOverlay").classList.remove("open"); }
+$("btnCancelFinish").addEventListener("click", closeFinishModal);
+$("finishOverlay").addEventListener("click", e => {
+  if (e.target === $("finishOverlay")) closeFinishModal();
+});
+$("btnConfirmFinish").addEventListener("click", async () => {
+  if (!clubSession || !activeTournament || activeTournament.status === "finalized") return;
+  clearTimeout(remoteSaveTimer);
+  activeTournament.status = "finalized";
+  $("btnConfirmFinish").disabled = true;
+  $("btnConfirmFinish").textContent = "Uppdaterar ranking…";
+  $("finishStatus").textContent = "Sparar tävlingen och räknar om rankingen…";
+  try{
+    remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+    await remoteSaveChain;
+    $("btnFinishTournament").style.display = "none";
+    $("finishStatus").textContent = "Klart – rankingen är uppdaterad.";
+    $("finishStatus").style.color = "var(--win-fg)";
+    $("btnCancelFinish").textContent = "Stäng";
+    $("btnConfirmFinish").style.display = "none";
+  }catch(error){
+    remoteSaveChain = Promise.resolve();
+    activeTournament.status = "draft";
+    $("finishStatus").textContent = "Kunde inte avsluta tävlingen: " + error.message;
+    $("finishStatus").style.color = "var(--danger)";
+  }finally{
+    $("btnConfirmFinish").disabled = false;
+    $("btnConfirmFinish").textContent = "Avsluta och uppdatera";
+    refresh();
+  }
 });
 $("btnPrevR").addEventListener("click", () => { state.round--; renderRounds(); store.save(); });
 $("btnNextR").addEventListener("click", () => { state.round++; renderRounds(); store.save(); });
 
-$("btnShare").addEventListener("click", () => {
+$("btnShare").addEventListener("click", async () => {
+  if (clubSession && activeTournament && !activeTournament.tournamentId){
+    clearTimeout(remoteSaveTimer);
+    try{
+      remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+      await remoteSaveChain;
+    }catch(error){
+      remoteSaveChain = Promise.resolve();
+      $("clubStatus").textContent = "Tävlingen måste sparas innan den kan delas: " + error.message;
+      $("clubStatus").style.color = "var(--danger)";
+      $("clubOverlay").classList.add("open");
+      return;
+    }
+  }
   const url = shareUrl();
+  $("shareHelp").textContent = clubSession && activeTournament && activeTournament.tournamentId
+    ? "Länken är skrivskyddad och hämtar automatiskt de senaste resultaten från servern när sidan uppdateras."
+    : "Hela tavlan ligger i länken. Den som öppnar den får en egen kopia.";
   $("shareBox").value = url;
   $("shareLen").textContent = url.length + " tecken" +
     (url.length > 2000 ? " – lång länk, vissa appar kan kapa den." : "");
@@ -2207,6 +2737,16 @@ window.addEventListener("hashchange", () => {
   if (Array.isArray(savedRoster)) roster = savedRoster.filter(x => typeof x === "string");
   if (migrated) kvSave(ROSTER_KEY, roster);
 
+  if (await loadPublicTournamentFromLink()) return;
+
+  if (await loadClubFromLink()){
+    if (!activeTournament){
+      state = blankTournamentState();
+      refresh();
+    }
+    return;
+  }
+
   let saved = await store.load();
   if (!saved){
     saved = await kvLoad(OLD_KEY);
@@ -2228,6 +2768,7 @@ window.addEventListener("hashchange", () => {
     state.players.forEach(p => {
       rosterRemember(p.name);                              // backfill from an in-progress pool
       if (typeof p.pool !== "number") p.pool = 0;          // saves made before pools existed
+      if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name);
     });
     if (!state.fresults) state.fresults = {};
     if (!state.pools) state.pools = 1;

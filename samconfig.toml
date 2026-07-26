@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "tt-protocol"
+resolve_s3 = true
+s3_prefix = "tt-protocol"
+region = "eu-north-1"
+profile = "dev"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AllowedOrigin=\"*\""
+image_repositories = []
+
+[default.global.parameters]
+region = "eu-north-1"
