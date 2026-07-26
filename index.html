@@ -59,7 +59,12 @@
     position:absolute; left:0; right:0; bottom:6px; height:3px;
     background:var(--line); opacity:.85;
   }
-  .brand{display:flex; align-items:baseline; gap:12px; flex:1; min-width:0; overflow:hidden;}
+  .brand{
+    display:flex; align-items:baseline; gap:12px; flex:1; min-width:0; overflow:hidden;
+    padding:0; border:0; background:transparent; color:#fff; text-align:left; cursor:pointer;
+  }
+  .brand:hover h1{text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:5px;}
+  .brand:focus-visible{outline:2px solid #fff; outline-offset:5px; border-radius:4px;}
   .brand h1{
     margin:0; font-size:clamp(15px, 4.4vw, 26px); font-weight:800; letter-spacing:.5px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
@@ -502,6 +507,30 @@
   .mockrankrow{display:grid; grid-template-columns:30px 1fr auto; padding:7px 2px; font-size:14px;}
   .mockrankrow b:last-child{color:var(--table);}
   .landingsection{max-width:1180px; margin:0 auto; padding:86px 24px;}
+  .recentclubs{
+    max-width:1180px; margin:-34px auto 0; padding:0 24px; position:relative; z-index:3;
+  }
+  .recentpanel{
+    padding:24px; border:1px solid rgba(10,56,91,.08); border-radius:20px;
+    background:#fff; box-shadow:0 14px 36px rgba(10,45,72,.13);
+  }
+  .recenthead{display:flex; align-items:end; justify-content:space-between; gap:14px; margin-bottom:16px;}
+  .recenthead h3{margin:0 0 3px; font-size:22px;}
+  .recenthead p{margin:0; color:var(--muted); font-size:14px;}
+  .recentlist{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+  .recentclub{
+    display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px;
+    min-height:68px; padding:10px 13px; border:1px solid #dce5eb; border-radius:14px;
+    background:#f8fafb; color:var(--ink); text-align:left;
+    transition:transform .15s,box-shadow .15s,border-color .15s;
+  }
+  .recentclub:hover{transform:translateY(-2px); border-color:#9fbdd2; box-shadow:0 8px 18px rgba(12,63,101,.1);}
+  .recentinitial{
+    display:grid; place-items:center; width:42px; height:42px; border-radius:12px;
+    background:#e5f2fb; color:var(--table); font-size:18px; font-weight:900;
+  }
+  .recentclub strong{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .recentclub .arrow{color:var(--table); font-size:20px; font-weight:900;}
   .sectionintro{max-width:680px; margin-bottom:34px;}
   .sectionintro .kicker{color:var(--ball-dark); font-size:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase;}
   .sectionintro h3{margin:8px 0 10px; font-size:clamp(32px,4vw,48px); letter-spacing:-1.2px;}
@@ -571,7 +600,7 @@
   @media (max-width:850px){
     .herogrid{grid-template-columns:1fr; gap:42px;}
     .productcard{max-width:560px; transform:none;}
-    .featuregrid,.steps,.bracketgallery{grid-template-columns:1fr;}
+    .featuregrid,.steps,.bracketgallery,.recentlist{grid-template-columns:1fr;}
     .step:not(:last-child)::after{display:none;}
   }
   @media (max-width:560px){
@@ -580,6 +609,8 @@
     .signupbox{flex-direction:column;}
     .signupbox input{min-height:56px;}
     .landingsection{padding:64px 16px;}
+    .recentclubs{margin:-34px auto 0; padding:0 16px;}
+    .recentpanel{padding:18px;}
     .landingcta{margin:0 16px 64px; padding:38px 20px;}
   }
 
@@ -590,6 +621,18 @@
     background:#E7E3D9; color:var(--muted); font-size:19px; font-weight:800;
   }
   .poolbar button.sel{background:var(--table); color:#fff;}
+  .poolchoice{
+    display:flex; align-items:center; justify-content:space-between; gap:18px;
+    min-height:82px; padding:14px 16px; border:2px solid #d4dde4;
+    border-radius:var(--radius); background:#f7f9fa;
+  }
+  .poolchoice strong{display:block; font-size:20px;}
+  .poolchoice small{display:block; margin-top:3px; color:var(--muted); line-height:1.35;}
+  .poolchoice select{
+    flex:0 0 auto; min-width:148px; min-height:52px; padding:0 40px 0 14px;
+    border:2px solid #b9c9d5; border-radius:11px; background:#fff;
+    color:var(--ink); font:inherit; font-weight:900;
+  }
   .poolbar button .dot{
     display:inline-block; width:10px; height:10px; border-radius:50%;
     background:var(--ball); margin-left:10px; vertical-align:middle;
@@ -775,6 +818,16 @@
   }
   /* ---------- Ball-point picker ---------- */
   .pgrid{grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .pgrid.deucemode{
+    max-height:min(54vh,560px); overflow-y:auto; overscroll-behavior:contain;
+    padding:2px 8px 8px 2px; scrollbar-gutter:stable;
+  }
+  .pgrid.deucemode .colhead{
+    position:sticky; top:0; z-index:2; padding:9px 4px;
+    background:linear-gradient(#fff 75%,rgba(255,255,255,0));
+  }
+  .pgrid.deucemode::-webkit-scrollbar{width:10px;}
+  .pgrid.deucemode::-webkit-scrollbar-thumb{background:#aebdca; border-radius:999px;}
   .phalf{min-width:0;}
   .pcols{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
   .pcol{display:flex; flex-direction:column; gap:6px;}
@@ -838,6 +891,8 @@
     .brand{gap:8px;}
     .brand small{display:none;}                 /* the tabs already say where you are */
     .hbtn{min-height:48px; min-width:48px; padding:0 12px; font-size:16px;}
+    .poolchoice{align-items:stretch; flex-direction:column;}
+    .poolchoice select{width:100%;}
 
     nav{gap:4px; padding:10px 8px 0;}
     .tab{min-height:54px; font-size:13px; padding:0 4px; letter-spacing:0;}
@@ -944,11 +999,11 @@
 <body>
 
 <header>
-  <div class="brand">
+  <button class="brand" id="btnHome" type="button" aria-label="Till startsidan">
     <span class="ball"></span>
     <h1>Matchprotokoll by Pingis.net</h1>
     <small id="subTitle"></small>
-  </div>
+  </button>
   <button class="hbtn clubbtn" id="btnClub">Klubb</button>
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
 </header>
@@ -990,6 +1045,18 @@
           <div class="mockrankrow"><span>3</span><b>Elias Holm</b><b>1050 p</b></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="recentclubs" id="recentClubsSection" style="display:none;">
+    <div class="recentpanel">
+      <div class="recenthead">
+        <div>
+          <h3>Fortsätt där du slutade</h3>
+          <p>Klubbar och grupper du har öppnat på den här enheten.</p>
+        </div>
+      </div>
+      <div class="recentlist" id="recentClubList"></div>
     </div>
   </section>
 
@@ -1180,11 +1247,12 @@
     </div>
 
     <h2>Antal pooler</h2>
-    <div class="seg" id="poolSeg">
-      <button data-pools="1">1 pool<small>alla möter alla</small></button>
-      <button data-pools="2">2 pooler<small>A och B</small></button>
-      <button data-pools="3">3 pooler<small>A, B, C</small></button>
-      <button data-pools="4">4 pooler<small>A–D</small></button>
+    <div class="poolchoice">
+      <div>
+        <strong id="poolRecommendation">1 pool</strong>
+        <small id="poolRecommendationDetail">Lägg till spelare så anpassas antalet automatiskt.</small>
+      </div>
+      <select id="poolCountSelect" aria-label="Antal pooler"></select>
     </div>
     <p class="hint" id="poolHint"></p>
     <label class="checkrow" id="seedWrap" style="display:none;">
@@ -1441,7 +1509,8 @@ const OLD_KEY = "bergertavlan_v1";        // pre-rename saves
 let state = {
   phase: "setup",          // setup | play
   format: "sets2",         // sets2 | bo3 | bo5
-  pools: 1,                // 1..4
+  pools: 1,
+  poolsManual: false,      // automatic recommendation until the organizer overrides it
   finals: "none",          // none | place | ab
   advance: 2,              // per-pool qualifiers for A-slutspel, or "half"
   scoring: "sets",         // sets | points (ball points per set)
@@ -1467,8 +1536,47 @@ const playerUuid = () => window.crypto && crypto.randomUUID ? crypto.randomUUID(
 
 const ROSTER_KEY = "matchprotokollet_roster_v1";
 const OLD_ROSTER_KEY = "bergertavlan_roster_v1";
+const RECENT_CLUBS_KEY = "matchprotokollet_recent_clubs_v1";
 let roster = [];              // remembered names, original casing preserved
 let rosterEditMode = false;
+const rosterStorageKey = () => clubSession
+  ? ROSTER_KEY + "_club_" + clubSession.clubId
+  : ROSTER_KEY;
+
+function recentClubs(){
+  try{
+    const value = JSON.parse(localStorage.getItem(RECENT_CLUBS_KEY) || "[]");
+    return Array.isArray(value) ? value.filter(item => item && item.clubId && item.name) : [];
+  }catch(error){ return []; }
+}
+
+function rememberClub(club){
+  const item = {clubId:String(club.clubId), name:String(club.name), visitedAt:Date.now()};
+  const clubs = recentClubs().filter(existing => existing.clubId !== item.clubId);
+  clubs.unshift(item);
+  localStorage.setItem(RECENT_CLUBS_KEY, JSON.stringify(clubs.slice(0, 6)));
+}
+
+function renderRecentClubs(){
+  const clubs = recentClubs();
+  const section = $("recentClubsSection");
+  const list = $("recentClubList");
+  list.innerHTML = "";
+  section.style.display = clubs.length ? "" : "none";
+  clubs.forEach(club => {
+    const button = document.createElement("button");
+    button.className = "recentclub";
+    button.innerHTML =
+      "<span class='recentinitial'></span><strong></strong><span class='arrow'>→</span>";
+    button.querySelector(".recentinitial").textContent = club.name.trim().charAt(0).toUpperCase();
+    button.querySelector("strong").textContent = club.name;
+    button.title = "Öppna " + club.name;
+    button.addEventListener("click", () => {
+      location.href = location.pathname + "?club=" + encodeURIComponent(club.clubId);
+    });
+    list.appendChild(button);
+  });
+}
 
 async function kvLoad(key){
   try{
@@ -1544,17 +1652,19 @@ function encodeState(st){
   const fopts = playoffResults(fmt);
   const optIdx = (sa, sb) => opts.findIndex(o => o[0] === sa && o[1] === sb);
   const foptIdx = (sa, sb) => fopts.findIndex(o => o[0] === sa && o[1] === sb);
-  const head = "1" +
-    Math.max(0, FMT_LIST.indexOf(fmt)) +
-    (st.pools || 1) +
-    Math.max(0, FIN_LIST.indexOf(st.finals || "none")) +
-    (st.advance === "half" ? "h" : String(st.advance || 2)) +
-    (st.phase === "play" ? "p" : "s") +
-    (st.scoring === "points" ? "P" : "S");
+  const head = [
+    "2",
+    Math.max(0, FMT_LIST.indexOf(fmt)),
+    st.pools || 1,
+    Math.max(0, FIN_LIST.indexOf(st.finals || "none")),
+    st.advance === "half" ? "h" : String(st.advance || 2),
+    st.phase === "play" ? "p" : "s",
+    st.scoring === "points" ? "P" : "S"
+  ].join("|");
 
   const ps = st.players || [];
   const names = ps.map(p => p.name).join("\t");
-  const pools = ps.map(p => String(p.pool || 0)).join("");
+  const pools = ps.map(p => String(p.pool || 0)).join(",");
 
   const pts = st.scoring === "points";
   const chunks = [];
@@ -1585,20 +1695,24 @@ function encodeState(st){
 function decodeState(code){
   try{
     const parts = b64urlDecode(code).split("\n");
-    if (parts.length < 5 || parts[0][0] !== "1") return null;
+    if (parts.length < 5 || !["1","2"].includes(parts[0][0])) return null;
     const h = parts[0];
-    const format = FMT_LIST[+h[1]] || "sets2";
-    const pools  = Math.min(4, Math.max(1, +h[2] || 1));
-    const finals = FIN_LIST[+h[3]] || "none";
-    const advance = h[4] === "h" ? "half" : (+h[4] || 2);
-    const phase = h[5] === "p" ? "play" : "setup";
-    const scoring = h[6] === "P" ? "points" : "sets";   // links made before this default to sets
+    const modern = h[0] === "2";
+    const fields = modern ? h.split("|") : null;
+    const format = FMT_LIST[+(modern ? fields[1] : h[1])] || "sets2";
+    const pools  = Math.max(1, +(modern ? fields[2] : h[2]) || 1);
+    const finals = FIN_LIST[+(modern ? fields[3] : h[3])] || "none";
+    const advanceField = modern ? fields[4] : h[4];
+    const advance = advanceField === "h" ? "half" : (+advanceField || 2);
+    const phase = (modern ? fields[5] : h[5]) === "p" ? "play" : "setup";
+    const scoring = (modern ? fields[6] : h[6]) === "P" ? "points" : "sets";
 
     const names = parts[1] ? parts[1].split("\t") : [];
     const poolStr = parts[2] || "";
-    const players = names.slice(0, 20).map((n, i) => ({
+    const poolAssignments = modern ? poolStr.split(",") : poolStr.split("");
+    const players = names.map((n, i) => ({
       id: i + 1, name: n,
-      pool: Math.min(pools - 1, Math.max(0, +(poolStr[i] || 0) || 0))
+      pool: Math.min(pools - 1, Math.max(0, +(poolAssignments[i] || 0) || 0))
     }));
 
     const opts = FORMATS[format].results;
@@ -1627,7 +1741,8 @@ function decodeState(code){
       else { const o = fopts[+val]; if (o) fresults[key] = [o[0], o[1]]; }
     });
 
-    return { phase, format, pools, finals, advance, scoring, players, results, fresults,
+    return { phase, format, pools, poolsManual:true, finals, advance, scoring,
+             players, results, fresults,
              nextId: players.length + 1, round: 0, view: "grid", pool: 0 };
   }catch(e){ return null; }
 }
@@ -1735,12 +1850,12 @@ function rosterRemember(name){
   if (!name.trim() || inRoster(name)) return;
   roster.push(name.trim());
   roster.sort((a,b) => a.localeCompare(b, "sv", {sensitivity:"base"}));
-  kvSave(ROSTER_KEY, roster);
+  kvSave(rosterStorageKey(), roster);
   scheduleClubRosterSave();
 }
 function rosterForget(name){
   roster = roster.filter(r => norm(r) !== norm(name));
-  kvSave(ROSTER_KEY, roster);
+  kvSave(rosterStorageKey(), roster);
   scheduleClubRosterSave();
 }
 
@@ -1757,7 +1872,12 @@ function playoffResults(format){
   return FORMATS[format].results;
 }
 
-const POOL_NAMES = ["A","B","C","D"];
+function poolName(index){
+  let name = "";
+  for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26))
+    name = String.fromCharCode(65 + ((n - 1) % 26)) + name;
+  return name;
+}
 const poolMembers = i => state.players.filter(p => (p.pool || 0) === i);
 
 /* Spread players across pools snake-style so seeding order stays balanced. */
@@ -1899,7 +2019,7 @@ function seededField(ready){
     for (let i = 0; i < state.pools; i++)
       if (tables[i][r]) field.push({
         p: ready ? tables[i][r].p : null,          // no names until pools are done
-        label: POOL_NAMES[i] + (r + 1),
+        label: poolName(i) + (r + 1),
         rank: r                                    // 0 = pool winner
       });
   return field;
@@ -1974,8 +2094,8 @@ function buildFinals(){
       const pos = r * 2 + 1;
       matches.push({
         key: "pl" + r,
-        top: { p: ready ? tables[0][r].p : null, label: POOL_NAMES[0] + (r+1) },
-        bot: { p: ready ? tables[1][r].p : null, label: POOL_NAMES[1] + (r+1) },
+        top: { p: ready ? tables[0][r].p : null, label: poolName(0) + (r+1) },
+        bot: { p: ready ? tables[1][r].p : null, label: poolName(1) + (r+1) },
         playable: true, bye: false,
         tag: "Plats " + pos + "–" + (pos + 1),
         medal: r === 0 ? "🏆" : (r === 1 ? "🥉" : "")
@@ -1984,7 +2104,7 @@ function buildFinals(){
     /* players with no counterpart in the other pool sit the placement round out */
     const spare = [];
     tables.forEach((t, i) => t.slice(depth).forEach(row =>
-      spare.push({ p: ready ? row.p : null, label: POOL_NAMES[i] + (t.indexOf(row)+1) })));
+      spare.push({ p: ready ? row.p : null, label: poolName(i) + (t.indexOf(row)+1) })));
     return { mode: "place", ready, matches, spare };
   }
 
@@ -2184,6 +2304,50 @@ function maxPoolSize(){
   return m;
 }
 
+function recommendedPoolCount(playerCount){
+  if (playerCount < 2) return 1;
+  const maxPools = Math.max(1, Math.floor(playerCount / 2));
+  return Math.min(maxPools, Math.max(1, Math.round(playerCount / 4)));
+}
+
+function renderPoolChoice(){
+  const playerCount = state.players.length;
+  const maxPools = Math.max(1, Math.floor(playerCount / 2));
+  const recommended = recommendedPoolCount(playerCount);
+  const selected = state.poolsManual
+    ? Math.min(maxPools, Math.max(1, state.pools || 1))
+    : recommended;
+  if (selected !== state.pools){
+    state.pools = selected;
+    state.pool = 0;
+    if (selected === 1) state.players.forEach(player => player.pool = 0);
+    else autoAssignPools();
+  }
+
+  const select = $("poolCountSelect");
+  select.innerHTML = "";
+  for (let count = 1; count <= maxPools; count++){
+    const option = document.createElement("option");
+    option.value = count;
+    option.textContent = count === 1 ? "1 pool" : count + " pooler";
+    if (count === recommended) option.textContent += " · rekommenderat";
+    option.selected = count === state.pools;
+    select.appendChild(option);
+  }
+
+  const smallestSize = playerCount ? Math.floor(playerCount / state.pools) : 0;
+  const largestSize = playerCount ? Math.ceil(playerCount / state.pools) : 0;
+  const sizeDescription = smallestSize === largestSize
+    ? smallestSize + " spelare per pool"
+    : smallestSize + "–" + largestSize + " spelare per pool";
+  $("poolRecommendation").textContent =
+    state.pools === 1 ? "1 pool" : state.pools + " pooler";
+  $("poolRecommendationDetail").textContent = !playerCount
+    ? "Lägg till spelare så anpassas antalet automatiskt."
+    : sizeDescription +
+      (state.poolsManual ? " · manuellt valt" : " · automatiskt rekommenderat");
+}
+
 /* Plain-language preview of the A/B split, using pool sizes only. */
 function advPreview(){
   if (state.finals !== "ab") return "";
@@ -2214,6 +2378,8 @@ function smallestPool(){
 
 function renderSetup(){
   if (state.useSeeding === undefined) state.useSeeding = true;
+  if (state.poolsManual === undefined) state.poolsManual = false;
+  renderPoolChoice();
   document.querySelectorAll("#formatSeg button").forEach(b => {
     b.classList.toggle("sel", b.dataset.fmt === state.format);
   });
@@ -2223,10 +2389,6 @@ function renderSetup(){
   $("scoringHint").textContent = state.scoring === "points"
     ? "Poängen per set skrivs in och set, ställning och bollkvot räknas ut automatiskt. Fler tryck per match."
     : "Snabbast: ett tryck per match. Ingen bollstatistik.";
-  document.querySelectorAll("#poolSeg button").forEach(b => {
-    b.classList.toggle("sel", +b.dataset.pools === state.pools);
-    b.disabled = state.players.length && state.players.length < +b.dataset.pools * 2;
-  });
   const hasRanking = state.players.some(player => playerRating(player) !== null);
   $("seedWrap").style.display = state.pools > 1 && hasRanking ? "" : "none";
   $("seedCheckbox").checked = state.useSeeding !== false;
@@ -2255,7 +2417,7 @@ function renderSetup(){
     if (state.pools > 1){
       const pick = document.createElement("button");
       pick.className = "poolpick";
-      pick.textContent = "Pool " + POOL_NAMES[p.pool || 0];
+      pick.textContent = "Pool " + poolName(p.pool || 0);
       pick.addEventListener("click", () => {          // cycle through the pools
         p.pool = ((p.pool || 0) + 1) % state.pools;
         renderSetup(); store.save();
@@ -2283,14 +2445,14 @@ function renderSetup(){
     ul.appendChild(li);
   });
   const n = state.players.length;
-  $("pcount").textContent = n ? "(" + n + " av max 20)" : "";
+  $("pcount").textContent = n ? "(" + n + ")" : "";
   let hint = "";
   if (state.pools > 1){
     const sizes = [];
-    for (let i = 0; i < state.pools; i++) sizes.push(POOL_NAMES[i] + ": " + poolMembers(i).length);
+    for (let i = 0; i < state.pools; i++) sizes.push(poolName(i) + ": " + poolMembers(i).length);
     hint = sizes.join("  ·  ") + " spelare. Tryck på poolknappen för att flytta någon.";
     const tooSmall = [];
-    for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) tooSmall.push(POOL_NAMES[i]);
+    for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) tooSmall.push(poolName(i));
     if (tooSmall.length) hint += "  Pool " + tooSmall.join(", ") + " behöver minst 2 spelare.";
   } else if (n >= 3 && n % 2){
     hint = "Ojämnt antal – en spelare vilar varje rond.";
@@ -2301,8 +2463,8 @@ function renderSetup(){
   for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) poolsOk = false;
   $("btnStart").disabled = n < 2 || !poolsOk;
   $("btnStart").textContent = state.pools > 1 ? "Starta poolspel" : "Starta rundpool";
-  $("nameInput").disabled = n >= 20;
-  $("btnAdd").disabled = n >= 20;
+  $("nameInput").disabled = false;
+  $("btnAdd").disabled = false;
   renderRoster();
 }
 
@@ -2331,7 +2493,7 @@ function renderRoster(){
     b.className = "chip" + (rosterEditMode ? " del" : (used ? " used" : ""));
     b.innerHTML = "<span class='plus'>" + (rosterEditMode ? "✕" : "+") + "</span><span class='t'></span>";
     b.querySelector(".t").textContent = nm;
-    b.disabled = !rosterEditMode && (used || state.players.length >= 20);
+    b.disabled = !rosterEditMode && used;
     b.addEventListener("click", () => {
       if (rosterEditMode){ rosterForget(nm); renderSetup(); return; }
       state.players.push({
@@ -2347,7 +2509,7 @@ function renderRoster(){
 function addPlayer(){
   const inp = $("nameInput");
   const name = sanitizeName(inp.value);
-  if (!name || state.players.length >= 20) return;
+  if (!name) return;
   if (inGame(name)){                       // same name already playing (case-insensitive)
     inp.value = "";
     renderSetup();
@@ -2378,7 +2540,7 @@ function renderGrid(){
   t.className = "berger";
   const thead = document.createElement("thead");
   let hr = "<tr><th class='corner'>" +
-    (state.pools > 1 ? "Pool " + POOL_NAMES[state.pool] : "Rundpool") + "</th>";
+    (state.pools > 1 ? "Pool " + poolName(state.pool) : "Rundpool") + "</th>";
   ps.forEach((p, i) => hr += "<th>" + (i+1) + "</th>");
   hr += "</tr>";
   thead.innerHTML = hr;
@@ -2446,7 +2608,7 @@ function renderRounds(){
   groups.forEach((group, gi) => {
     const r = current[gi];
     if (!r.length) return;
-    if (state.pools > 1) list.appendChild(sectionHead("Pool " + POOL_NAMES[group.pool]));
+    if (state.pools > 1) list.appendChild(sectionHead("Pool " + poolName(group.pool)));
     r.forEach(([a, b]) => {
       const div = document.createElement("div");
       if (a === null || b === null){
@@ -2524,7 +2686,7 @@ function renderStandings(){
   for (let i = 0; i < state.pools; i++){
     const head = document.createElement("div");
     head.className = "secthead";
-    head.innerHTML = "<h3>Pool " + POOL_NAMES[i] + "</h3><span></span>";
+    head.innerHTML = "<h3>Pool " + poolName(i) + "</h3><span></span>";
     head.querySelector("span").textContent =
       poolComplete(i) ? "färdigspelad" : "pågår";
     wrap.appendChild(head);
@@ -2545,7 +2707,7 @@ function renderPoolBar(){
   bar.style.display = "";
   for (let i = 0; i < state.pools; i++){
     const b = document.createElement("button");
-    b.innerHTML = "Pool " + POOL_NAMES[i] + (poolComplete(i) ? "<span class='dot'></span>" : "");
+    b.innerHTML = "Pool " + poolName(i) + (poolComplete(i) ? "<span class='dot'></span>" : "");
     if (i === state.pool) b.classList.add("sel");
     b.addEventListener("click", () => {
       state.pool = i; state.round = 0;
@@ -2568,7 +2730,7 @@ function waitingBanner(){
   const b = document.createElement("div");
   b.className = "banner";
   const left = [];
-  for (let i = 0; i < state.pools; i++) if (!poolComplete(i)) left.push(POOL_NAMES[i]);
+  for (let i = 0; i < state.pools; i++) if (!poolComplete(i)) left.push(poolName(i));
   b.innerHTML = "<strong>Lottas när poolspelet är klart</strong>";
   b.appendChild(document.createTextNode(
     "Väntar på pool " + left.join(", ") + ". Rutorna visar vilka placeringar som möts."));
@@ -2857,7 +3019,8 @@ function renderPointsModal(pa, pb, box){
   $("mSub").textContent = done
     ? "Klart: " + s[0] + "–" + s[1] + " i set"
     : "Set " + (modalSets.length + 1) + " av högst " + MAX_SETS() +
-      " · ställning " + s[0] + "–" + s[1];
+      " · ställning " + s[0] + "–" + s[1] +
+      (deuceMode ? " · scrolla för högre poäng" : "");
 
   /* sets entered so far — tap one to redo from there */
   if (modalSets.length){
@@ -2901,6 +3064,7 @@ function renderPointsModal(pa, pb, box){
 
   const grid = document.createElement("div");
   grid.className = "pgrid";
+  if (deuceMode) grid.classList.add("deucemode");
   [pa, pb].forEach((pl, side) => {
     const half = document.createElement("div");
     half.className = "phalf";
@@ -2910,7 +3074,9 @@ function renderPointsModal(pa, pb, box){
     half.appendChild(h);
     const cols = document.createElement("div");
     cols.className = "pcols";
-    const losers = deuceMode ? [10,11,12,13,14] : [0,1,2,3,4,5,6,7,8,9];
+    const losers = deuceMode
+      ? Array.from({length:190}, (_, index) => index + 10)
+      : [0,1,2,3,4,5,6,7,8,9];
     const per = deuceMode ? 5 : 5;
     for (let c = 0; c < losers.length / per; c++){
       const col = document.createElement("div");
@@ -3016,15 +3182,19 @@ async function saveRemoteTournament(){
 function scheduleClubRosterSave(){
   if (!clubSession || !API_BASE) return;
   clearTimeout(clubRosterSaveTimer);
+  const clubId = clubSession.clubId;
+  const names = roster.slice();
   clubRosterSaveTimer = setTimeout(async () => {
+    if (!clubSession || clubSession.clubId !== clubId) return;
     try{
       const data = await api(
-        "/clubs/" + clubSession.clubId + "/saved-names",
-        {method:"PUT", body:JSON.stringify({names:roster})}
+        "/clubs/" + clubId + "/saved-names",
+        {method:"PUT", body:JSON.stringify({names})}
       );
+      if (!clubSession || clubSession.clubId !== clubId) return;
       roster = data.savedNames;
       clubSession.savedNames = data.savedNames;
-      kvSave(ROSTER_KEY, roster);
+      kvSave(rosterStorageKey(), roster);
     }catch(error){
       $("clubStatus").textContent = "Kunde inte spara namnlistan: " + error.message;
       $("clubStatus").style.color = "var(--danger)";
@@ -3035,7 +3205,8 @@ function scheduleClubRosterSave(){
 function blankTournamentState(){
   return {
     phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
-    advance:state.advance, scoring:state.scoring, players:[], results:{}, fresults:{},
+    poolsManual:false, advance:state.advance, scoring:state.scoring,
+    players:[], results:{}, fresults:{},
     rankingMatches:{}, useSeeding:true, nextId:1, round:0, view:"grid", pool:0
   };
 }
@@ -3282,23 +3453,28 @@ function showLanding(){
   $("viewMain").style.display = "none";
   $("subTitle").textContent = "";
   $("btnClub").textContent = "Skapa klubb";
+  renderRecentClubs();
   animateLandingPrompt();
 }
 
 async function loadClubFromLink(){
   const clubId = new URLSearchParams(location.search).get("club");
   const hash = new URLSearchParams(location.hash.slice(1));
-  const token = hash.get("clubToken") || clubId;
+  const token = hash.get("clubToken") ||
+    localStorage.getItem("matchprotokollet_club_token_" + clubId) || clubId;
   if (!clubId || !API_BASE) return false;
+  clearTimeout(clubRosterSaveTimer);
+  roster = [];
   clubSession = {clubId, token, name:"Klubb", tournaments:[], players:[]};
   localStorage.setItem("matchprotokollet_club_token_" + clubId, token);
   try{
     const data = await api("/clubs/" + clubId, {method:"GET"});
     clubSession = Object.assign(data, {token});
+    rememberClub(clubSession);
     const hasBackendNames = Array.isArray(data.savedNames);
     const backendNames = hasBackendNames ? data.savedNames : data.players.map(player => player.name);
     roster = backendNames.slice().sort((a,b) => a.localeCompare(b, "sv", {sensitivity:"base"}));
-    kvSave(ROSTER_KEY, roster);
+    kvSave(rosterStorageKey(), roster);
     if (!hasBackendNames) scheduleClubRosterSave();
     renderClubPortal();
     return true;
@@ -3346,6 +3522,14 @@ async function loadPublicTournamentFromLink(){
 }
 
 function closeClub(){ $("clubOverlay").classList.remove("open"); }
+$("btnHome").addEventListener("click", () => {
+  history.pushState(null, "", location.pathname);
+  publicSession = null;
+  document.body.classList.remove("viewer");
+  document.querySelectorAll(".overlay.open").forEach(overlay => overlay.classList.remove("open"));
+  showLanding();
+  scrollTo({top:0, behavior:"smooth"});
+});
 $("btnClub").addEventListener("click", () => {
   if (publicSession){
     location.href = location.pathname + "?club=" +
@@ -3548,16 +3732,19 @@ async function createClub(name, statusElement){
   }
   statusElement.textContent = "Skapar klubben…";
   try{
+    clearTimeout(clubRosterSaveTimer);
     const data = await api("/clubs", {method:"POST", body:JSON.stringify({name})});
     clubSession = {
       clubId:data.clubId, token:data.accessToken, name:data.name,
       tournaments:[], players:[], savedNames:[]
     };
+    rememberClub(clubSession);
+    roster = [];
+    kvSave(rosterStorageKey(), roster);
     localStorage.setItem("matchprotokollet_club_token_" + data.clubId, data.accessToken);
     history.replaceState(null, "", "?club=" + encodeURIComponent(data.clubId));
     statusElement.textContent = "";
     renderClubPortal();
-    scheduleClubRosterSave();
     closeClub();
     showClubPage();
     return true;
@@ -3720,14 +3907,13 @@ $("scoringSeg").addEventListener("click", e => {
   state.results = {}; state.fresults = {}; state.rankingMatches = {};
   renderSetup(); store.save();
 });
-$("poolSeg").addEventListener("click", e => {
-  const b = e.target.closest("button");
-  if (!b || b.disabled) return;
-  const n = +b.dataset.pools;
+$("poolCountSelect").addEventListener("change", e => {
+  const n = +e.target.value;
   if (n === state.pools) return;
   if (Object.keys(state.fresults).length &&
       !confirm("Ändrat antal pooler rensar slutspelsresultaten. Fortsätt?")) return;
   state.pools = n;
+  state.poolsManual = true;
   state.fresults = {};
   clearFinalRankingMatches();
   state.pool = 0;
@@ -3787,7 +3973,7 @@ $("btnEdit").addEventListener("click", () => {
 });
 $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
-  state = { phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
+  state = { phase:"setup", format:state.format, pools:1, poolsManual:false, finals:state.finals,
             advance:state.advance, scoring:state.scoring,
             players:[], results:{}, fresults:{}, rankingMatches:{}, useSeeding:state.useSeeding,
             nextId:1, round:0, view:"grid", pool:0 };

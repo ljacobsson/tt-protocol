@@ -375,7 +375,7 @@ export async function handler(event) {
       if (!Array.isArray(input)) return response(400, {message: "Ogiltig namnlista"});
       const seen = new Set();
       const names = [];
-      for (const value of input.slice(0, 200)) {
+      for (const value of input) {
         const name = String(value).replace(/[\t\r\n]+/g, " ").trim().slice(0, 80);
         const key = name.toLocaleLowerCase("sv");
         if (name && !seen.has(key)) {
