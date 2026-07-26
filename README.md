@@ -1,4 +1,4 @@
-# Matchprotokollet
+# Matchprotokoll by Pingis.net
 
 En mobilanpassad tävlingsapp för rundpool, poolspel och slutspel. Appen kan
 fortfarande köras helt lokalt, men innehåller också en AWS SAM-backend för

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Matchprotokollet – bordtennisturneringar utan registrering</title>
+<title>Matchprotokoll by Pingis.net – bordtennisturneringar utan registrering</title>
 <meta name="description" content="Skapa poolspel, slutspel och live-resultat på några minuter. Gratis, utan konto eller registrering.">
 <meta name="theme-color" content="#07558e">
-<meta property="og:title" content="Matchprotokollet – spela mer, administrera mindre">
+<meta property="og:title" content="Matchprotokoll by Pingis.net – spela mer, administrera mindre">
 <meta property="og:description" content="Skapa och dela bordtennisturneringar direkt. Ingen registrering behövs.">
 <meta property="og:type" content="website">
 <style>
@@ -313,49 +313,101 @@
     padding:5px 9px; border-radius:999px; background:#EEF1F4;
     color:var(--muted); font-size:13px; font-weight:800;
   }
-  .clubpage{max-width:1100px; margin:24px auto 100px; padding:0 16px;}
+  .clubpage{max-width:1240px; margin:32px auto 100px; padding:0 22px;}
   .clubhero{
-    display:flex; align-items:center; justify-content:space-between; gap:18px;
-    margin-bottom:18px;
+    position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:space-between; gap:28px;
+    min-height:190px; margin-bottom:24px; padding:34px 38px;
+    border-radius:24px;
+    background:
+      radial-gradient(circle at 88% 20%,rgba(255,151,28,.28),transparent 27%),
+      linear-gradient(135deg,#07375f,#0b609f 72%,#1378bd);
+    color:#fff; box-shadow:0 18px 45px rgba(7,55,95,.2);
   }
-  .clubhero h2{margin:0; font-size:clamp(28px,5vw,42px);}
+  .clubhero::after{
+    content:""; position:absolute; width:210px; height:210px; right:-90px; bottom:-145px;
+    border:34px solid rgba(255,255,255,.08); border-radius:50%; pointer-events:none;
+  }
+  .clubidentity{position:relative; z-index:1; min-width:0;}
+  .clubhero .viewerbadge{background:#fff; color:#9b4b00; box-shadow:0 5px 15px rgba(0,0,0,.12);}
+  .clubhero h2{
+    margin:8px 0 6px; font-size:clamp(34px,5vw,54px); line-height:1.05;
+    color:#fff; overflow-wrap:anywhere;
+  }
+  .clubtagline{margin:0; color:rgba(255,255,255,.82); font-size:16px;}
   .clubactions{display:flex; flex-wrap:wrap; gap:10px;}
   .clubactions button{
-    min-height:58px; padding:0 20px; border-radius:12px;
-    background:var(--table); color:#fff; font-size:17px; font-weight:800;
+    position:relative; z-index:1; min-height:54px; padding:0 19px; border-radius:13px;
+    background:var(--ball); color:#17212b; font-size:16px; font-weight:900;
+    box-shadow:0 8px 22px rgba(0,0,0,.14); transition:transform .15s,box-shadow .15s;
   }
-  .clubactions button.secondary{background:#E7E3D9; color:var(--ink);}
+  .clubactions button:hover{transform:translateY(-2px); box-shadow:0 11px 27px rgba(0,0,0,.2);}
+  .clubactions button.secondary{
+    background:rgba(255,255,255,.14); color:#fff;
+    border:1px solid rgba(255,255,255,.32); box-shadow:none; backdrop-filter:blur(6px);
+  }
+  .clubdashboardgrid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;}
   .clubsection{
-    background:#fff; border-radius:var(--radius); padding:20px;
-    margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,.06);
+    overflow:hidden; background:#fff; border:1px solid rgba(10,56,91,.08);
+    border-radius:20px; padding:0; margin-bottom:20px;
+    box-shadow:0 8px 28px rgba(16,43,68,.07);
   }
-  .clubsection h3{margin:0 0 14px; font-size:23px;}
+  .clubdashboardgrid .clubsection{margin-bottom:0;}
+  .clubsectionhead{
+    display:flex; align-items:center; gap:12px; min-height:72px; padding:16px 20px;
+    border-bottom:1px solid #e8edf1;
+    background:linear-gradient(180deg,#fff,#fbfcfd);
+  }
+  .clubsectionicon{
+    display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px;
+    border-radius:11px; background:#e8f3fb; color:var(--table); font-size:19px; font-weight:900;
+  }
+  .clubsection h3{margin:0; font-size:21px;}
+  .clubcount{
+    margin-left:auto; min-width:28px; padding:4px 9px; border-radius:999px;
+    background:#edf1f4; color:var(--muted); text-align:center; font-size:13px; font-weight:900;
+  }
+  .clubsectionbody{padding:6px 20px;}
+  .clubempty{
+    display:flex; align-items:center; gap:14px; min-height:104px; padding:18px 4px; color:var(--muted);
+  }
+  .clubempty span{
+    display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px;
+    border-radius:50%; background:#f0f4f7; color:#7590a5; font-size:22px;
+  }
+  .clubempty strong{display:block; color:#34495a; margin-bottom:3px;}
+  .clubempty small{font-size:14px;}
   .teamtournament{
     display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px;
-    align-items:center; padding:12px 0; border-bottom:1px solid var(--grid-line);
+    align-items:center; padding:14px 0; border-bottom:1px solid var(--grid-line);
   }
   .teamtournament:last-child{border-bottom:0;}
-  .teamtournament .meta strong{display:block; font-size:19px;}
-  .teamtournament .meta small{color:var(--muted);}
+  .teamtournament .meta strong{display:block; font-size:18px;}
+  .teamtournament .meta small{display:block; color:var(--muted); margin-top:4px;}
   .teamtournament .openresult{
     display:flex; align-items:center; justify-content:center; text-decoration:none;
     min-height:48px; padding:0 16px; border-radius:10px;
-    background:#E3EAF1; color:var(--table-dark); font-size:15px; font-weight:900;
+    background:#e8f3fb; color:var(--table-dark); font-size:14px; font-weight:900;
+    transition:background .15s,transform .15s;
   }
+  .teamtournament .openresult:hover{background:#d6eaf8; transform:translateY(-1px);}
   .teamtournament .remove{
     width:48px; height:48px; border-radius:10px;
     background:#F3E1DE; color:var(--danger); font-size:20px; font-weight:900;
   }
   .teamplayer{
     display:grid; grid-template-columns:46px minmax(0,1fr) auto; gap:10px;
-    align-items:center; min-height:54px; border-bottom:1px solid var(--grid-line);
+    align-items:center; min-height:64px; border-bottom:1px solid var(--grid-line);
     width:100%; padding:0; background:transparent; color:inherit; text-align:left;
   }
-  .teamplayer:hover{background:#F4F6F8;}
+  .teamplayer:hover{background:#f5f9fc;}
   .teamplayer:last-child{border-bottom:0;}
   .teamplayer .rank{color:var(--muted); font-weight:800;}
   .teamplayer .name{font-weight:800;}
-  .teamplayer .points{font-size:20px; font-weight:900; color:var(--table);}
+  .teamplayer .points{
+    padding:7px 11px; border-radius:9px; background:#edf6fc;
+    font-size:18px; font-weight:900; color:var(--table);
+  }
   .playerstats{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:16px 0;}
   .playerstat{padding:12px 8px; border-radius:12px; background:#EEF1F4; text-align:center;}
   .playerstat strong{display:block; font-size:24px;}
@@ -372,9 +424,14 @@
   .rankingchange.minus{color:var(--loss-fg);}
   .periodnote{font-size:13px; color:var(--muted); margin-top:10px;}
   @media (max-width:650px){
-    .clubhero{align-items:flex-start; flex-direction:column;}
+    .clubpage{margin-top:14px; padding:0 10px;}
+    .clubhero{align-items:flex-start; flex-direction:column; padding:25px 20px; border-radius:18px;}
     .clubactions{width:100%;}
     .clubactions button{flex:1;}
+    .clubdashboardgrid{grid-template-columns:1fr; gap:14px;}
+    .clubsection{border-radius:16px; margin-bottom:14px;}
+    .clubsectionhead{padding:14px 15px;}
+    .clubsectionbody{padding:4px 15px;}
     .teamtournament{grid-template-columns:minmax(0,1fr) 48px;}
     .teamtournament .openresult{grid-column:1 / -1; grid-row:2;}
     .teamtournament .remove{grid-column:2; grid-row:1;}
@@ -854,7 +911,7 @@
 <header>
   <div class="brand">
     <span class="ball"></span>
-    <h1>MATCHPROTOKOLLET</h1>
+    <h1>Matchprotokoll by Pingis.net</h1>
     <small id="subTitle"></small>
   </div>
   <button class="hbtn clubbtn" id="btnClub">Klubb</button>
@@ -874,7 +931,7 @@
         </p>
         <div class="signupbox">
           <input id="landingClubName" maxlength="80" placeholder="Vad heter klubben?"
-                 aria-label="Klubbnamn">
+                 aria-label="Gruppens namn">
           <button id="btnLandingCreate">Skapa klubb gratis</button>
         </div>
         <p class="landingerror" id="landingCreateStatus"></p>
@@ -885,17 +942,17 @@
         </div>
         <button class="locallink" id="btnOpenLocal">Öppna en lokal tävling på den här enheten</button>
       </div>
-      <div class="productcard" aria-label="Förhandsvisning av Matchprotokollet">
+      <div class="productcard" aria-label="Förhandsvisning av Matchprotokoll by Pingis.net">
         <div class="producttop">
-          <strong>Sigtunasommar · A-slutspel</strong>
+          <strong>Solvikens BTK · Sommarcup</strong>
           <span class="livepill">● LIVE</span>
         </div>
-        <div class="mockmatch"><span>Linus</span><b class="mockscore">2–1</b><span>Robban</span></div>
-        <div class="mockmatch"><span>Jojje</span><b class="mockscore">1–2</b><span>Michael</span></div>
+        <div class="mockmatch"><span>Alva Lind</span><b class="mockscore">2–1</b><span>Noah Berg</span></div>
+        <div class="mockmatch"><span>Mira Sjö</span><b class="mockscore">1–2</b><span>Elias Holm</span></div>
         <div class="mockranking">
-          <div class="mockrankrow"><span>1</span><b>Linus</b><b>1090 p</b></div>
-          <div class="mockrankrow"><span>2</span><b>Robban</b><b>1060 p</b></div>
-          <div class="mockrankrow"><span>3</span><b>Michael</b><b>1050 p</b></div>
+          <div class="mockrankrow"><span>1</span><b>Alva Lind</b><b>1090 p</b></div>
+          <div class="mockrankrow"><span>2</span><b>Noah Berg</b><b>1060 p</b></div>
+          <div class="mockrankrow"><span>3</span><b>Elias Holm</b><b>1050 p</b></div>
         </div>
       </div>
     </div>
@@ -948,29 +1005,44 @@
 <!-- ================= CLUB PAGE ================= -->
 <div id="viewClub" class="clubpage" style="display:none;">
   <div class="clubhero">
-    <div>
+    <div class="clubidentity">
       <span class="viewerbadge">KLUBB</span>
       <h2 id="clubPageTitle"></h2>
+      <p class="clubtagline">Tävlingar, resultat och ranking – samlat på ett ställe.</p>
     </div>
     <div class="clubactions">
-      <button id="btnClubPageNew">Ny tävling</button>
-      <button class="secondary" id="btnClubPageImport">Importera</button>
-      <button class="secondary" id="btnClubPageCopy">Kopiera klubblänk</button>
+      <button id="btnClubPageNew">＋ Ny tävling</button>
+      <button class="secondary" id="btnClubPageImport">↥ Importera</button>
+      <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
   </div>
   <p class="clubstatus" id="clubPageStatus"></p>
+  <div class="clubdashboardgrid">
+    <section class="clubsection">
+      <div class="clubsectionhead">
+        <span class="clubsectionicon">●</span>
+        <h3>Pågående tävlingar</h3>
+        <span class="clubcount" id="clubOngoingCount">0</span>
+      </div>
+      <div class="clubsectionbody" id="clubOngoingList"></div>
+    </section>
+    <section class="clubsection">
+      <div class="clubsectionhead">
+        <span class="clubsectionicon">✓</span>
+        <h3>Tidigare tävlingar</h3>
+        <span class="clubcount" id="clubPastCount">0</span>
+      </div>
+      <div class="clubsectionbody" id="clubPastList"></div>
+    </section>
+  </div>
   <section class="clubsection">
-    <h3>Pågående tävlingar</h3>
-    <div id="clubOngoingList"></div>
-  </section>
-  <section class="clubsection">
-    <h3>Tidigare tävlingar</h3>
-    <div id="clubPastList"></div>
-  </section>
-  <section class="clubsection">
-    <h3>Spelare och ranking</h3>
-    <div id="clubPlayerRanking"></div>
+    <div class="clubsectionhead">
+      <span class="clubsectionicon">★</span>
+      <h3>Spelare och ranking</h3>
+      <span class="clubcount" id="clubPlayerCount">0</span>
+    </div>
+    <div class="clubsectionbody" id="clubPlayerRanking"></div>
   </section>
 </div>
 
@@ -2959,12 +3031,24 @@ function renderClubPage(){
   $("btnClubPageBack").style.display = activeTournament ? "" : "none";
   const ongoing = $("clubOngoingList"), past = $("clubPastList");
   ongoing.innerHTML = ""; past.innerHTML = "";
+  const ongoingTournaments = [];
+  const pastTournaments = [];
   (clubSession.tournaments || []).forEach(tournament => {
     const concluded = tournament.status === "finalized";
-    (concluded ? past : ongoing).appendChild(tournamentPageRow(tournament, concluded));
+    (concluded ? pastTournaments : ongoingTournaments).push(tournament);
   });
-  if (!ongoing.children.length) ongoing.innerHTML = "<p class='hint'>Inga pågående tävlingar.</p>";
-  if (!past.children.length) past.innerHTML = "<p class='hint'>Inga tidigare tävlingar.</p>";
+  ongoingTournaments.forEach(tournament =>
+    ongoing.appendChild(tournamentPageRow(tournament, false)));
+  pastTournaments.forEach(tournament =>
+    past.appendChild(tournamentPageRow(tournament, true)));
+  $("clubOngoingCount").textContent = ongoingTournaments.length;
+  $("clubPastCount").textContent = pastTournaments.length;
+  if (!ongoing.children.length) ongoing.innerHTML =
+    "<div class='clubempty'><span>＋</span><div><strong>Redo för första matchen?</strong>" +
+    "<small>Skapa en tävling och bjud in spelarna.</small></div></div>";
+  if (!past.children.length) past.innerHTML =
+    "<div class='clubempty'><span>✓</span><div><strong>Inga avslutade tävlingar ännu</strong>" +
+    "<small>Slutresultaten samlas här när ni har spelat klart.</small></div></div>";
 
   const players = $("clubPlayerRanking");
   players.innerHTML = "";
@@ -2978,7 +3062,10 @@ function renderClubPage(){
     row.addEventListener("click", () => showPlayerDetails(player.playerId));
     players.appendChild(row);
   });
-  if (!players.children.length) players.innerHTML = "<p class='hint'>Inga klubbspelare ännu.</p>";
+  $("clubPlayerCount").textContent = (clubSession.players || []).length;
+  if (!players.children.length) players.innerHTML =
+    "<div class='clubempty'><span>★</span><div><strong>Rankingen väntar på spelare</strong>" +
+    "<small>Spelare läggs till automatiskt när de deltar i en tävling.</small></div></div>";
 }
 
 function showPlayerDetails(playerId){
@@ -3044,6 +3131,34 @@ function showClubPage(){
   renderClubPage();
 }
 
+const landingGroupNames = ["klubben", "arbetsplatsen", "kompisgänget", "familjen"];
+let landingPromptRun = 0;
+const landingPromptDelay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function animateLandingPrompt(){
+  const input = $("landingClubName");
+  const run = ++landingPromptRun;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches){
+    input.placeholder = "Vad heter klubben, arbetsplatsen, kompisgänget eller familjen?";
+    return;
+  }
+  let groupIndex = 0;
+  while (run === landingPromptRun && !input.value && document.activeElement !== input){
+    const group = landingGroupNames[groupIndex];
+    for (let length = 0; length <= group.length && run === landingPromptRun; length++){
+      input.placeholder = "Vad heter " + group.slice(0, length) + (length ? "?" : "");
+      await landingPromptDelay(65);
+    }
+    await landingPromptDelay(1450);
+    for (let length = group.length - 1; length >= 0 && run === landingPromptRun; length--){
+      input.placeholder = "Vad heter " + group.slice(0, length) + (length ? "?" : "");
+      await landingPromptDelay(35);
+    }
+    groupIndex = (groupIndex + 1) % landingGroupNames.length;
+    await landingPromptDelay(180);
+  }
+}
+
 function showLanding(){
   $("viewLanding").style.display = "";
   $("viewClub").style.display = "none";
@@ -3051,6 +3166,7 @@ function showLanding(){
   $("viewMain").style.display = "none";
   $("subTitle").textContent = "";
   $("btnClub").textContent = "Skapa klubb";
+  animateLandingPrompt();
 }
 
 async function loadClubFromLink(){
@@ -3346,6 +3462,13 @@ $("btnLandingCreate").addEventListener("click", async () => {
 });
 $("landingClubName").addEventListener("keydown", event => {
   if (event.key === "Enter") $("btnLandingCreate").click();
+});
+$("landingClubName").addEventListener("focus", () => {
+  landingPromptRun++;
+  $("landingClubName").placeholder = "Skriv gruppens namn";
+});
+$("landingClubName").addEventListener("blur", () => {
+  if (!$("landingClubName").value) animateLandingPrompt();
 });
 $("btnLandingCreateBottom").addEventListener("click", () => {
   $("landingClubName").scrollIntoView({behavior:"smooth", block:"center"});
