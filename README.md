@@ -4,6 +4,11 @@ En mobilanpassad tävlingsapp för rundpool, poolspel och slutspel. Appen kan
 fortfarande köras helt lokalt, men innehåller också en AWS SAM-backend för
 klubbar, flera tävlingar per klubb och beständig spelarranking.
 
+Rotadressen är en konsumentinriktad landningssida där en klubb kan skapas
+direkt med endast klubbnamnet. Ingen registrering, e-postadress, betalning eller
+lösenord krävs; den unika klubblänken är åtkomsten. Äldre lokal användning nås
+via länken för lokal tävling på landningssidan.
+
 ## AWS-arkitektur
 
 - API Gateway exponerar klubb- och tävlings-API:t.
