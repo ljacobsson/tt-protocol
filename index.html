@@ -29,12 +29,20 @@
 <meta name="twitter:description" content="Poolspel, slutspel, live-resultat och ranking. Gratis och utan registrering.">
 <meta name="twitter:image" content="https://protokoll.pingis.net/og-matchprotokoll.png">
 <script>
+  window.loadPostHog = function(){
+    if (window.__matchprotokolletPostHogLoaded) return;
+    window.__matchprotokolletPostHogLoaded = true;
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="Ji Yi init fn mn Hr pn bn cn capture calculateEventProperties Sn register register_once register_for_session unregister unregister_for_session In getFeatureFlag getFeatureFlagPayload getFeatureFlagResult getAllFeatureFlags isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync Mn identify setPersonProperties unsetPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset shutdown setIdentity clearIdentity get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException addExceptionStep captureLog startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty Cn xn createPersonProfile setInternalOrTestUser Tn hn Pn opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing debug Ur wt getPageViewId captureTraceFeedback captureTraceMetric an".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_P4wfoPmRCk3wQsqre9gkQcZ3gQLhJoaNUV3GFvwA8XT', {
         api_host: 'https://eu.i.posthog.com',
         defaults: '2026-05-30',
         person_profiles: 'identified_only',
     })
+  };
+  try{
+    if (localStorage.getItem("matchprotokollet-cookie-consent") === "accepted")
+      window.loadPostHog();
+  }catch(error){}
 </script>
 <script type="application/ld+json">
 {
@@ -101,6 +109,35 @@
     touch-action:manipulation;
     -webkit-user-select:none; user-select:none;
     min-height:100vh;
+  }
+  .cookiebanner{
+    position:fixed; z-index:10000; left:50%; bottom:18px; transform:translateX(-50%);
+    display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:18px;
+    width:min(920px,calc(100% - 28px)); padding:18px 20px; border-radius:16px;
+    background:#fff; border:1px solid #d8e2e9; box-shadow:0 18px 55px rgba(7,44,70,.25);
+  }
+  .cookiebanner[hidden]{display:none;}
+  .cookiecopy strong{display:block; margin-bottom:5px; font-size:17px;}
+  .cookiecopy p{margin:0; color:var(--muted); font-size:14px; line-height:1.45;}
+  .cookiecopy a{color:var(--table); font-weight:800;}
+  .cookieactions{display:flex; gap:9px;}
+  .cookieactions button{
+    min-height:44px; padding:0 16px; border-radius:10px; font-size:14px; font-weight:900;
+  }
+  .cookieactions .reject{border:1px solid #cbd8e1; background:#fff; color:var(--table-dark);}
+  .cookieactions .accept{background:var(--table); color:#fff;}
+  .cookiesettings{
+    position:fixed; z-index:9000; left:10px; bottom:10px; padding:7px 10px;
+    border:1px solid #cbd8e1; border-radius:999px; background:rgba(255,255,255,.92);
+    color:#536b7d; font-size:11px; font-weight:800; box-shadow:0 3px 12px rgba(7,44,70,.1);
+  }
+  .nameconsentnote{
+    margin:7px 2px 2px; color:var(--muted); font-size:12px; line-height:1.4;
+  }
+  @media (max-width:650px){
+    .cookiebanner{grid-template-columns:1fr; gap:13px; bottom:10px; padding:16px;}
+    .cookieactions{width:100%;}
+    .cookieactions button{flex:1;}
   }
   button{
     font-family:inherit;
@@ -1503,6 +1540,20 @@
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
 </header>
 
+<button type="button" class="cookiesettings" id="btnCookieSettings">Cookies</button>
+<aside class="cookiebanner" id="cookieBanner" aria-labelledby="cookieTitle" hidden>
+  <div class="cookiecopy">
+    <strong id="cookieTitle">Hjälp oss förbättra Matchprotokoll</strong>
+    <p>Vi använder PostHog och analyscookies för användningsstatistik. Analys laddas bara om du godkänner.
+      <a href="https://posthog.com/privacy" target="_blank" rel="noopener">Läs om PostHogs integritet</a>.
+    </p>
+  </div>
+  <div class="cookieactions">
+    <button type="button" class="reject" id="btnRejectCookies">Avvisa</button>
+    <button type="button" class="accept" id="btnAcceptCookies">Godkänn statistik</button>
+  </div>
+</aside>
+
 <!-- ================= LANDING ================= -->
 <div id="viewLanding" class="landing" style="display:none;">
   <section class="landinghero">
@@ -1919,6 +1970,7 @@
       <input id="nameInput" type="text" placeholder="Namn…" autocomplete="off" maxlength="24">
       <button id="btnAdd">Lägg till</button>
     </div>
+    <p class="nameconsentnote">Lägg inte in namn eller andra personuppgifter utan spelarens samtycke.</p>
     <div class="rosterhead">
       <h3 id="rosterTitle">SPARADE NAMN</h3>
       <button id="btnRosterEdit">Ta bort namn</button>
@@ -2480,6 +2532,31 @@ function syncUrl(){
 
 /* ---------------- Helpers ---------------- */
 const $ = id => document.getElementById(id);
+const COOKIE_CONSENT_KEY = "matchprotokollet-cookie-consent";
+function cookieConsentValue(){
+  try{return localStorage.getItem(COOKIE_CONSENT_KEY);}catch(error){return null;}
+}
+function saveCookieConsent(value){
+  try{localStorage.setItem(COOKIE_CONSENT_KEY,value);}catch(error){}
+  $("cookieBanner").hidden = true;
+}
+if (!cookieConsentValue()) $("cookieBanner").hidden = false;
+$("btnCookieSettings").addEventListener("click", () => {
+  $("cookieBanner").hidden = false;
+});
+$("btnAcceptCookies").addEventListener("click", () => {
+  saveCookieConsent("accepted");
+  if (window.__matchprotokolletPostHogLoaded && window.posthog?.opt_in_capturing)
+    window.posthog.opt_in_capturing();
+  else window.loadPostHog();
+});
+$("btnRejectCookies").addEventListener("click", () => {
+  saveCookieConsent("rejected");
+  if (window.__matchprotokolletPostHogLoaded && window.posthog){
+    if (window.posthog.reset) window.posthog.reset();
+    if (window.posthog.opt_out_capturing) window.posthog.opt_out_capturing();
+  }
+});
 const byId = id => state.players.find(p => p.id === id);
 const rkey = (a,b) => a < b ? a+"_"+b : b+"_"+a;
 
