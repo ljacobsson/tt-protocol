@@ -374,6 +374,80 @@
     padding:5px 9px; border-radius:999px; background:#EEF1F4;
     color:var(--muted); font-size:13px; font-weight:800;
   }
+  .resultcelebration{
+    position:relative; overflow:hidden; margin:-2px -2px 24px; padding:36px 24px 0;
+    border-radius:20px; color:#fff; text-align:center;
+    background:
+      radial-gradient(circle at 16% 18%,rgba(255,190,72,.28),transparent 24%),
+      radial-gradient(circle at 86% 14%,rgba(109,207,255,.22),transparent 25%),
+      linear-gradient(145deg,#07345a,#0d609e 62%,#1175b9);
+    box-shadow:0 18px 42px rgba(7,52,90,.2);
+  }
+  .resultcelebration::after{
+    content:""; position:absolute; inset:-80% -40%; pointer-events:none;
+    background:linear-gradient(110deg,transparent 44%,rgba(255,255,255,.16) 49%,transparent 54%);
+    animation:resultShine 5.5s ease-in-out infinite;
+  }
+  @keyframes resultShine{0%,52%{transform:translateX(-35%)}82%,100%{transform:translateX(35%)}}
+  .resultkicker{font-size:12px; font-weight:950; letter-spacing:1.4px; text-transform:uppercase; color:#aee2ff;}
+  .resultcelebration h2{margin:7px 0 5px; color:#fff; font-size:clamp(28px,5vw,44px);}
+  .resultcelebration > p{margin:0; color:rgba(255,255,255,.76);}
+  .resultpodium{
+    position:relative; z-index:1; display:flex; justify-content:center; align-items:end;
+    max-width:760px; min-height:260px; margin:24px auto 0;
+  }
+  .resultpodiumplace{
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    width:31%; padding:17px 9px 12px; color:#172737;
+    opacity:0; transform:translateY(28px);
+    animation:podiumRise .65s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .resultpodiumplace.place-1{
+    order:2; min-height:205px; border-radius:18px 18px 0 0;
+    background:linear-gradient(155deg,#fff8d9,#f4ca55); animation-delay:.12s;
+  }
+  .resultpodiumplace.place-2{
+    order:1; min-height:164px; border-radius:18px 0 0;
+    background:linear-gradient(155deg,#f7fafc,#c9d3da); animation-delay:.24s;
+  }
+  .resultpodiumplace.place-3{
+    order:3; min-height:132px; border-radius:0 18px 0 0;
+    background:linear-gradient(155deg,#faeee6,#dca779); animation-delay:.34s;
+  }
+  @keyframes podiumRise{to{opacity:1;transform:none}}
+  .resultmedal{font-size:34px; filter:drop-shadow(0 5px 8px rgba(0,0,0,.15));}
+  .resultpodiumplace strong{margin:7px 0 3px; font-size:clamp(15px,2.2vw,21px); line-height:1.15;}
+  .resultpodiumplace small{color:#536879; font-weight:800;}
+  .resultstats{margin:0 0 26px;}
+  .resultstatshead{margin:0 0 12px; font-size:22px;}
+  .resultstatgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  .resultstat{
+    min-height:118px; padding:17px; border:1px solid #dce5eb; border-radius:16px;
+    background:linear-gradient(155deg,#fff,#f5f8fa);
+    box-shadow:0 7px 20px rgba(12,54,83,.07);
+    opacity:0; animation:statReveal .45s ease forwards;
+  }
+  .resultstat:nth-child(2){animation-delay:.08s}
+  .resultstat:nth-child(3){animation-delay:.16s}
+  .resultstat:nth-child(4){animation-delay:.24s}
+  @keyframes statReveal{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .resultstat span{display:block; font-size:24px;}
+  .resultstat strong{display:block; margin:7px 0 3px; font-size:20px;}
+  .resultstat b{display:block; margin-bottom:4px; font-size:13px;}
+  .resultstat small{color:var(--muted); line-height:1.35;}
+  .fullresulthead{display:flex; align-items:center; gap:10px; margin:4px 0 8px;}
+  .fullresulthead h3{margin:0; font-size:22px;}
+  .fullresulthead span{padding:5px 9px; border-radius:999px; background:#e8f3fb; color:var(--table); font-size:12px; font-weight:900;}
+  @media (max-width:650px){
+    .resultcelebration{padding:28px 10px 0;}
+    .resultpodium{min-height:225px;}
+    .resultpodiumplace{width:33%; padding:13px 5px 9px;}
+    .resultpodiumplace.place-1{min-height:174px;}
+    .resultpodiumplace.place-2{min-height:140px;}
+    .resultpodiumplace.place-3{min-height:115px;}
+    .resultmedal{font-size:27px;}
+    .resultstatgrid{grid-template-columns:1fr 1fr;}
+  }
   .clubpage{max-width:1240px; margin:32px auto 100px; padding:0 22px;}
   .clubhero{
     position:relative; overflow:hidden;
@@ -559,13 +633,79 @@
   .nopass{display:flex; flex-wrap:wrap; gap:18px; margin-top:14px; font-size:14px; color:rgba(255,255,255,.8);}
   .nopass span::before{content:"✓"; color:#8EE5A7; font-weight:900; margin-right:6px;}
   .productcard{
-    position:relative; padding:18px; border-radius:26px; color:var(--ink);
+    position:relative; min-height:390px; padding:18px; overflow:hidden;
+    border-radius:26px; color:var(--ink);
     background:rgba(255,255,255,.95); box-shadow:0 28px 70px rgba(0,0,0,.3);
     transform:rotate(1.5deg);
   }
   .producttop{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
   .producttop strong{font-size:18px;}
   .livepill{padding:6px 10px; border-radius:999px; background:#DFF2E3; color:#1E7A3C; font-size:12px; font-weight:900;}
+  .tourviewport{position:relative; min-height:286px;}
+  .tourscene{
+    position:absolute; inset:0; opacity:0; transform:translateX(28px) scale(.985);
+    visibility:hidden; pointer-events:none;
+    transition:opacity .38s ease,transform .48s cubic-bezier(.2,.8,.2,1),visibility 0s linear .48s;
+  }
+  .tourscene.active{
+    opacity:1; transform:none; visibility:visible; pointer-events:auto;
+    transition:opacity .38s ease,transform .48s cubic-bezier(.2,.8,.2,1);
+  }
+  .tourlabel{
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+    color:var(--table); font-size:12px; font-weight:950; letter-spacing:.75px;
+    text-transform:uppercase;
+  }
+  .tourlabel span{
+    display:grid; place-items:center; width:25px; height:25px; border-radius:8px;
+    background:#e5f2fb; font-size:13px;
+  }
+  .toursetup{display:grid; gap:9px;}
+  .tourfield,.tourchoice,.tourplayer{
+    min-height:43px; padding:10px 12px; border-radius:11px; background:#eef1f4;
+  }
+  .tourfield{display:flex; justify-content:space-between; align-items:center; color:#627789;}
+  .tourfield b{color:var(--ink);}
+  .tourchoices{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
+  .tourchoice{min-height:48px; padding:8px; text-align:center; font-size:12px; font-weight:850;}
+  .tourchoice.selected{outline:2px solid var(--ball); background:#fff1df; color:#8d4800;}
+  .tourplayers{display:flex; flex-wrap:wrap; gap:7px;}
+  .tourplayer{min-height:0; padding:7px 10px; background:#e7f1f8; color:var(--table); font-size:12px; font-weight:850;}
+  .tourpools{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .tourpool{padding:11px; border:1px solid #d9e2e8; border-radius:12px; background:#f8fafb;}
+  .tourpool h5{margin:0 0 7px; color:var(--table); font-size:13px;}
+  .tourpool div{display:flex; justify-content:space-between; padding:5px 0; font-size:12px; font-weight:750;}
+  .scoreentry{padding:13px; border-radius:15px; background:#eef1f4; text-align:center;}
+  .scoreversus{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; font-weight:900;}
+  .scoreversus i{display:grid; place-items:center; width:36px; height:36px; border-radius:50%; background:var(--table); color:#fff; font-style:normal;}
+  .scorebuttons{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:14px;}
+  .scorebuttons b{padding:14px 8px; border-radius:11px; background:#fff; font-size:22px;}
+  .scorebuttons b:first-child{animation:scoreTap 4.2s ease infinite;}
+  @keyframes scoreTap{0%,45%,100%{transform:none;box-shadow:none}55%{transform:scale(.96);box-shadow:0 0 0 3px var(--ball)}}
+  .tourstand{width:100%; border-collapse:collapse; font-size:12px;}
+  .tourstand th{padding:7px 5px; color:#617687; text-align:left; border-bottom:2px solid #d7e0e6;}
+  .tourstand td{padding:9px 5px; border-bottom:1px solid #e1e7eb; font-weight:750;}
+  .tourstand td:last-child,.tourstand th:last-child{text-align:right;}
+  .tourstand .qualified td:first-child{color:#159151; font-weight:950;}
+  .tourbracket{display:grid; grid-template-columns:1fr 28px 1fr; align-items:center;}
+  .tourround{display:grid; gap:10px;}
+  .tourgame{padding:8px; border-radius:9px; background:#eef1f4; font-size:11px;}
+  .tourgame div{display:flex; justify-content:space-between; padding:3px 2px;}
+  .tourgame .winner{font-weight:950; color:var(--table);}
+  .tourconnector{height:72px; border:2px solid #9eb1bf; border-left:0;}
+  .tourpodium{display:flex; align-items:end; justify-content:center; min-height:206px; padding-top:35px;}
+  .tourplace{display:grid; place-items:center; width:31%; padding:12px 5px; text-align:center; font-size:11px; font-weight:900;}
+  .tourplace b{font-size:22px;}
+  .tourplace.first{height:145px; order:2; background:#fff0c7; color:#785000; border-radius:13px 13px 0 0;}
+  .tourplace.second{height:108px; order:1; background:#e5eaee; border-radius:13px 0 0;}
+  .tourplace.third{height:82px; order:3; background:#f1ded1; border-radius:0 13px 0 0;}
+  .tourprogress{display:flex; align-items:center; gap:6px; margin-top:13px;}
+  .tourprogress button{
+    width:8px; height:8px; min-height:0; padding:0; border-radius:999px;
+    background:#b8c7d1; transition:width .25s,background .25s;
+  }
+  .tourprogress button.active{width:27px; background:var(--table);}
+  .tourprogress small{margin-left:auto; color:#64798a; font-size:11px; font-weight:800;}
   .mockmatch{
     display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px;
     padding:14px; margin-bottom:8px; border-radius:14px; background:#EEF1F4; font-weight:800;
@@ -699,7 +839,7 @@
   }
   @media (max-width:850px){
     .herogrid{grid-template-columns:1fr; gap:42px;}
-    .productcard{max-width:560px; transform:none;}
+    .productcard{max-width:560px; width:100%; transform:none;}
     .featuregrid,.steps,.bracketgallery,.recentlist,.faqgrid{grid-template-columns:1fr;}
     .step:not(:last-child)::after{display:none;}
   }
@@ -712,6 +852,14 @@
     .recentclubs{margin:-34px auto 0; padding:0 16px;}
     .recentpanel{padding:18px;}
     .landingcta{margin:0 16px 64px; padding:38px 20px;}
+    .productcard{min-height:370px; padding:15px;}
+    .tourviewport{min-height:271px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .tourscene{transition:none;}
+    .scorebuttons b:first-child{animation:none;}
+    .resultcelebration::after,.resultpodiumplace,.resultstat{animation:none;}
+    .resultpodiumplace,.resultstat{opacity:1; transform:none;}
   }
 
   /* ---------- Pools ---------- */
@@ -1135,17 +1283,85 @@
           Visa demo
         </button>
       </div>
-      <div class="productcard" aria-label="Förhandsvisning av Matchprotokoll by Pingis.net">
+      <div class="productcard" id="productTour" aria-label="Så fungerar Matchprotokoll – från tävlingsstart till slutresultat">
         <div class="producttop">
           <strong>Solvikens BTK · Sommarcup</strong>
-          <span class="livepill">● LIVE</span>
+          <span class="livepill" id="tourStatus">NY TÄVLING</span>
         </div>
-        <div class="mockmatch"><span>Alva Lind</span><b class="mockscore">2–1</b><span>Noah Berg</span></div>
-        <div class="mockmatch"><span>Mira Sjö</span><b class="mockscore">1–2</b><span>Elias Holm</span></div>
-        <div class="mockranking">
-          <div class="mockrankrow"><span>1</span><b>Alva Lind</b><b>1090 p</b></div>
-          <div class="mockrankrow"><span>2</span><b>Noah Berg</b><b>1060 p</b></div>
-          <div class="mockrankrow"><span>3</span><b>Elias Holm</b><b>1050 p</b></div>
+        <div class="tourviewport">
+          <div class="tourscene active" data-tour-title="Skapa tävlingen" data-tour-status="NY TÄVLING">
+            <div class="tourlabel"><span>1</span> Skapa tävlingen</div>
+            <div class="toursetup">
+              <div class="tourfield"><span>Tävlingsnamn</span><b>Sommarcupen</b></div>
+              <div class="tourchoices">
+                <div class="tourchoice selected">Setsiffror<br>2–1</div>
+                <div class="tourchoice selected">Bäst av 3</div>
+                <div class="tourchoice selected">2 pooler</div>
+              </div>
+              <div class="tourplayers">
+                <span class="tourplayer">Alva Lind</span><span class="tourplayer">Noah Berg</span>
+                <span class="tourplayer">Mira Sjö</span><span class="tourplayer">Elias Holm</span>
+                <span class="tourplayer">Vera Lund</span><span class="tourplayer">Oskar Ek</span>
+              </div>
+            </div>
+          </div>
+          <div class="tourscene" data-tour-title="Automatisk poolindelning" data-tour-status="LOTTNING">
+            <div class="tourlabel"><span>2</span> Seedade pooler skapas</div>
+            <div class="tourpools">
+              <div class="tourpool"><h5>Pool A</h5><div><span>1</span><b>Alva Lind</b></div><div><span>2</span><b>Elias Holm</b></div><div><span>3</span><b>Oskar Ek</b></div></div>
+              <div class="tourpool"><h5>Pool B</h5><div><span>1</span><b>Noah Berg</b></div><div><span>2</span><b>Mira Sjö</b></div><div><span>3</span><b>Vera Lund</b></div></div>
+            </div>
+          </div>
+          <div class="tourscene" data-tour-title="Registrera resultat" data-tour-status="● LIVE">
+            <div class="tourlabel"><span>3</span> Ett tryck per match</div>
+            <div class="scoreentry">
+              <div class="scoreversus"><b>Alva Lind</b><i>VS</i><b>Noah Berg</b></div>
+              <div class="scorebuttons"><b>2–1</b><b>1–2</b></div>
+            </div>
+            <div class="mockmatch" style="margin-top:10px"><span>Mira Sjö</span><b class="mockscore">2–0</b><span>Elias Holm</span></div>
+          </div>
+          <div class="tourscene" data-tour-title="Följ tabellen live" data-tour-status="● LIVE">
+            <div class="tourlabel"><span>4</span> Tabellen räknas direkt</div>
+            <table class="tourstand">
+              <thead><tr><th>#</th><th>Spelare</th><th>M</th><th>Set</th><th>P</th></tr></thead>
+              <tbody>
+                <tr class="qualified"><td>1</td><td>Alva Lind</td><td>3</td><td>6–2</td><td>6</td></tr>
+                <tr class="qualified"><td>2</td><td>Noah Berg</td><td>3</td><td>5–3</td><td>4</td></tr>
+                <tr><td>3</td><td>Elias Holm</td><td>3</td><td>3–5</td><td>2</td></tr>
+                <tr><td>4</td><td>Oskar Ek</td><td>3</td><td>2–6</td><td>0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tourscene" data-tour-title="Slutspelet byggs" data-tour-status="SLUTSPEL">
+            <div class="tourlabel"><span>5</span> Automatisk slutspelslottning</div>
+            <div class="tourbracket">
+              <div class="tourround">
+                <div class="tourgame"><div class="winner"><span>Alva Lind</span><b>2</b></div><div><span>Mira Sjö</span><b>0</b></div></div>
+                <div class="tourgame"><div><span>Noah Berg</span><b>1</b></div><div class="winner"><span>Vera Lund</span><b>2</b></div></div>
+              </div>
+              <div class="tourconnector"></div>
+              <div class="tourround">
+                <div class="tourgame"><div class="winner"><span>Alva Lind</span><b>2</b></div><div><span>Vera Lund</span><b>1</b></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tourscene" data-tour-title="Slutresultat och ranking" data-tour-status="AVGJORD">
+            <div class="tourlabel"><span>6</span> Klart – ranking uppdaterad</div>
+            <div class="tourpodium">
+              <div class="tourplace first"><b>🥇</b><span>Alva Lind</span><small>1090 p · +24</small></div>
+              <div class="tourplace second"><b>🥈</b><span>Vera Lund</span><small>1068 p · +18</small></div>
+              <div class="tourplace third"><b>🥉</b><span>Noah Berg</span><small>1056 p · +7</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="tourprogress" aria-label="Steg i produktvisningen">
+          <button class="active" type="button" aria-label="Visa steg 1"></button>
+          <button type="button" aria-label="Visa steg 2"></button>
+          <button type="button" aria-label="Visa steg 3"></button>
+          <button type="button" aria-label="Visa steg 4"></button>
+          <button type="button" aria-label="Visa steg 5"></button>
+          <button type="button" aria-label="Visa steg 6"></button>
+          <small id="tourCaption">Skapa tävlingen</small>
         </div>
       </div>
     </div>
@@ -1324,7 +1540,7 @@
 
 <div class="demooverlay" id="demoOverlay" role="dialog" aria-modal="true" aria-hidden="true"
      aria-label="Demo av Matchprotokoll">
-  <video id="demoVideo" src="protokoll.mp4" controls playsinline preload="metadata">
+  <video id="demoVideo" src="/protokoll.mp4" controls playsinline preload="metadata">
     Din webbläsare kan inte spela upp videon.
   </video>
   <button class="democlose" id="btnCloseDemo" aria-label="Stäng demo">✕</button>
@@ -1644,7 +1860,7 @@
   </div>
 </div>
 
-<script src="config.js"></script>
+<script src="/config.js"></script>
 <script>
 "use strict";
 
@@ -1684,6 +1900,49 @@ const OLD_ROSTER_KEY = "bergertavlan_roster_v1";
 const RECENT_CLUBS_KEY = "matchprotokollet_recent_clubs_v1";
 let roster = [];              // remembered names, original casing preserved
 let rosterEditMode = false;
+const homePath = () => "/";
+const localTournamentPath = () => "/local";
+const clubPath = clubId => "/clubs/" + encodeURIComponent(clubId);
+const tournamentPath = (clubId, tournamentId, results = false) =>
+  clubPath(clubId) + "/tournaments/" + encodeURIComponent(tournamentId) +
+  (results ? "/results" : "");
+function currentRoute(){
+  const match = location.pathname.match(
+    /^\/clubs\/([^/]+)(?:\/tournaments\/([^/]+)(\/results)?)?\/?$/
+  );
+  if (match){
+    return {
+      kind:match[2] ? "tournament" : "club",
+      clubId:decodeURIComponent(match[1]),
+      tournamentId:match[2] ? decodeURIComponent(match[2]) : null,
+      view:match[3] ? "result" : null,
+      legacy:false
+    };
+  }
+  if (location.pathname === "/local" || location.pathname === "/local/")
+    return {kind:"local", legacy:false};
+
+  // Existing links keep working, but are immediately replaced with canonical paths.
+  const query = new URLSearchParams(location.search);
+  const clubId = query.get("club");
+  const tournamentId = query.get("tournament");
+  if (clubId && tournamentId)
+    return {
+      kind:"tournament", clubId, tournamentId,
+      view:query.get("view") === "result" ? "result" : null, legacy:true
+    };
+  if (clubId) return {kind:"club", clubId, legacy:true};
+  if (query.get("local") === "1") return {kind:"local", legacy:true};
+  return {kind:"landing", legacy:false};
+}
+function normalizeLegacyRoute(route){
+  if (!route.legacy) return;
+  const path = route.kind === "club" ? clubPath(route.clubId)
+    : route.kind === "tournament"
+      ? tournamentPath(route.clubId, route.tournamentId, route.view === "result")
+      : localTournamentPath();
+  history.replaceState(null, "", path + location.hash);
+}
 const rosterStorageKey = () => clubSession
   ? ROSTER_KEY + "_club_" + clubSession.clubId
   : ROSTER_KEY;
@@ -1717,7 +1976,7 @@ function renderRecentClubs(){
     button.querySelector("strong").textContent = club.name;
     button.title = "Öppna " + club.name;
     button.addEventListener("click", () => {
-      location.href = location.pathname + "?club=" + encodeURIComponent(club.clubId);
+      location.href = clubPath(club.clubId);
     });
     list.appendChild(button);
   });
@@ -1893,20 +2152,27 @@ function decodeState(code){
 }
 
 function shareUrl(){
-  if (publicSession) return location.origin + location.pathname + location.search;
+  if (publicSession)
+    return location.origin + tournamentPath(
+      publicSession.club.clubId,
+      activeTournament.tournamentId,
+      state.view === "result"
+    );
   if (clubSession && activeTournament && activeTournament.tournamentId){
-    return location.origin + location.pathname +
-      "?club=" + encodeURIComponent(clubSession.clubId) +
-      "&tournament=" + encodeURIComponent(activeTournament.tournamentId);
+    return location.origin + tournamentPath(
+      clubSession.clubId,
+      activeTournament.tournamentId,
+      state.view === "result"
+    );
   }
-  return location.origin + location.pathname + location.search + "#t=" + encodeState();
+  return location.origin + localTournamentPath() + "#t=" + encodeState();
 }
 function syncUrl(){
   if (clubSession || publicSession) return;  // preserve backend links
   try{
     const h = "#t=" + encodeState();
-    if (location.hash !== h)
-      history.replaceState(null, "", location.pathname + location.search + h);
+    if (location.pathname !== localTournamentPath() || location.hash !== h)
+      history.replaceState(null, "", localTournamentPath() + h);
   }catch(e){ /* file:// can refuse replaceState — sharing still works via the button */ }
 }
 
@@ -2388,6 +2654,50 @@ function finalResultGroups(){
   return groups;
 }
 
+function tournamentHighlights(){
+  const decidedResults = [
+    ...Object.values(state.results || {}).filter(result => matchDecided(result)),
+    ...Object.values(state.fresults || {}).filter(result => matchDecided(result, true))
+  ];
+  const setScores = decidedResults.map(setsOf).filter(Boolean);
+  const totalSets = setScores.reduce((sum, score) => sum + score[0] + score[1], 0);
+  const closeMatches = setScores.filter(score =>
+    score[0] !== score[1] && Math.abs(score[0] - score[1]) === 1).length;
+  const draws = setScores.filter(score => score[0] === score[1]).length;
+
+  const wins = new Map(), losses = new Map(), played = new Map();
+  Object.values(state.rankingMatches || {}).forEach(match => {
+    const ids = match.draw
+      ? [match.playerAId, match.playerBId]
+      : [match.winnerId, match.loserId];
+    ids.filter(Boolean).forEach(id => played.set(id, (played.get(id) || 0) + 1));
+    if (match.winnerId) wins.set(match.winnerId, (wins.get(match.winnerId) || 0) + 1);
+    if (match.loserId) losses.set(match.loserId, (losses.get(match.loserId) || 0) + 1);
+  });
+  const nameFor = id => {
+    const player = state.players.find(candidate => candidate.clubPlayerId === id);
+    return player ? player.name : "";
+  };
+  const maxWins = Math.max(0, ...wins.values());
+  const winLeaders = [...wins.entries()]
+    .filter(([, count]) => count === maxWins)
+    .map(([id]) => nameFor(id)).filter(Boolean);
+  const unbeaten = [...played.keys()]
+    .filter(id => (wins.get(id) || 0) > 0 && !losses.get(id))
+    .map(nameFor).filter(Boolean);
+  return {
+    matches:decidedResults.length,
+    totalSets,
+    averageSets:decidedResults.length
+      ? (totalSets / decidedResults.length).toLocaleString("sv-SE", {maximumFractionDigits:1}) : "0",
+    closeMatches,
+    draws,
+    maxWins,
+    winLeaders,
+    unbeaten
+  };
+}
+
 function renderFinalResult(){
   const body = $("resultBody");
   body.innerHTML = "";
@@ -2396,6 +2706,72 @@ function renderFinalResult(){
     body.innerHTML = "<p class='hint'>Inga placeringar kunde räknas ut.</p>";
     return;
   }
+
+  const celebration = document.createElement("section");
+  celebration.className = "resultcelebration";
+  celebration.innerHTML =
+    "<span class='resultkicker'>Tävlingen är avgjord</span>" +
+    "<h2></h2><div class='resultpodium'></div>";
+  celebration.querySelector("h2").textContent =
+    activeTournament && activeTournament.name ? activeTournament.name : "Slutresultat";
+  const podium = celebration.querySelector(".resultpodium");
+  const medals = {1:"🥇", 2:"🥈", 3:"🥉"};
+  [1, 2, 3].forEach(place => {
+    const group = groups.find(candidate => candidate.place === place);
+    if (!group) return;
+    const block = document.createElement("div");
+    block.className = "resultpodiumplace place-" + place;
+    block.innerHTML = "<span class='resultmedal'></span><strong></strong><small></small>";
+    block.children[0].textContent = medals[place];
+    block.children[1].textContent = group.players.map(player => player.name).join(" & ");
+    block.children[2].textContent =
+      group.players.length > 1 ? "Delad " + place + ":a plats" : place + ":a plats";
+    podium.appendChild(block);
+  });
+  body.appendChild(celebration);
+
+  const highlights = tournamentHighlights();
+  const leaderText = highlights.winLeaders.length
+    ? highlights.winLeaders.slice(0, 2).join(" & ") : "Jämnt hela vägen";
+  const unbeatenText = highlights.unbeaten.length
+    ? highlights.unbeaten.slice(0, 2).join(" & ") : "Ingen gick helt säker";
+  const stats = [
+    ["🏓", highlights.matches, "spelade matcher",
+      state.pools + (state.pools === 1 ? " pool" : " pooler") + " och slutspel"],
+    ["🔥", highlights.totalSets, "spelade set",
+      "I snitt " + highlights.averageSets + " per match"],
+    ["👑", leaderText, "flest segrar",
+      highlights.maxWins ? highlights.maxWins + " vunna matcher" : "Alla bjöd upp"],
+    ["⚡", highlights.closeMatches, "riktiga rysare",
+      highlights.draws
+        ? highlights.draws + (highlights.draws === 1 ? " oavgjord match" : " oavgjorda matcher")
+        : "Matcher avgjorda med minsta setmarginal"]
+  ];
+  const statsSection = document.createElement("section");
+  statsSection.className = "resultstats";
+  statsSection.innerHTML = "<h3 class='resultstatshead'>Tävlingen i siffror</h3><div class='resultstatgrid'></div>";
+  const statGrid = statsSection.querySelector(".resultstatgrid");
+  stats.forEach(([icon, value, label, note]) => {
+    const card = document.createElement("article");
+    card.className = "resultstat";
+    card.innerHTML = "<span></span><strong></strong><b></b><small></small>";
+    card.children[0].textContent = icon;
+    card.children[1].textContent = value;
+    card.children[2].textContent = label;
+    card.children[3].textContent = note;
+    statGrid.appendChild(card);
+  });
+  const unbeaten = document.createElement("p");
+  unbeaten.className = "hint";
+  unbeaten.textContent = "Obesegrad: " + unbeatenText;
+  statsSection.appendChild(unbeaten);
+  body.appendChild(statsSection);
+
+  const heading = document.createElement("div");
+  heading.className = "fullresulthead";
+  heading.innerHTML = "<h3>Alla placeringar</h3><span></span>";
+  heading.querySelector("span").textContent = state.players.length + " spelare";
+  body.appendChild(heading);
   groups.forEach(group => group.players.forEach(player => {
     const row = document.createElement("div");
     row.className = "resultrow";
@@ -3275,7 +3651,7 @@ async function api(path, options){
 }
 
 function clubLink(){
-  return location.origin + location.pathname + "?club=" + encodeURIComponent(clubSession.clubId);
+  return location.origin + clubPath(clubSession.clubId);
 }
 
 function tournamentPayload(){
@@ -3439,8 +3815,9 @@ function tournamentPageRow(tournament, concluded){
   open.className = "openresult";
   open.textContent = concluded ? "Visa slutresultat" : "Öppna tävling";
   if (concluded){
-    open.href = location.pathname + "?club=" + encodeURIComponent(clubSession.clubId) +
-      "&tournament=" + encodeURIComponent(tournament.tournamentId) + "&view=result";
+    open.href = tournamentPath(
+      clubSession.clubId, tournament.tournamentId, true
+    );
   }else{
     open.addEventListener("click", () => openTournament(tournament));
   }
@@ -3565,7 +3942,43 @@ function showClubPage(){
 
 const landingGroupNames = ["klubben", "arbetsplatsen", "kompisgänget", "familjen"];
 let landingPromptRun = 0;
+let productTourTimer = null;
+let productTourStep = 0;
 const landingPromptDelay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function showProductTourStep(step){
+  const tour = $("productTour");
+  if (!tour) return;
+  const scenes = Array.from(tour.querySelectorAll(".tourscene"));
+  const dots = Array.from(tour.querySelectorAll(".tourprogress button"));
+  productTourStep = (step + scenes.length) % scenes.length;
+  scenes.forEach((scene, index) => scene.classList.toggle("active", index === productTourStep));
+  dots.forEach((dot, index) => {
+    dot.classList.toggle("active", index === productTourStep);
+    dot.setAttribute("aria-current", index === productTourStep ? "step" : "false");
+  });
+  const scene = scenes[productTourStep];
+  $("tourCaption").textContent = scene.dataset.tourTitle;
+  $("tourStatus").textContent = scene.dataset.tourStatus;
+}
+
+function startProductTour(){
+  clearInterval(productTourTimer);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  productTourTimer = setInterval(() => {
+    if (!document.hidden && $("viewLanding").style.display !== "none")
+      showProductTourStep(productTourStep + 1);
+  }, 3600);
+}
+
+$("productTour").querySelectorAll(".tourprogress button").forEach((button, index) => {
+  button.addEventListener("click", () => {
+    showProductTourStep(index);
+    startProductTour();
+  });
+});
+$("productTour").addEventListener("mouseenter", () => clearInterval(productTourTimer));
+$("productTour").addEventListener("mouseleave", startProductTour);
 
 async function animateLandingPrompt(){
   const input = $("landingClubName");
@@ -3600,10 +4013,12 @@ function showLanding(){
   $("btnClub").textContent = "Skapa klubb";
   renderRecentClubs();
   animateLandingPrompt();
+  startProductTour();
 }
 
 async function loadClubFromLink(){
-  const clubId = new URLSearchParams(location.search).get("club");
+  const route = currentRoute();
+  const clubId = route.clubId;
   const hash = new URLSearchParams(location.hash.slice(1));
   const token = hash.get("clubToken") ||
     localStorage.getItem("matchprotokollet_club_token_" + clubId) || clubId;
@@ -3632,9 +4047,9 @@ async function loadClubFromLink(){
 }
 
 async function loadPublicTournamentFromLink(){
-  const query = new URLSearchParams(location.search);
-  const clubId = query.get("club");
-  const tournamentId = query.get("tournament");
+  const route = currentRoute();
+  const clubId = route.clubId;
+  const tournamentId = route.tournamentId;
   if (!clubId || !tournamentId || !API_BASE) return false;
   try{
     const data = await api(
@@ -3645,7 +4060,7 @@ async function loadPublicTournamentFromLink(){
     publicSession = data;
     activeTournament = data.tournament;
     state = Object.assign(blankTournamentState(), data.tournament.state || {});
-    const requestedView = query.get("view");
+    const requestedView = route.view;
     if (requestedView === "result" && activeTournament.status === "finalized"){
       state.phase = "play";
       state.view = "result";
@@ -3668,7 +4083,7 @@ async function loadPublicTournamentFromLink(){
 
 function closeClub(){ $("clubOverlay").classList.remove("open"); }
 $("btnHome").addEventListener("click", () => {
-  history.pushState(null, "", location.pathname);
+  history.pushState(null, "", homePath());
   publicSession = null;
   document.body.classList.remove("viewer");
   document.querySelectorAll(".overlay.open").forEach(overlay => overlay.classList.remove("open"));
@@ -3677,11 +4092,11 @@ $("btnHome").addEventListener("click", () => {
 });
 $("btnClub").addEventListener("click", () => {
   if (publicSession){
-    location.href = location.pathname + "?club=" +
-      encodeURIComponent(publicSession.club.clubId);
+    location.href = clubPath(publicSession.club.clubId);
     return;
   }
   if (clubSession){
+    history.pushState(null, "", clubPath(clubSession.clubId));
     showClubPage();
     return;
   }
@@ -3701,6 +4116,11 @@ $("btnClubPageNew").addEventListener("click", () => $("btnNewTournament").click(
 $("btnClubPageImport").addEventListener("click", () => $("btnImportTournament").click());
 $("btnClubPageBack").addEventListener("click", () => {
   if (activeTournament){
+    if (activeTournament.tournamentId)
+      history.pushState(null, "", tournamentPath(
+        clubSession.clubId, activeTournament.tournamentId,
+        activeTournament.status === "finalized" && state.view === "result"
+      ));
     refresh();
     if (state.phase === "play") setView(state.view || "grid");
   }
@@ -3877,17 +4297,28 @@ async function createClub(name, statusElement){
   }
   statusElement.textContent = "Skapar klubben…";
   try{
+    // A club created after visiting another club must start as a completely
+    // separate session. In particular, never let the previous tournament's
+    // debounced save run against the newly assigned clubSession.
+    clearTimeout(remoteSaveTimer);
     clearTimeout(clubRosterSaveTimer);
+    await remoteSaveChain.catch(() => {});
+    remoteSaveChain = Promise.resolve();
     const data = await api("/clubs", {method:"POST", body:JSON.stringify({name})});
     clubSession = {
       clubId:data.clubId, token:data.accessToken, name:data.name,
       tournaments:[], players:[], savedNames:[]
     };
+    publicSession = null;
+    activeTournament = null;
+    state = blankTournamentState();
+    state.phase = "setup";
+    kvSave(KEY, state);
     rememberClub(clubSession);
     roster = [];
     kvSave(rosterStorageKey(), roster);
     localStorage.setItem("matchprotokollet_club_token_" + data.clubId, data.accessToken);
-    history.replaceState(null, "", "?club=" + encodeURIComponent(data.clubId));
+    history.replaceState(null, "", clubPath(data.clubId));
     statusElement.textContent = "";
     renderClubPortal();
     closeClub();
@@ -4163,6 +4594,7 @@ $("finishOverlay").addEventListener("click", e => {
 });
 $("btnConfirmFinish").addEventListener("click", async () => {
   if (!clubSession || !activeTournament || activeTournament.status === "finalized") return;
+  let completed = false;
   clearTimeout(remoteSaveTimer);
   activeTournament.status = "finalized";
   $("btnConfirmFinish").disabled = true;
@@ -4176,6 +4608,7 @@ $("btnConfirmFinish").addEventListener("click", async () => {
     $("finishStatus").style.color = "var(--win-fg)";
     $("btnCancelFinish").textContent = "Stäng";
     $("btnConfirmFinish").style.display = "none";
+    completed = true;
   }catch(error){
     remoteSaveChain = Promise.resolve();
     activeTournament.status = "draft";
@@ -4184,7 +4617,16 @@ $("btnConfirmFinish").addEventListener("click", async () => {
   }finally{
     $("btnConfirmFinish").disabled = false;
     $("btnConfirmFinish").textContent = "Avsluta och uppdatera";
+    if (completed){
+      closeFinishModal();
+      scrollTo(0, 0);
+      state.view = "result";
+    }
     refresh();
+    if (completed){
+      setView("result");
+      store.save();
+    }
   }
 });
 $("btnPrevR").addEventListener("click", () => { state.round--; renderRounds(); store.save(); });
@@ -4254,6 +4696,7 @@ window.addEventListener("hashchange", () => {
   if (!code || code === encodeState()) return;      // our own write-back, ignore
   if (adoptShared(code, true)){ refresh(); setView(state.view || "grid"); store.save(); }
 });
+window.addEventListener("popstate", () => location.reload());
 
 (async function boot(){
   let savedRoster = await kvLoad(ROSTER_KEY);
@@ -4265,16 +4708,16 @@ window.addEventListener("hashchange", () => {
   if (Array.isArray(savedRoster)) roster = savedRoster.filter(x => typeof x === "string");
   if (migrated) kvSave(ROSTER_KEY, roster);
 
-  const initialQuery = new URLSearchParams(location.search);
-  if (!initialQuery.get("club") && initialQuery.get("local") !== "1" &&
-      !location.hash.startsWith("#t=")){
+  const initialRoute = currentRoute();
+  normalizeLegacyRoute(initialRoute);
+  if (initialRoute.kind === "landing" && !location.hash.startsWith("#t=")){
     showLanding();
     return;
   }
 
   if (await loadPublicTournamentFromLink()) return;
 
-  const requestedClub = new URLSearchParams(location.search).get("club");
+  const requestedClub = currentRoute().clubId;
   if (await loadClubFromLink()){
     if (!activeTournament){
       state = blankTournamentState();

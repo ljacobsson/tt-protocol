@@ -7,7 +7,18 @@ klubbar, flera tävlingar per klubb och beständig spelarranking.
 Rotadressen är en konsumentinriktad landningssida där en klubb kan skapas
 direkt med endast klubbnamnet. Ingen registrering, e-postadress, betalning eller
 lösenord krävs; den unika klubblänken är åtkomsten. Äldre lokal användning nås
-via länken för lokal tävling på landningssidan.
+via `/local`.
+
+## Köra lokalt
+
+```bash
+npm start
+```
+
+Appen öppnas på `http://localhost:8001`. Den lokala servern har history
+fallback så att rena adresser som `/clubs/{clubId}` och
+`/clubs/{clubId}/tournaments/{tournamentId}/results` fungerar även efter en
+omladdning. Porten kan ändras med `MATCHPROTOKOLL_PORT`.
 
 ## AWS-arkitektur
 
@@ -36,10 +47,28 @@ Ange frontendens origin som `AllowedOrigin` i guiden (till exempel
 window.MATCHPROTOKOLLET_API = "https://....execute-api.eu-north-1.amazonaws.com/Prod";
 ```
 
-Servera sedan `index.html` och `config.js` från valfri statisk hosting. När
+Servera sedan `index.html` och `config.js` från valfri statisk hosting och
+konfigurera history fallback till `index.html` för frontendens rena routes. När
 API-adressen är tom fungerar appen i sitt tidigare lokala läge. Knappen
 **Klubb** skapar en klubb och visar dess unika länk. Via samma dialog går det
 att skapa och öppna flera tävlingar samt se klubbens ranking.
+
+### AWS Amplify Hosting
+
+`amplify.yml` bygger en ren `dist`-artefakt med endast frontendfilerna.
+Lägg dessutom till följande regel under **Hosting → Rewrites and redirects**
+så att klubb- och tävlingslänkar kan öppnas och laddas om direkt:
+
+```json
+[
+  {
+    "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|jpeg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|xml|mp4)$)([^.]+$)/>",
+    "target": "/index.html",
+    "status": "200",
+    "condition": null
+  }
+]
+```
 
 Namnchipsen är klubbdata när appen öppnas via en klubblänk. Listan läses från
 DynamoDB och tillägg eller borttagning synkas automatiskt, så samma sparade
