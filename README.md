@@ -95,12 +95,6 @@ förvalt. Spelarna sorteras efter ranking och fördelas snake-vis över poolerna
 klubbspelare räknas som 1000 poäng. Checkboxen kan stängas av och
 poolplaceringarna kan alltid justeras manuellt.
 
-En färdig lokal tävling kan flyttas in i en klubb via **Importera tävling** i
-klubbportalen. Använd den lokala tävlingens vanliga delningslänk och ange namn
-och speldatum. Importen matchar befintliga klubbspelare via namn, återskapar
-rankinggrundande pool- och slutspelsmatcher, sparar tävlingen som avslutad och
-räknar om klubbens ranking omedelbart.
-
 Avslutade tävlingar får fliken **Slutresultat** i både administratörs- och
 publik vy. Cupförlorare som åker ut i samma omgång delar placering (till
 exempel delad tredjeplats för semifinalförlorarna), och nästa platsnummer

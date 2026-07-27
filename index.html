@@ -1556,7 +1556,6 @@
     </div>
     <div class="clubactions">
       <button id="btnClubPageNew">＋ Ny tävling</button>
-      <button class="secondary" id="btnClubPageImport">↥ Importera</button>
       <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
@@ -1591,7 +1590,7 @@
 </div>
 
 <!-- ================= SETUP ================= -->
-<div id="viewSetup" class="setup">
+<div id="viewSetup" class="setup" style="display:none;">
   <div class="panel" style="border-radius:var(--radius);">
     <h2 style="margin-top:0;">Vad skrivs in</h2>
     <div class="seg" id="scoringSeg">
@@ -1755,7 +1754,6 @@
     <div id="clubPortal" style="display:none;">
       <div class="modalrow" style="margin-top:8px;">
         <button class="btn-close" id="btnNewTournament">Ny tävling</button>
-        <button class="btn-clear" id="btnImportTournament">Importera tävling</button>
         <button class="btn-clear" id="btnCopyClubLink">Kopiera klubblänk</button>
       </div>
       <h3>Tävlingar</h3>
@@ -4113,7 +4111,6 @@ $("clubOverlay").addEventListener("click", e => {
   if (e.target === $("clubOverlay")) closeClub();
 });
 $("btnClubPageNew").addEventListener("click", () => $("btnNewTournament").click());
-$("btnClubPageImport").addEventListener("click", () => $("btnImportTournament").click());
 $("btnClubPageBack").addEventListener("click", () => {
   if (activeTournament){
     if (activeTournament.tournamentId)
@@ -4181,16 +4178,6 @@ $("btnConfirmDeleteTournament").addEventListener("click", async () => {
   }finally{
     $("btnConfirmDeleteTournament").textContent = "Ta bort";
   }
-});
-$("btnImportTournament").addEventListener("click", () => {
-  $("importTournamentLink").value = "";
-  $("importTournamentName").value = "";
-  $("importTournamentDate").value = new Date().toISOString().slice(0,10);
-  $("importTournamentStatus").textContent = "";
-  $("btnConfirmImportTournament").disabled = false;
-  $("btnConfirmImportTournament").textContent = "Importera och ranka";
-  $("importTournamentOverlay").classList.add("open");
-  setTimeout(() => $("importTournamentLink").focus(), 0);
 });
 function closeImportTournamentModal(){
   $("importTournamentOverlay").classList.remove("open");
