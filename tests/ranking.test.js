@@ -84,3 +84,34 @@ test("a decided pool match counts even if legacy data marked it unranked", () =>
   );
   assert.deepEqual(result.players.map(player => player.rating), [1010, 990]);
 });
+
+test("reimported matches are counted once and the newest correction wins", () => {
+  const older = {
+    tournamentId: "old-import",
+    playedAt: "2026-07-19",
+    updatedAt: "2026-07-20T10:00:00Z",
+    status: "finalized",
+    matches: [{
+      matchId: "import:pool:external-match",
+      winnerId: "a",
+      loserId: "b",
+      ranked: true,
+    }],
+  };
+  const corrected = {
+    ...older,
+    tournamentId: "corrected-import",
+    updatedAt: "2026-07-21T10:00:00Z",
+    matches: [{
+      matchId: "import:pool:external-match",
+      winnerId: "b",
+      loserId: "a",
+      ranked: true,
+    }],
+  };
+  const result = calculateRanking({a:"Ada", b:"Bo"}, [older, corrected]);
+  assert.deepEqual(
+    Object.fromEntries(result.players.map(player => [player.playerId, player.rating])),
+    {a:990, b:1010},
+  );
+});

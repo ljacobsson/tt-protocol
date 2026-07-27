@@ -169,6 +169,36 @@
     border-radius:12px; font:inherit; font-size:19px;
   }
   .formfield textarea{padding:12px 14px; resize:vertical;}
+  .importmodal{width:min(900px,100%);}
+  .importjson{min-height:180px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px;}
+  .importmapping{display:grid; gap:8px; max-height:40vh; overflow:auto; margin:16px 0; padding-right:4px;}
+  .importmaprow{
+    display:grid; grid-template-columns:minmax(130px,.8fr) 28px minmax(190px,1.2fr);
+    align-items:center; gap:9px; padding:9px 11px; border:1px solid #dce5eb;
+    border-radius:11px; background:#f8fafb;
+  }
+  .importmaprow strong{overflow:hidden; text-overflow:ellipsis;}
+  .importmaprow .arrow{color:var(--table); text-align:center; font-weight:900;}
+  .importmaprow select{
+    width:100%; min-height:44px; padding:0 34px 0 11px; border:1px solid #b9c9d5;
+    border-radius:9px; background:#fff; color:var(--ink); font:inherit; font-weight:750;
+  }
+  .importsummary{padding:12px 14px; border-radius:11px; background:#eaf4fb; color:#24465f; font-weight:750;}
+  .importranking{margin:18px 0; padding:16px; border:1px solid #cfe0eb; border-radius:14px; background:#f7fbfd;}
+  .importranking h3{margin:0 0 10px;}
+  .importrankrows{display:grid; gap:6px; max-height:30vh; overflow:auto;}
+  .importrankrow{
+    display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center;
+    gap:12px; min-height:43px; padding:6px 9px; border-radius:9px; background:#fff;
+  }
+  .importrankrow strong{overflow:hidden; text-overflow:ellipsis;}
+  .importrankrow .ratings{color:var(--muted); font-size:13px; white-space:nowrap;}
+  .importrankrow .change{min-width:48px; text-align:right; font-size:18px; font-weight:950;}
+  .importrankrow .change.plus{color:var(--win-fg);}
+  .importrankrow .change.minus{color:var(--danger);}
+  @media(max-width:560px){
+    .importmaprow{grid-template-columns:1fr 22px 1.15fr; padding:8px;}
+  }
   .checkrow{
     display:flex; align-items:center; gap:12px; margin:12px 0 4px;
     padding:14px 16px; border-radius:12px; background:#EEF1F4;
@@ -438,6 +468,15 @@
   .fullresulthead{display:flex; align-items:center; gap:10px; margin:4px 0 8px;}
   .fullresulthead h3{margin:0; font-size:22px;}
   .fullresulthead span{padding:5px 9px; border-radius:999px; background:#e8f3fb; color:var(--table); font-size:12px; font-weight:900;}
+  .resulttoolbar{display:flex; justify-content:flex-end; margin-bottom:10px;}
+  .resultshare{
+    display:grid; place-items:center; width:48px; height:48px; padding:0;
+    border:1px solid #c7d6e0; border-radius:13px; background:#fff; color:var(--table);
+    box-shadow:0 6px 18px rgba(12,55,86,.09);
+    transition:transform .15s,box-shadow .15s,background .15s;
+  }
+  .resultshare:hover{transform:translateY(-2px); background:#edf7fd; box-shadow:0 9px 22px rgba(12,55,86,.14);}
+  .resultshare svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   @media (max-width:650px){
     .resultcelebration{padding:28px 10px 0;}
     .resultpodium{min-height:225px;}
@@ -481,7 +520,48 @@
     background:rgba(255,255,255,.14); color:#fff;
     border:1px solid rgba(255,255,255,.32); box-shadow:none; backdrop-filter:blur(6px);
   }
-  .clubdashboardgrid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;}
+  .clubinsights{
+    position:relative; overflow:hidden; margin-bottom:24px; padding:25px;
+    border:1px solid rgba(10,56,91,.08); border-radius:22px;
+    background:linear-gradient(145deg,#fff,#f3f8fb);
+    box-shadow:0 10px 32px rgba(12,51,80,.08);
+  }
+  .clubinsights::after{
+    content:""; position:absolute; width:220px; height:220px; right:-125px; top:-145px;
+    border:34px solid rgba(14,90,156,.06); border-radius:50%; pointer-events:none;
+  }
+  .clubinsightshead{display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:18px;}
+  .clubinsightshead span{color:var(--table); font-size:12px; font-weight:950; letter-spacing:1px; text-transform:uppercase;}
+  .clubinsightshead h3{margin:4px 0 0; font-size:27px;}
+  .clubinsightshead p{margin:0; color:var(--muted); font-size:14px;}
+  .clubstatgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:11px;}
+  .clubstatcard{
+    position:relative; z-index:1; min-height:126px; padding:17px;
+    border:1px solid #dce6ec; border-radius:16px; background:rgba(255,255,255,.9);
+    opacity:0; animation:statReveal .45s ease forwards;
+  }
+  .clubstatcard:nth-child(2){animation-delay:.06s}
+  .clubstatcard:nth-child(3){animation-delay:.12s}
+  .clubstatcard:nth-child(4){animation-delay:.18s}
+  .clubstatcard .icon{font-size:22px;}
+  .clubstatcard strong{display:block; margin:7px 0 2px; font-size:29px; line-height:1;}
+  .clubstatcard b{display:block; font-size:13px;}
+  .clubstatcard small{display:block; margin-top:5px; color:var(--muted); line-height:1.3;}
+  .clubstatcard small:empty{display:none;}
+  .clubhighlights{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:11px;}
+  .clubhighlight{
+    display:grid; grid-template-columns:42px minmax(0,1fr); align-items:center; gap:10px;
+    min-height:72px; padding:11px 13px; border-radius:14px;
+    background:#eaf4fb; color:#254861;
+  }
+  .clubhighlight .badge{
+    display:grid; place-items:center; width:42px; height:42px; border-radius:12px;
+    background:#fff; font-size:21px; box-shadow:0 4px 12px rgba(13,68,105,.08);
+  }
+  .clubhighlight strong,.clubhighlight small{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .clubhighlight strong{color:var(--ink);}
+  .clubhighlight small{margin-top:3px; color:var(--muted);}
+  .clubdashboardgrid{display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:20px;}
   .clubsection{
     overflow:hidden; background:#fff; border:1px solid rgba(10,56,91,.08);
     border-radius:20px; padding:0; margin-bottom:20px;
@@ -512,6 +592,15 @@
   }
   .clubempty strong{display:block; color:#34495a; margin-bottom:3px;}
   .clubempty small{font-size:14px;}
+  .clubemptyaction{justify-content:space-between; gap:20px;}
+  .clubemptyaction .emptycopy{display:flex; align-items:center; gap:14px;}
+  .clubemptyaction button{
+    min-height:50px; padding:0 18px; border-radius:12px;
+    background:var(--table); color:#fff; font-size:15px; font-weight:900;
+    box-shadow:0 7px 18px rgba(14,90,156,.18);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .clubemptyaction button:hover{transform:translateY(-2px); box-shadow:0 10px 23px rgba(14,90,156,.25);}
   .teamtournament{
     display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px;
     align-items:center; padding:14px 0; border-bottom:1px solid var(--grid-line);
@@ -531,18 +620,138 @@
     background:#F3E1DE; color:var(--danger); font-size:20px; font-weight:900;
   }
   .teamplayer{
-    display:grid; grid-template-columns:46px minmax(0,1fr) auto; gap:10px;
+    display:grid; grid-template-columns:46px minmax(180px,1fr) 110px 150px; gap:14px;
     align-items:center; min-height:64px; border-bottom:1px solid var(--grid-line);
     width:100%; padding:0; background:transparent; color:inherit; text-align:left;
   }
+  .teamplayerhead{
+    display:grid; grid-template-columns:46px minmax(180px,1fr) 110px 150px; gap:14px;
+    align-items:center; min-height:45px; border-bottom:1px solid var(--grid-line);
+    color:var(--muted); font-size:12px; font-weight:900; letter-spacing:.45px;
+    text-transform:uppercase;
+  }
+  .teamplayerhead span:last-child{text-align:right;}
   .teamplayer:hover{background:#f5f9fc;}
   .teamplayer:last-child{border-bottom:0;}
   .teamplayer .rank{color:var(--muted); font-weight:800;}
   .teamplayer .name{font-weight:800;}
+  .teamplayer .participations{font-weight:900;}
+  .teamplayer .participations small{display:none;}
   .teamplayer .points{
-    padding:7px 11px; border-radius:9px; background:#edf6fc;
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 9px 7px 11px;
+    border-radius:9px; background:#edf6fc;
     font-size:18px; font-weight:900; color:var(--table);
   }
+  .rankingcontrols{
+    display:flex; align-items:center; gap:7px; margin-left:auto;
+  }
+  .playerviewtoggle{
+    display:flex; padding:3px; border:1px solid #d9e2e8; border-radius:11px; background:#fff;
+  }
+  .playerviewtoggle button{
+    min-height:34px; padding:0 11px; border-radius:8px; background:transparent;
+    color:#536b7d; font-size:13px; font-weight:850;
+  }
+  .playerviewtoggle button.active{
+    background:var(--table); color:#fff; box-shadow:0 3px 9px rgba(14,90,156,.18);
+  }
+  .rankingtoggle{
+    display:flex; padding:3px; border-radius:11px; background:#edf1f4;
+  }
+  .rankingtoggle button{
+    min-height:34px; padding:0 11px; border-radius:8px; background:transparent;
+    color:#536b7d; font-size:13px; font-weight:850;
+  }
+  .rankingtoggle button.active{
+    background:#fff; color:var(--table); box-shadow:0 2px 8px rgba(18,54,79,.12);
+  }
+  .rankinginfo{
+    position:relative; display:grid; place-items:center; width:30px; height:30px;
+    border:1px solid #cbd8e1; border-radius:50%; background:#fff;
+    color:#527086; font-size:14px; font-weight:950; cursor:help;
+  }
+  .rankinginfo::after{
+    content:attr(data-tooltip); position:absolute; z-index:20; right:0; top:calc(100% + 9px);
+    width:min(310px,80vw); padding:11px 13px; border-radius:10px;
+    background:#102f47; color:#fff; font-size:12px; font-weight:650;
+    line-height:1.45; text-align:left; text-transform:none; letter-spacing:0;
+    box-shadow:0 8px 24px rgba(5,31,50,.24);
+    opacity:0; visibility:hidden; transform:translateY(-3px);
+    transition:opacity .15s,transform .15s,visibility .15s;
+    pointer-events:none;
+  }
+  .rankinginfo:hover::after,.rankinginfo:focus::after{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .clubsectionhead.playersectionhead .clubcount{margin-left:0;}
+  .networkwrap{padding:16px 0 20px;}
+  .networktoolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:10px; color:var(--muted); font-size:13px;
+  }
+  .networklegend{display:flex; align-items:center; flex-wrap:wrap; gap:7px 13px;}
+  .networklegend span{display:inline-flex; align-items:center; gap:5px; white-space:nowrap;}
+  .networklegend i{
+    width:10px; height:10px; border-radius:50%; background:var(--legend-color);
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--legend-color) 24%,transparent);
+  }
+  .networkzoom{display:flex; gap:6px;}
+  .networkzoom button{
+    width:36px; height:34px; border:1px solid #d4e0e8; border-radius:9px;
+    background:#fff; color:var(--table-dark); font-size:18px; font-weight:900;
+  }
+  .networkstage{
+    position:relative; overflow:auto; height:600px; border:1px solid #d9e5ed;
+    border-radius:16px; background:
+      radial-gradient(circle at 50% 42%,rgba(27,124,193,.09),transparent 34%),
+      linear-gradient(180deg,#f8fbfd,#eef5f9);
+    touch-action:none; cursor:grab;
+  }
+  .networkstage.panning{cursor:grabbing;}
+  .networkstage svg{display:block; max-width:none; user-select:none;}
+  .networkedge{stroke:#9bb6c8; stroke-width:2; opacity:.65;}
+  .networkedge.selected{stroke:var(--ball); stroke-width:4; opacity:1;}
+  .networkedge.muted{opacity:.12;}
+  .networkedgelabel.muted{opacity:.12;}
+  .networkedgehit{stroke:transparent; stroke-width:18; cursor:pointer;}
+  .networkedgelabel{
+    fill:#48677d; font-size:12px; font-weight:850; text-anchor:middle;
+    paint-order:stroke; stroke:#f3f8fb; stroke-width:5px; stroke-linejoin:round;
+    pointer-events:none;
+  }
+  .networknode{cursor:pointer;}
+  .networknode circle{
+    fill:#fff; stroke:#78a8c8; stroke-width:3;
+    filter:drop-shadow(0 5px 7px rgba(11,64,99,.15));
+    transition:fill .3s ease,stroke .3s ease,stroke-width .3s ease;
+  }
+  .networknode:hover circle,.networknode:focus circle{stroke:var(--ball); stroke-width:4;}
+  .networknode.record-win circle{fill:#e1f4e7; stroke:#21834b;}
+  .networknode.record-loss circle{fill:#f8e4e1; stroke:#c34a3b;}
+  .networknode.record-mixed circle{fill:#fff0d8; stroke:#d68119;}
+  .networknode.record-unplayed circle{fill:#edf1f4; stroke:#8a9ba7;}
+  .networknode.selected circle{stroke:#1269a8; stroke-width:5; fill:#dceefa;}
+  .networknode text{pointer-events:none; text-anchor:middle; fill:var(--ink);}
+  .networknode .networkname{font-size:14px; font-weight:900;}
+  .networknode .networkrating{font-size:11px; font-weight:750; fill:#5d788b;}
+  .networkinspector{
+    max-height:210px; overflow:auto; margin-top:10px; padding:13px 14px; border-radius:13px;
+    background:#f3f8fb; border:1px solid #d9e5ed;
+    color:#496579; font-size:13px;
+  }
+  .networkinspector strong{display:block; color:var(--ink); font-size:16px; margin-bottom:5px;}
+  .networkresult{
+    display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
+    padding:7px 0; border-top:1px solid #e4ebf0;
+  }
+  .networkresult span:last-child{font-weight:900; color:var(--table-dark);}
+  .rankingtrend{
+    display:inline-flex; align-items:center; gap:3px; padding:4px 7px;
+    border-radius:999px; font-size:12px; font-weight:950; line-height:1;
+  }
+  .rankingtrend.up{background:#dff2e3; color:#16723b;}
+  .rankingtrend.down{background:#f5dfdc; color:#a42c20;}
+  .rankingtrend.flat{background:#e4e9ed; color:#617486;}
   .playerstats{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:16px 0;}
   .playerstat{padding:12px 8px; border-radius:12px; background:#EEF1F4; text-align:center;}
   .playerstat strong{display:block; font-size:24px;}
@@ -564,12 +773,42 @@
     .clubactions{width:100%;}
     .clubactions button{flex:1;}
     .clubdashboardgrid{grid-template-columns:1fr; gap:14px;}
+    .clubinsights{padding:19px 15px; border-radius:18px;}
+    .clubinsightshead{align-items:start; flex-direction:column;}
+    .clubstatgrid{grid-template-columns:1fr 1fr;}
+    .clubhighlights{grid-template-columns:1fr;}
     .clubsection{border-radius:16px; margin-bottom:14px;}
     .clubsectionhead{padding:14px 15px;}
     .clubsectionbody{padding:4px 15px;}
+    .clubemptyaction{align-items:stretch; flex-direction:column;}
+    .clubemptyaction button{width:100%;}
     .teamtournament{grid-template-columns:minmax(0,1fr) 48px;}
     .teamtournament .openresult{grid-column:1 / -1; grid-row:2;}
     .teamtournament .remove{grid-column:2; grid-row:1;}
+    .teamplayerhead{display:none;}
+    .teamplayer{
+      grid-template-columns:34px minmax(0,1fr) auto; gap:7px 9px;
+      padding:9px 0;
+    }
+    .teamplayer .rank{grid-column:1; grid-row:1;}
+    .teamplayer .name{grid-column:2; grid-row:1;}
+    .teamplayer .points{grid-column:3; grid-row:1;}
+    .teamplayer .participations{grid-column:2; grid-row:2;}
+    .teamplayer .participations small{
+      display:inline; margin-right:4px; color:var(--muted); font-size:11px; font-weight:750;
+    }
+    .clubsectionhead.playersectionhead{align-items:flex-start; flex-wrap:wrap;}
+    .clubsectionhead.playersectionhead h3{padding-top:7px;}
+    .clubsectionhead.playersectionhead .clubcount{margin-top:6px;}
+    .rankingcontrols{order:4; width:100%; margin-left:50px;}
+    .playerviewtoggle{flex:1;}
+    .playerviewtoggle button{flex:1;}
+    .rankingtoggle{flex:1;}
+    .rankingtoggle button{flex:1;}
+    .networkstage{height:520px;}
+    .networktoolbar>span{display:none;}
+    .networktoolbar{align-items:flex-end;}
+    .networklegend{font-size:11px; gap:5px 9px;}
     .playerstats{grid-template-columns:repeat(2,1fr);}
   }
 
@@ -858,8 +1097,8 @@
   @media (prefers-reduced-motion:reduce){
     .tourscene{transition:none;}
     .scorebuttons b:first-child{animation:none;}
-    .resultcelebration::after,.resultpodiumplace,.resultstat{animation:none;}
-    .resultpodiumplace,.resultstat{opacity:1; transform:none;}
+    .resultcelebration::after,.resultpodiumplace,.resultstat,.clubstatcard{animation:none;}
+    .resultpodiumplace,.resultstat,.clubstatcard{opacity:1; transform:none;}
   }
 
   /* ---------- Pools ---------- */
@@ -1556,11 +1795,23 @@
     </div>
     <div class="clubactions">
       <button id="btnClubPageNew">＋ Ny tävling</button>
+      <button class="secondary" id="btnClubPageImport" hidden>↥ Importera</button>
       <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
   </div>
   <p class="clubstatus" id="clubPageStatus"></p>
+  <section class="clubinsights" id="clubInsights" style="display:none;">
+    <div class="clubinsightshead">
+      <div>
+        <span>Klubben genom tiderna</span>
+        <h3>Statistik</h3>
+      </div>
+      <p id="clubStatsPeriod"></p>
+    </div>
+    <div class="clubstatgrid" id="clubStatGrid"></div>
+    <div class="clubhighlights" id="clubHighlights"></div>
+  </section>
   <div class="clubdashboardgrid">
     <section class="clubsection">
       <div class="clubsectionhead">
@@ -1580,9 +1831,21 @@
     </section>
   </div>
   <section class="clubsection">
-    <div class="clubsectionhead">
+    <div class="clubsectionhead playersectionhead">
       <span class="clubsectionicon">★</span>
       <h3>Spelare och ranking</h3>
+      <div class="rankingcontrols">
+        <div class="playerviewtoggle" aria-label="Välj spelarvy">
+          <button type="button" id="btnPlayerList" class="active" aria-pressed="true">Lista</button>
+          <button type="button" id="btnPlayerNetwork" aria-pressed="false">Nätverk</button>
+        </div>
+        <div class="rankingtoggle" id="rankingModeToggle" aria-label="Välj typ av ranking">
+          <button type="button" id="btnRankingNormal" class="active" aria-pressed="true">Ranking</button>
+          <button type="button" id="btnRankingAdjusted" aria-pressed="false">Justerad</button>
+        </div>
+        <button type="button" class="rankinginfo" id="rankingInfo" aria-label="Om justerad ranking"
+          data-tooltip="Justerad ranking jämför spelare som deltagit olika många gånger. Formeln är: ((rankingpoäng − 1000) ÷ antal deltaganden) × antal tävlingstillfällen + 1000.">i</button>
+      </div>
       <span class="clubcount" id="clubPlayerCount">0</span>
     </div>
     <div class="clubsectionbody" id="clubPlayerRanking"></div>
@@ -1695,6 +1958,17 @@
       <div class="bracketscroll"><div id="bracketBody"></div></div>
     </div>
     <div class="panel" id="paneResult" style="display:none;">
+      <div class="resulttoolbar">
+        <button class="resultshare" id="btnResultShare" type="button" title="Dela slutresultat"
+                aria-label="Dela slutresultat">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"></path>
+          </svg>
+        </button>
+      </div>
       <div id="resultBody"></div>
     </div>
   </main>
@@ -1754,6 +2028,7 @@
     <div id="clubPortal" style="display:none;">
       <div class="modalrow" style="margin-top:8px;">
         <button class="btn-close" id="btnNewTournament">Ny tävling</button>
+        <button class="btn-clear" id="btnImportTournament" hidden>Importera</button>
         <button class="btn-clear" id="btnCopyClubLink">Kopiera klubblänk</button>
       </div>
       <h3>Tävlingar</h3>
@@ -1818,29 +2093,46 @@
 
 <!-- ================= IMPORT TOURNAMENT MODAL ================= -->
 <div class="overlay" id="importTournamentOverlay">
-  <div class="modal">
-    <div style="font-size:24px; font-weight:900;">Importera tävling</div>
+  <div class="modal importmodal">
+    <div style="font-size:24px; font-weight:900;">Importera avslutad tävling</div>
     <p class="hint" style="margin-top:8px;">
-      Klistra in delningslänken från den lokala, färdigspelade tävlingen.
+      Klistra in tävlingens JSON. Kontrollera sedan hur spelarna kopplas till klubbens namn.
     </p>
-    <div class="formfield">
-      <label for="importTournamentLink">Delningslänk</label>
-      <textarea id="importTournamentLink" rows="3"
-                placeholder="https://…/#t=…"></textarea>
+    <div id="importJsonStep">
+      <div class="formfield">
+        <label for="importTournamentJson">Tävlingsdata (JSON)</label>
+        <textarea class="importjson" id="importTournamentJson"
+                  placeholder='{"id":"…","name":"…","players":[…],"pools":[…]}'></textarea>
+      </div>
+      <div class="modalrow">
+        <button class="btn-clear" id="btnCancelImportTournament">Avbryt</button>
+        <button class="btn-close" id="btnAnalyzeImportTournament">Läs in JSON</button>
+      </div>
     </div>
-    <div class="formfield">
-      <label for="importTournamentName">Tävlingens namn</label>
-      <input id="importTournamentName" maxlength="80">
-    </div>
-    <div class="formfield">
-      <label for="importTournamentDate">Speldatum</label>
-      <input id="importTournamentDate" type="date">
+    <div id="importMappingStep" style="display:none;">
+      <div class="formfield">
+        <label for="importTournamentName">Tävlingens namn</label>
+        <input id="importTournamentName" maxlength="80">
+      </div>
+      <div class="formfield">
+        <label for="importTournamentDate">Speldatum</label>
+        <input id="importTournamentDate" type="date">
+      </div>
+      <div class="importsummary" id="importTournamentSummary"></div>
+      <h3>Matcha spelare</h3>
+      <p class="hint">Vi har gjort en bästa gissning utifrån namnlikhet. Ändra det som inte stämmer.</p>
+      <div class="importmapping" id="importPlayerMapping"></div>
+      <section class="importranking" id="importRankingPreview" style="display:none;">
+        <h3>Föreslagna rankingändringar</h3>
+        <p class="hint" id="importReplacementNotice" style="display:none;"></p>
+        <div class="importrankrows" id="importRankingRows"></div>
+      </section>
+      <div class="modalrow">
+        <button class="btn-clear" id="btnImportBack">Tillbaka</button>
+        <button class="btn-close" id="btnConfirmImportTournament">Förhandsvisa ranking</button>
+      </div>
     </div>
     <p class="clubstatus" id="importTournamentStatus"></p>
-    <div class="modalrow">
-      <button class="btn-clear" id="btnCancelImportTournament">Avbryt</button>
-      <button class="btn-close" id="btnConfirmImportTournament">Importera och ranka</button>
-    </div>
   </div>
 </div>
 
@@ -1886,10 +2178,13 @@ let state = {
 let clubSession = null;    // {clubId, token, name, tournaments, players}
 let publicSession = null;  // read-only backend tournament
 let activeTournament = null;
+let clubRankingMode = "normal";
+let clubPlayerView = "list";
 let tournamentToDelete = null;
 let remoteSaveTimer = null;
 let clubRosterSaveTimer = null;
 const API_BASE = (window.MATCHPROTOKOLLET_API || "").replace(/\/$/, "");
+const hackerMode = localStorage.getItem("hacker") === "true";
 const playerUuid = () => window.crypto && crypto.randomUUID ? crypto.randomUUID() :
   Date.now().toString(36) + Math.random().toString(36).slice(2);
 
@@ -2599,6 +2894,12 @@ function bracketResultGroups(bracket, offset){
 
 function finalResultGroups(){
   if (!state.players.length) return [];
+  if (Array.isArray(state.importedPlacements) && state.importedPlacements.length){
+    return state.importedPlacements.map(group => ({
+      place:group.place,
+      players:group.playerIds.map(byId).filter(Boolean)
+    })).filter(group => group.players.length);
+  }
   const finals = buildFinals();
   if (!finals){
     if (state.pools === 1) return groupedPoolRows(computeStandings(state.players), 1);
@@ -2653,10 +2954,12 @@ function finalResultGroups(){
 }
 
 function tournamentHighlights(){
-  const decidedResults = [
-    ...Object.values(state.results || {}).filter(result => matchDecided(result)),
-    ...Object.values(state.fresults || {}).filter(result => matchDecided(result, true))
-  ];
+  const decidedResults = Array.isArray(state.importedMatchResults)
+    ? state.importedMatchResults
+    : [
+        ...Object.values(state.results || {}).filter(result => matchDecided(result)),
+        ...Object.values(state.fresults || {}).filter(result => matchDecided(result, true))
+      ];
   const setScores = decidedResults.map(setsOf).filter(Boolean);
   const totalSets = setScores.reduce((sum, score) => sum + score[0] + score[1], 0);
   const closeMatches = setScores.filter(score =>
@@ -3296,9 +3599,77 @@ function sectionHead(title, note){
   return h;
 }
 
+function importedBracketWinner(match, matches){
+  const score = setsOf(match.result);
+  if (score && score[0] !== score[1])
+    return score[0] > score[1] ? match.player1Id : match.player2Id;
+  const later = matches.filter(candidate =>
+    candidate.bracket === match.bracket && candidate.round > match.round);
+  const oneAdvanced = later.some(candidate =>
+    candidate.player1Id === match.player1Id || candidate.player2Id === match.player1Id);
+  const twoAdvanced = later.some(candidate =>
+    candidate.player1Id === match.player2Id || candidate.player2Id === match.player2Id);
+  return oneAdvanced !== twoAdvanced
+    ? (oneAdvanced ? match.player1Id : match.player2Id) : null;
+}
+
+function importedRoundName(round, maxRound){
+  if (round === 0) return "Kval";
+  if (round === maxRound) return "Final";
+  if (round === maxRound - 1) return "Semifinal";
+  if (round === maxRound - 2) return "Kvartsfinal";
+  return "Omgång " + round;
+}
+
+function importedFinalMatchRow(match, matches){
+  const one = byId(match.player1Id), two = byId(match.player2Id);
+  const score = setsOf(match.result);
+  const winner = importedBracketWinner(match, matches);
+  const row = document.createElement("div");
+  row.className = "match locked hassets";
+  row.innerHTML =
+    "<div class='medal'></div><div class='side'></div>" +
+    "<div class='score done'></div><div class='side right'></div>" +
+    "<div class='tag' style='text-align:right'>Importerad</div>" +
+    "<div class='setline'></div>";
+  row.children[0].textContent =
+    importedRoundName(match.round, Math.max(...matches
+      .filter(candidate => candidate.bracket === match.bracket)
+      .map(candidate => candidate.round))) === "Final" ? "🏆" : "";
+  row.children[1].textContent = one ? one.name : "Okänd spelare";
+  row.children[2].textContent = score ? score[0] + " – " + score[1] : "· – ·";
+  row.children[3].textContent = two ? two.name : "Okänd spelare";
+  row.children[5].textContent = match.result.map(set => set[0] + "–" + set[1]).join("  ");
+  if (winner === match.player1Id) row.children[1].style.fontWeight = "950";
+  if (winner === match.player2Id) row.children[3].style.fontWeight = "950";
+  return row;
+}
+
+function renderImportedFinals(matches){
+  const body = $("finalsBody");
+  ["a", "b"].forEach(bracket => {
+    const bracketMatches = matches.filter(match => match.bracket === bracket);
+    if (!bracketMatches.length) return;
+    const maxRound = Math.max(...bracketMatches.map(match => match.round));
+    [...new Set(bracketMatches.map(match => match.round))].sort((a,b) => a-b)
+      .forEach(round => {
+        body.appendChild(sectionHead(
+          (bracket === "a" ? "A-slutspel" : "B-slutspel") + " – " +
+          importedRoundName(round, maxRound)
+        ));
+        bracketMatches.filter(match => match.round === round)
+          .forEach(match => body.appendChild(importedFinalMatchRow(match, matches)));
+      });
+  });
+}
+
 function renderFinals(){
   const body = $("finalsBody");
   body.innerHTML = "";
+  if (Array.isArray(state.importedBracketMatches) && state.importedBracketMatches.length){
+    renderImportedFinals(state.importedBracketMatches);
+    return;
+  }
   const f = buildFinals();
   if (!f){ body.appendChild(document.createTextNode("Inget slutspel valt.")); return; }
   if (!f.ready) body.appendChild(waitingBanner());
@@ -3337,9 +3708,68 @@ function renderFinals(){
 }
 
 /* ---------------- Playoff (bracket tree) ---------------- */
+function renderImportedBracket(matches){
+  const body = $("bracketBody");
+  ["a", "b"].forEach(bracket => {
+    const bracketMatches = matches.filter(match => match.bracket === bracket);
+    if (!bracketMatches.length) return;
+    const maxRound = Math.max(...bracketMatches.map(match => match.round));
+    const final = bracketMatches.find(match => match.round === maxRound);
+    const championId = final ? importedBracketWinner(final, bracketMatches) : null;
+    body.appendChild(sectionHead(
+      bracket === "a" ? "A-slutspel" : "B-slutspel",
+      championId && byId(championId) ? "Vinnare: " + byId(championId).name : ""
+    ));
+    const wrap = document.createElement("div");
+    wrap.className = "bracket";
+    [...new Set(bracketMatches.map(match => match.round))].sort((a,b) => a-b)
+      .forEach(round => {
+        const column = document.createElement("div");
+        column.className = "bcol";
+        column.innerHTML = "<div class='bcolhead'></div><div class='bcells'></div>";
+        column.children[0].textContent = importedRoundName(round, maxRound);
+        const cells = column.children[1];
+        bracketMatches.filter(match => match.round === round).forEach(match => {
+          const score = setsOf(match.result);
+          const winner = importedBracketWinner(match, bracketMatches);
+          const one = byId(match.player1Id), two = byId(match.player2Id);
+          const cell = document.createElement("div");
+          cell.className = "bcell";
+          cell.innerHTML =
+            "<div class='bmatch" + (round === maxRound ? " gold" : "") + "'>" +
+            "<div class='brow'><span class='bn'></span><span class='bs'></span></div>" +
+            "<div class='brow'><span class='bn'></span><span class='bs'></span></div></div>";
+          const rows = cell.querySelectorAll(".brow");
+          rows[0].children[0].textContent = one ? one.name : "Okänd";
+          rows[1].children[0].textContent = two ? two.name : "Okänd";
+          rows[0].children[1].textContent = score ? score[0] : "–";
+          rows[1].children[1].textContent = score ? score[1] : "–";
+          if (winner === match.player1Id) rows[0].classList.add("won");
+          if (winner === match.player2Id) rows[1].classList.add("won");
+          cells.appendChild(cell);
+        });
+        wrap.appendChild(column);
+      });
+    const winnerColumn = document.createElement("div");
+    winnerColumn.className = "bcol";
+    winnerColumn.innerHTML =
+      "<div class='bcolhead'>" + (bracket === "a" ? "🏆 Segrare" : "🥈 B-segrare") +
+      "</div><div class='bcells'><div class='bcell'><div class='bmatch champ'>" +
+      "<div class='brow'><span class='bn'></span></div></div></div></div>";
+    winnerColumn.querySelector(".bn").textContent =
+      championId && byId(championId) ? byId(championId).name : "—";
+    wrap.appendChild(winnerColumn);
+    body.appendChild(wrap);
+  });
+}
+
 function renderBracket(){
   const body = $("bracketBody");
   body.innerHTML = "";
+  if (Array.isArray(state.importedBracketMatches) && state.importedBracketMatches.length){
+    renderImportedBracket(state.importedBracketMatches);
+    return;
+  }
   const f = buildFinals();
   if (!f){ body.appendChild(document.createTextNode("Inget slutspel valt.")); return; }
   if (!f.ready) body.appendChild(waitingBanner());
@@ -3831,11 +4261,545 @@ function tournamentPageRow(tournament, concluded){
   return row;
 }
 
+function tournamentSetCount(tournament){
+  const tournamentState = tournament.state || {};
+  const results = Array.isArray(tournamentState.importedMatchResults)
+    ? tournamentState.importedMatchResults
+    : [
+        ...Object.values(tournamentState.results || {}),
+        ...Object.values(tournamentState.fresults || {})
+      ];
+  return results.reduce((total, result) => {
+    if (!Array.isArray(result)) return total;
+    if (Array.isArray(result[0])){
+      // Older imports stored a final set score as [[2,0]], while newer point
+      // imports store one [11,8] entry per played set.
+      if (result.length === 1 && result[0].every(value =>
+        Number.isFinite(Number(value)) && Number(value) <= 3))
+        return total + (Number(result[0][0]) || 0) + (Number(result[0][1]) || 0);
+      return total + result.length;
+    }
+    return total + (Number(result[0]) || 0) + (Number(result[1]) || 0);
+  }, 0);
+}
+
+function effectiveFinalizedTournaments(){
+  const seenSources = new Set(), seenImportedMatches = new Set();
+  return (clubSession.tournaments || [])
+    .filter(tournament => tournament.status === "finalized")
+    .slice().sort((a, b) =>
+      String(b.updatedAt || b.createdAt || "").localeCompare(
+        String(a.updatedAt || a.createdAt || "")))
+    .filter(tournament => {
+      const source = String(
+        tournament.sourceTournamentId || tournament.state?.importSourceId || "");
+      if (source && seenSources.has(source)) return false;
+      const importedIds = (tournament.matches || [])
+        .map(match => String(match.matchId || ""))
+        .filter(matchId => matchId.startsWith("import:"));
+      if (importedIds.some(matchId => seenImportedMatches.has(matchId))) return false;
+      if (source) seenSources.add(source);
+      importedIds.forEach(matchId => seenImportedMatches.add(matchId));
+      return true;
+    });
+}
+
+function renderClubStatistics(){
+  const tournaments = effectiveFinalizedTournaments();
+  const section = $("clubInsights");
+  section.style.display = tournaments.length ? "" : "none";
+  if (!tournaments.length) return;
+
+  const participants = new Set();
+  const appearances = new Map();
+  let matchCount = 0, setCount = 0, drawCount = 0;
+  tournaments.forEach(tournament => {
+    setCount += tournamentSetCount(tournament);
+    (tournament.participants || []).forEach(player => {
+      participants.add(player.playerId);
+      appearances.set(player.playerId, (appearances.get(player.playerId) || 0) + 1);
+    });
+    (tournament.matches || []).forEach(match => {
+      matchCount++;
+      if (match.draw) drawCount++;
+    });
+  });
+
+  const dates = tournaments.map(tournament => tournament.playedAt).filter(Boolean).sort();
+  const latestTournament = tournaments.slice().sort((a,b) =>
+    String(b.playedAt || "").localeCompare(String(a.playedAt || "")))[0];
+  $("clubStatsPeriod").textContent = dates.length
+    ? dates[0] + (dates.at(-1) !== dates[0] ? " – " + dates.at(-1) : "")
+    : "";
+  const stats = [
+    ["🏆", tournaments.length, "avslutade tävlingar",
+      "Senast: " + (latestTournament?.name || "Tävling")],
+    ["🏓", matchCount, "spelade matcher",
+      drawCount ? drawCount + " oavgjorda" : "Alla med en segrare"],
+    ["🔥", setCount, "spelade set",
+      matchCount ? (setCount / matchCount).toLocaleString("sv-SE", {
+        maximumFractionDigits:1
+      }) + " set per match" : "–"],
+    ["👥", participants.size, "spelare", ""]
+  ];
+  const grid = $("clubStatGrid");
+  grid.innerHTML = "";
+  stats.forEach(([icon, value, label, note]) => {
+    const card = document.createElement("article");
+    card.className = "clubstatcard";
+    card.innerHTML = "<span class='icon'></span><strong></strong><b></b><small></small>";
+    card.children[0].textContent = icon;
+    card.children[1].textContent = value;
+    card.children[2].textContent = label;
+    card.children[3].textContent = note;
+    grid.appendChild(card);
+  });
+
+  const details = Object.values(clubSession.playerDetails || {});
+  const byPlayerId = new Map((clubSession.players || []).map(player =>
+    [player.playerId, player]));
+  const mostActive = details.slice().sort((a,b) => b.matches - a.matches)[0];
+  const winLeader = details.slice().sort((a,b) =>
+    b.wins - a.wins || b.matches - a.matches)[0];
+  const mostFrequentEntry = [...appearances.entries()].sort((a,b) => b[1] - a[1])[0];
+  const mostFrequent = mostFrequentEntry
+    ? byPlayerId.get(mostFrequentEntry[0]) : null;
+  const climber = (clubSession.players || []).slice().sort((a,b) =>
+    (b.rating - 1000) - (a.rating - 1000))[0];
+  const highlights = [
+    ["⚡", mostActive?.name || "–",
+      mostActive ? mostActive.matches + " matcher · mest aktiv" : "Inga matcher ännu"],
+    ["👑", winLeader?.name || "–",
+      winLeader ? winLeader.wins + " vinster · flest i klubben" : "Inga vinster ännu"],
+    ["📈", climber?.name || mostFrequent?.name || "–",
+      climber
+        ? (climber.rating - 1000 >= 0 ? "+" : "") + (climber.rating - 1000) +
+          " från startpoängen"
+        : mostFrequent
+          ? mostFrequentEntry[1] + " tävlingar"
+          : "Ingen ranking ännu"]
+  ];
+  const highlightWrap = $("clubHighlights");
+  highlightWrap.innerHTML = "";
+  highlights.forEach(([icon, name, note]) => {
+    const item = document.createElement("article");
+    item.className = "clubhighlight";
+    item.innerHTML =
+      "<span class='badge'></span><div><strong></strong><small></small></div>";
+    item.children[0].textContent = icon;
+    item.querySelector("strong").textContent = name;
+    item.querySelector("small").textContent = note;
+    highlightWrap.appendChild(item);
+  });
+}
+
+function latestPlayerTrend(playerId){
+  const detail = (clubSession.playerDetails || {})[playerId];
+  const matches = (detail?.rankingMatches || []).slice().sort((a, b) =>
+    String(b.playedAt || "").localeCompare(String(a.playedAt || "")) ||
+    String(b.tournamentId || "").localeCompare(String(a.tournamentId || "")));
+  if (!matches.length) return null;
+  const latest = matches[0];
+  return matches.filter(match =>
+    match.tournamentId === latest.tournamentId).reduce(
+      (sum, match) => sum + Number(match.change || 0), 0);
+}
+
+function clubParticipationSummary(){
+  const tournaments = effectiveFinalizedTournaments();
+  const counts = new Map();
+  tournaments.forEach(tournament => {
+    const seen = new Set();
+    (tournament.participants || []).forEach(participant => {
+      if (!participant.playerId || seen.has(participant.playerId)) return;
+      seen.add(participant.playerId);
+      counts.set(participant.playerId, (counts.get(participant.playerId) || 0) + 1);
+    });
+  });
+  return {counts, occasions:tournaments.length};
+}
+
+function clubMatchNetwork(){
+  const players = clubSession.players || [];
+  const playerById = new Map(players.map(player => [player.playerId, player]));
+  const seen = new Set();
+  const edges = new Map();
+  Object.entries(clubSession.playerDetails || {}).forEach(([playerId, detail]) => {
+    (detail.rankingMatches || []).forEach(match => {
+      if (!match.opponentId || !playerById.has(match.opponentId)) return;
+      const matchKey = [match.tournamentId || "", match.matchId || "",
+        playerId < match.opponentId ? playerId : match.opponentId,
+        playerId < match.opponentId ? match.opponentId : playerId].join("|");
+      if (seen.has(matchKey)) return;
+      seen.add(matchKey);
+      const ids = [playerId, match.opponentId].sort();
+      const edgeKey = ids.join("|");
+      if (!edges.has(edgeKey))
+        edges.set(edgeKey, {a:ids[0], b:ids[1], aWins:0, bWins:0, draws:0, matches:[]});
+      const edge = edges.get(edgeKey);
+      const aOutcome = playerId === edge.a ? match.outcome
+        : match.outcome === "win" ? "loss" : match.outcome === "loss" ? "win" : "draw";
+      if (aOutcome === "win") edge.aWins++;
+      else if (aOutcome === "loss") edge.bWins++;
+      else edge.draws++;
+      edge.matches.push(Object.assign({}, match, {aOutcome}));
+    });
+  });
+  return {players, playerById, edges:[...edges.values()]};
+}
+
+function renderPlayerNetwork(container){
+  const {players, playerById, edges} = clubMatchNetwork();
+  if (!players.length){
+    container.innerHTML =
+      "<div class='clubempty'><span>◎</span><div><strong>Nätverket väntar på spelare</strong>" +
+      "<small>Matcherna visas här när klubben har spelat.</small></div></div>";
+    return;
+  }
+  const wrap = document.createElement("div");
+  wrap.className = "networkwrap";
+  wrap.innerHTML =
+    "<div class='networktoolbar'><div class='networklegend'>" +
+    "<span><i style='--legend-color:#1269a8'></i>Vald spelare</span>" +
+    "<span><i style='--legend-color:#21834b'></i>Bara vinster</span>" +
+    "<span><i style='--legend-color:#c34a3b'></i>Bara förluster</span>" +
+    "<span><i style='--legend-color:#d68119'></i>Blandat</span>" +
+    "<span><i style='--legend-color:#8a9ba7'></i>Inte mötts</span></div>" +
+    "<div class='networkzoom'><button type='button' aria-label='Zooma ut'>−</button>" +
+    "<button type='button' aria-label='Återställ vy'>↺</button>" +
+    "<button type='button' aria-label='Zooma in'>＋</button></div></div>" +
+    "<div class='networkstage'><svg viewBox='0 0 1000 620' role='img' " +
+    "aria-label='Interaktivt nätverk över klubbens spelare och matcher'></svg></div>" +
+    "<div class='networkinspector'><strong>Utforska matcherna</strong>" +
+    "Välj en linje mellan två spelare för att se deras möten och resultat.</div>";
+  container.appendChild(wrap);
+
+  const stage = wrap.querySelector(".networkstage");
+  const svg = wrap.querySelector("svg");
+  const inspector = wrap.querySelector(".networkinspector");
+  const NS = "http://www.w3.org/2000/svg";
+  const scene = document.createElementNS(NS, "g");
+  const edgeLayer = document.createElementNS(NS, "g");
+  const labelLayer = document.createElementNS(NS, "g");
+  const nodeLayer = document.createElementNS(NS, "g");
+  scene.append(edgeLayer, labelLayer, nodeLayer);
+  svg.appendChild(scene);
+
+  const positions = new Map(players.map((player, index) => {
+    const angle = -Math.PI/2 + index*Math.PI*2/players.length;
+    return [player.playerId, {x:500+Math.cos(angle)*350, y:290+Math.sin(angle)*220}];
+  }));
+  const edgeEls = new Map();
+  const nodeEls = new Map();
+  let selectedPlayerId = null;
+  let graphHeight = 620;
+  let layoutAnimationFrame = 0;
+  let transform = {x:0, y:0, scale:1};
+  const applyTransform = () => scene.setAttribute("transform",
+    "translate(" + transform.x + " " + transform.y + ") scale(" + transform.scale + ")");
+
+  function updateEdge(edge){
+    const elements = edgeEls.get(edge);
+    const a = positions.get(edge.a), b = positions.get(edge.b);
+    if (!elements || !a || !b) return;
+    [elements.line, elements.hit].forEach(line => {
+      line.setAttribute("x1", a.x); line.setAttribute("y1", a.y);
+      line.setAttribute("x2", b.x); line.setAttribute("y2", b.y);
+    });
+    elements.label.setAttribute("x", (a.x + b.x) / 2);
+    elements.label.setAttribute("y", (a.y + b.y) / 2 - 7);
+  }
+
+  function updateGraph(){
+    nodeEls.forEach((node, playerId) => {
+      const point = positions.get(playerId);
+      node.setAttribute("transform", "translate(" + point.x + " " + point.y + ")");
+      node.classList.toggle("selected", playerId === selectedPlayerId);
+    });
+    edges.forEach(updateEdge);
+  }
+
+  function preventAnimatedOverlap(){
+    const ids = players.map(player => player.playerId);
+    const minimumDistance = 84;
+    for (let pass=0; pass<18; pass++){
+      let separated = true;
+      for (let i=0; i<ids.length; i++) for (let j=i+1; j<ids.length; j++){
+        const a = positions.get(ids[i]), b = positions.get(ids[j]);
+        let dx = b.x-a.x, dy = b.y-a.y;
+        let distance = Math.hypot(dx,dy);
+        if (distance >= minimumDistance) continue;
+        separated = false;
+        if (distance < .01){
+          dx = (i+j)%2 ? 1 : -1;
+          dy = (i*j)%2 ? 1 : -1;
+          distance = Math.hypot(dx,dy);
+        }
+        const shift = (minimumDistance-distance)/2+.15;
+        a.x -= dx/distance*shift; a.y -= dy/distance*shift;
+        b.x += dx/distance*shift; b.y += dy/distance*shift;
+      }
+      if (separated) break;
+    }
+  }
+
+  function focusPlayer(playerId){
+    if (layoutAnimationFrame) cancelAnimationFrame(layoutAnimationFrame);
+    const startPositions = new Map([...positions].map(([id, point]) =>
+      [id, {x:point.x,y:point.y}]));
+    selectedPlayerId = playerId;
+    const pureLosses = [], pureWins = [], mixed = [], unplayed = [];
+    players.filter(player => player.playerId !== playerId).forEach(player => {
+      const edge = edges.find(item =>
+        (item.a === playerId && item.b === player.playerId) ||
+        (item.b === playerId && item.a === player.playerId));
+      if (!edge){
+        unplayed.push({player});
+        return;
+      }
+      const wins = edge.a === playerId ? edge.aWins : edge.bWins;
+      const losses = edge.a === playerId ? edge.bWins : edge.aWins;
+      const draws = edge.draws;
+      const item = {player, edge, wins, losses, draws,
+        rate:(wins+draws*.5)/Math.max(1,wins+losses+draws)};
+      if (wins === 0 && losses > 0) pureLosses.push(item);
+      else if (wins > 0 && losses === 0) pureWins.push(item);
+      else mixed.push(item);
+    });
+    const byName = (a,b) => a.player.name.localeCompare(b.player.name, "sv");
+    pureLosses.sort(byName); pureWins.sort(byName);
+    mixed.sort((a,b) => a.rate-b.rate || byName(a,b));
+    unplayed.sort(byName);
+    nodeEls.forEach((node,id) => {
+      node.classList.remove("record-win","record-loss","record-mixed","record-unplayed");
+      if (id === playerId) return;
+      if (pureWins.some(item => item.player.playerId === id)) node.classList.add("record-win");
+      else if (pureLosses.some(item => item.player.playerId === id)) node.classList.add("record-loss");
+      else if (mixed.some(item => item.player.playerId === id)) node.classList.add("record-mixed");
+      else node.classList.add("record-unplayed");
+    });
+
+    const laneRows = Math.max(1, Math.ceil(pureLosses.length/3),
+      Math.ceil(pureWins.length/3), Math.ceil(mixed.length/3));
+    const unplayedRows = Math.ceil(unplayed.length/9);
+    const laneHeight = Math.max(620, laneRows*90+170);
+    const centerY = laneHeight/2;
+    graphHeight = laneHeight + (unplayedRows ? unplayedRows*90+35 : 0);
+    svg.setAttribute("viewBox", "0 0 1000 " + graphHeight);
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+    transform = {x:0,y:0,scale:1};
+    applyTransform();
+    stage.scrollTop = 0;
+    stage.scrollLeft = 0;
+    positions.set(playerId, {x:500,y:centerY});
+
+    const rowY = row => centerY +
+      (row%2 === 0 ? -1 : 1)*(Math.floor(row/2)+1)*90;
+    pureLosses.forEach((item,index) => positions.set(item.player.playerId, {
+      x:100+(index%3)*95, y:rowY(Math.floor(index/3))
+    }));
+    pureWins.forEach((item,index) => positions.set(item.player.playerId, {
+      x:900-(index%3)*95, y:rowY(Math.floor(index/3))
+    }));
+    mixed.forEach((item,index) => {
+      const row = Math.floor(index/3);
+      const members = mixed.slice(row*3,row*3+3);
+      const slot = members.indexOf(item);
+      const slots = members.length === 1 ? [500]
+        : members.length === 2 ? [405,595] : [390,500,610];
+      positions.set(item.player.playerId, {x:slots[slot],y:rowY(row)});
+    });
+    unplayed.forEach((item,index) => positions.set(item.player.playerId, {
+      x:100+(index%9)*100,
+      y:laneHeight+55+Math.floor(index/9)*90
+    }));
+    const targetPositions = new Map([...positions].map(([id, point]) =>
+      [id, {x:point.x,y:point.y}]));
+    startPositions.forEach((point,id) => positions.set(id, point));
+
+    edgeEls.forEach((elements, edge) => {
+      const connected = edge.a === playerId || edge.b === playerId;
+      elements.line.classList.toggle("muted", !connected);
+      elements.label.classList.toggle("muted", !connected);
+      elements.line.classList.remove("selected");
+      if (connected){
+        const wins = edge.a === playerId ? edge.aWins : edge.bWins;
+        const losses = edge.a === playerId ? edge.bWins : edge.aWins;
+        elements.label.textContent = wins+"–"+losses+
+          (edge.draws ? " (+"+edge.draws+")" : "");
+      }
+    });
+    const reduceMotion = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion){
+      targetPositions.forEach((point,id) => positions.set(id, point));
+      updateGraph();
+    }else{
+      let startedAt = null;
+      const animateLayout = timestamp => {
+        if (startedAt === null) startedAt = timestamp;
+        const progress = Math.min(1, (timestamp-startedAt)/560);
+        const eased = 1-Math.pow(1-progress,3);
+        targetPositions.forEach((target,id) => {
+          const start = startPositions.get(id) || target;
+          positions.set(id, {
+            x:start.x+(target.x-start.x)*eased,
+            y:start.y+(target.y-start.y)*eased
+          });
+        });
+        if (progress < 1) preventAnimatedOverlap();
+        updateGraph();
+        if (progress < 1) layoutAnimationFrame = requestAnimationFrame(animateLayout);
+        else layoutAnimationFrame = 0;
+      };
+      layoutAnimationFrame = requestAnimationFrame(animateLayout);
+    }
+    inspector.innerHTML = "";
+    const player = playerById.get(playerId);
+    const detail = (clubSession.playerDetails || {})[playerId] || {};
+    const title = document.createElement("strong");
+    title.textContent = player.name + " · " + player.rating + " p";
+    const summary = document.createElement("span");
+    summary.textContent = (detail.wins || 0) + " vinster · " +
+      (detail.losses || 0) + " förluster · " + (detail.draws || 0) +
+      " oavgjorda. Välj en linje för matchhistorik.";
+    inspector.append(title, summary);
+  }
+
+  function inspectEdge(edge){
+    edgeEls.forEach(elements => elements.line.classList.remove("selected"));
+    edgeEls.get(edge).line.classList.add("selected");
+    const a = playerById.get(edge.a), b = playerById.get(edge.b);
+    inspector.innerHTML = "";
+    const title = document.createElement("strong");
+    title.textContent = a.name + " " + edge.aWins + "–" + edge.bWins + " " + b.name +
+      (edge.draws ? " · " + edge.draws + " oavgjorda" : "");
+    inspector.appendChild(title);
+    edge.matches.slice().sort((x, y) =>
+      String(y.playedAt || "").localeCompare(String(x.playedAt || ""))).forEach(match => {
+      const row = document.createElement("div");
+      row.className = "networkresult";
+      const tournament = document.createElement("span");
+      tournament.textContent = (match.tournamentName || "Tävling") +
+        (match.playedAt ? " · " + match.playedAt : "");
+      const result = document.createElement("span");
+      result.textContent = match.aOutcome === "draw" ? "Oavgjort"
+        : match.aOutcome === "win" ? a.name + " vann" : b.name + " vann";
+      row.append(tournament, result);
+      inspector.appendChild(row);
+    });
+  }
+
+  edges.forEach(edge => {
+    const line = document.createElementNS(NS, "line");
+    line.classList.add("networkedge");
+    const hit = document.createElementNS(NS, "line");
+    hit.classList.add("networkedgehit");
+    const label = document.createElementNS(NS, "text");
+    label.classList.add("networkedgelabel");
+    label.textContent = edge.aWins + "–" + edge.bWins +
+      (edge.draws ? " (+" + edge.draws + ")" : "");
+    hit.addEventListener("click", event => {
+      event.stopPropagation();
+      inspectEdge(edge);
+    });
+    edgeLayer.append(line, hit);
+    labelLayer.appendChild(label);
+    edgeEls.set(edge, {line, hit, label});
+    updateEdge(edge);
+  });
+
+  players.forEach(player => {
+    const detail = (clubSession.playerDetails || {})[player.playerId] || {};
+    const node = document.createElementNS(NS, "g");
+    node.classList.add("networknode");
+    node.setAttribute("tabindex", "0");
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-label", player.name + ", " + player.rating + " rankingpoäng");
+    const circle = document.createElementNS(NS, "circle");
+    circle.setAttribute("r", 32 + Math.min(8, Math.sqrt(detail.matches || 0)));
+    const name = document.createElementNS(NS, "text");
+    name.classList.add("networkname");
+    name.setAttribute("y", "-2");
+    name.textContent = player.name.length > 14 ? player.name.slice(0, 13) + "…" : player.name;
+    const rating = document.createElementNS(NS, "text");
+    rating.classList.add("networkrating");
+    rating.setAttribute("y", "17");
+    rating.textContent = player.rating + " p";
+    node.append(circle, name, rating);
+    nodeLayer.appendChild(node);
+    nodeEls.set(player.playerId, node);
+    const updateNode = () => {
+      const point = positions.get(player.playerId);
+      node.setAttribute("transform", "translate(" + point.x + " " + point.y + ")");
+      edges.filter(edge => edge.a === player.playerId || edge.b === player.playerId)
+        .forEach(updateEdge);
+    };
+    updateNode();
+
+    node.addEventListener("click", event => {
+      event.stopPropagation();
+      focusPlayer(player.playerId);
+    });
+    node.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " "){
+        event.preventDefault();
+        focusPlayer(player.playerId);
+      }
+    });
+  });
+  focusPlayer(players.slice().sort((a,b) => b.rating-a.rating)[0].playerId);
+
+  let pan = null;
+  stage.addEventListener("pointerdown", event => {
+    if (event.target.closest(".networknode") || event.target.classList.contains("networkedgehit")) return;
+    stage.setPointerCapture(event.pointerId);
+    stage.classList.add("panning");
+    pan = {x:event.clientX, y:event.clientY};
+  });
+  stage.addEventListener("pointermove", event => {
+    if (!pan) return;
+    const rect = svg.getBoundingClientRect();
+    transform.x += (event.clientX - pan.x) * 1000 / rect.width;
+    transform.y += (event.clientY - pan.y) * graphHeight / rect.height;
+    pan = {x:event.clientX, y:event.clientY};
+    applyTransform();
+  });
+  const stopPan = () => { pan = null; stage.classList.remove("panning"); };
+  stage.addEventListener("pointerup", stopPan);
+  stage.addEventListener("pointercancel", stopPan);
+
+  function zoomAt(nextScale, screenX=500, screenY=graphHeight/2){
+    nextScale = Math.max(.45, Math.min(2.5, nextScale));
+    const worldX = (screenX - transform.x) / transform.scale;
+    const worldY = (screenY - transform.y) / transform.scale;
+    transform.x = screenX - worldX * nextScale;
+    transform.y = screenY - worldY * nextScale;
+    transform.scale = nextScale;
+    applyTransform();
+  }
+  stage.addEventListener("wheel", event => {
+    event.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    zoomAt(transform.scale * (event.deltaY < 0 ? 1.12 : .89),
+      (event.clientX - rect.left) * 1000 / rect.width,
+      (event.clientY - rect.top) * graphHeight / rect.height);
+  }, {passive:false});
+  const zoomButtons = wrap.querySelectorAll(".networkzoom button");
+  zoomButtons[0].addEventListener("click", () => zoomAt(transform.scale / 1.25));
+  zoomButtons[1].addEventListener("click", () => {
+    transform = {x:0, y:0, scale:1}; applyTransform();
+  });
+  zoomButtons[2].addEventListener("click", () => zoomAt(transform.scale * 1.25));
+}
+
 function renderClubPage(){
   if (!clubSession) return;
   $("clubPageTitle").textContent = clubSession.name;
   $("btnClub").textContent = clubSession.name;
   $("btnClubPageBack").style.display = activeTournament ? "" : "none";
+  renderClubStatistics();
   const ongoing = $("clubOngoingList"), past = $("clubPastList");
   ongoing.innerHTML = ""; past.innerHTML = "";
   const ongoingTournaments = [];
@@ -3850,27 +4814,80 @@ function renderClubPage(){
     past.appendChild(tournamentPageRow(tournament, true)));
   $("clubOngoingCount").textContent = ongoingTournaments.length;
   $("clubPastCount").textContent = pastTournaments.length;
-  if (!ongoing.children.length) ongoing.innerHTML =
-    "<div class='clubempty'><span>＋</span><div><strong>Redo för första matchen?</strong>" +
-    "<small>Skapa en tävling och bjud in spelarna.</small></div></div>";
+  if (!ongoing.children.length){
+    const empty = document.createElement("div");
+    empty.className = "clubempty clubemptyaction";
+    empty.innerHTML =
+      "<div class='emptycopy'><span>＋</span><div>" +
+      "<strong>Redo för nästa match?</strong>" +
+      "<small>Skapa en tävling och bjud in spelarna.</small></div></div>" +
+      "<button type='button'>Skapa ny tävling</button>";
+    empty.querySelector("button").addEventListener("click", () =>
+      $("btnNewTournament").click());
+    ongoing.appendChild(empty);
+  }
   if (!past.children.length) past.innerHTML =
     "<div class='clubempty'><span>✓</span><div><strong>Inga avslutade tävlingar ännu</strong>" +
     "<small>Slutresultaten samlas här när ni har spelat klart.</small></div></div>";
 
   const players = $("clubPlayerRanking");
   players.innerHTML = "";
-  (clubSession.players || []).forEach((player, index) => {
+  $("rankingModeToggle").hidden = clubPlayerView === "network";
+  $("rankingInfo").hidden = clubPlayerView === "network";
+  if (clubPlayerView === "network"){
+    renderPlayerNetwork(players);
+    $("clubPlayerCount").textContent = (clubSession.players || []).length;
+    return;
+  }
+  const participation = clubParticipationSummary();
+  const rankedPlayers = (clubSession.players || []).map(player => {
+    const timesPlayed = participation.counts.get(player.playerId) || 0;
+    const adjustedRating = timesPlayed && participation.occasions
+      ? Math.round(((player.rating - 1000) / timesPlayed) *
+          participation.occasions + 1000)
+      : 1000;
+    return Object.assign({}, player, {timesPlayed, adjustedRating});
+  }).sort((a, b) =>
+    (clubRankingMode === "adjusted" ? b.adjustedRating - a.adjustedRating : b.rating - a.rating) ||
+    a.name.localeCompare(b.name, "sv"));
+  if (rankedPlayers.length){
+    const heading = document.createElement("div");
+    heading.className = "teamplayerhead";
+    heading.innerHTML =
+      "<span></span><span>Spelare</span><span>Deltagit</span>" +
+      "<span>" + (clubRankingMode === "adjusted" ? "Justerad ranking" : "Ranking") + "</span>";
+    players.appendChild(heading);
+  }
+  rankedPlayers.forEach((player, index) => {
     const row = document.createElement("button");
     row.className = "teamplayer";
-    row.innerHTML = "<span class='rank'></span><span class='name'></span><span class='points'></span>";
+    row.innerHTML =
+      "<span class='rank'></span><span class='name'></span>" +
+      "<span class='participations'><small>Deltagit</small><b></b></span>" +
+      "<span class='points'><span class='ratingvalue'></span><span class='rankingtrend'></span></span>";
     row.children[0].textContent = index + 1 + ".";
     row.children[1].textContent = player.name;
-    row.children[2].textContent = player.rating + " p";
+    row.querySelector(".participations b").textContent = player.timesPlayed + " ggr";
+    row.querySelector(".ratingvalue").textContent =
+      (clubRankingMode === "adjusted" ? player.adjustedRating : player.rating) + " p";
+    const trend = latestPlayerTrend(player.playerId);
+    const indicator = row.querySelector(".rankingtrend");
+    if (trend === null){
+      indicator.classList.add("flat");
+      indicator.textContent = "Ny";
+      indicator.title = "Ingen tidigare rankingförändring";
+    }else{
+      indicator.classList.add(trend > 0 ? "up" : trend < 0 ? "down" : "flat");
+      indicator.textContent =
+        (trend > 0 ? "↗ +" : trend < 0 ? "↘ −" : "→ ±") + Math.abs(trend);
+      indicator.title = "Förändring i senaste tävlingen: " +
+        (trend > 0 ? "+" : "") + trend + " poäng";
+    }
     row.addEventListener("click", () => showPlayerDetails(player.playerId));
     players.appendChild(row);
   });
-  $("clubPlayerCount").textContent = (clubSession.players || []).length;
-  if (!players.children.length) players.innerHTML =
+  $("clubPlayerCount").textContent = rankedPlayers.length;
+  if (!rankedPlayers.length) players.innerHTML =
     "<div class='clubempty'><span>★</span><div><strong>Rankingen väntar på spelare</strong>" +
     "<small>Spelare läggs till automatiskt när de deltar i en tävling.</small></div></div>";
 }
@@ -4111,6 +5128,41 @@ $("clubOverlay").addEventListener("click", e => {
   if (e.target === $("clubOverlay")) closeClub();
 });
 $("btnClubPageNew").addEventListener("click", () => $("btnNewTournament").click());
+$("btnClubPageImport").hidden = !hackerMode;
+$("btnImportTournament").hidden = !hackerMode;
+$("btnClubPageImport").addEventListener("click", () => $("btnImportTournament").click());
+$("btnPlayerList").addEventListener("click", () => {
+  clubPlayerView = "list";
+  $("btnPlayerList").classList.add("active");
+  $("btnPlayerList").setAttribute("aria-pressed", "true");
+  $("btnPlayerNetwork").classList.remove("active");
+  $("btnPlayerNetwork").setAttribute("aria-pressed", "false");
+  renderClubPage();
+});
+$("btnPlayerNetwork").addEventListener("click", () => {
+  clubPlayerView = "network";
+  $("btnPlayerNetwork").classList.add("active");
+  $("btnPlayerNetwork").setAttribute("aria-pressed", "true");
+  $("btnPlayerList").classList.remove("active");
+  $("btnPlayerList").setAttribute("aria-pressed", "false");
+  renderClubPage();
+});
+$("btnRankingNormal").addEventListener("click", () => {
+  clubRankingMode = "normal";
+  $("btnRankingNormal").classList.add("active");
+  $("btnRankingNormal").setAttribute("aria-pressed", "true");
+  $("btnRankingAdjusted").classList.remove("active");
+  $("btnRankingAdjusted").setAttribute("aria-pressed", "false");
+  renderClubPage();
+});
+$("btnRankingAdjusted").addEventListener("click", () => {
+  clubRankingMode = "adjusted";
+  $("btnRankingAdjusted").classList.add("active");
+  $("btnRankingAdjusted").setAttribute("aria-pressed", "true");
+  $("btnRankingNormal").classList.remove("active");
+  $("btnRankingNormal").setAttribute("aria-pressed", "false");
+  renderClubPage();
+});
 $("btnClubPageBack").addEventListener("click", () => {
   if (activeTournament){
     if (activeTournament.tournamentId)
@@ -4179,102 +5231,545 @@ $("btnConfirmDeleteTournament").addEventListener("click", async () => {
     $("btnConfirmDeleteTournament").textContent = "Ta bort";
   }
 });
+let pendingJsonImport = null;
+let importNameCandidates = [];
+let pendingImportPreview = null;
+
+const importNameKey = value => String(value || "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLocaleLowerCase("sv").replace(/[^a-z0-9]/g, "");
+
+function levenshtein(a, b){
+  a = importNameKey(a); b = importNameKey(b);
+  const row = Array.from({length:b.length + 1}, (_, index) => index);
+  for (let i = 1; i <= a.length; i++){
+    let previous = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++){
+      const saved = row[j];
+      row[j] = Math.min(
+        row[j] + 1,
+        row[j - 1] + 1,
+        previous + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+      previous = saved;
+    }
+  }
+  return row[b.length];
+}
+
 function closeImportTournamentModal(){
   $("importTournamentOverlay").classList.remove("open");
+  pendingJsonImport = null;
+  pendingImportPreview = null;
 }
+
+function openJsonImporter(){
+  pendingJsonImport = null;
+  pendingImportPreview = null;
+  $("importTournamentJson").value = "";
+  $("importTournamentStatus").textContent = "";
+  $("importJsonStep").style.display = "";
+  $("importMappingStep").style.display = "none";
+  $("importRankingPreview").style.display = "none";
+  $("btnConfirmImportTournament").disabled = false;
+  $("btnConfirmImportTournament").textContent = "Förhandsvisa ranking";
+  $("importTournamentOverlay").classList.add("open");
+  setTimeout(() => $("importTournamentJson").focus(), 0);
+}
+
+$("btnImportTournament").addEventListener("click", openJsonImporter);
 $("btnCancelImportTournament").addEventListener("click", closeImportTournamentModal);
-$("importTournamentOverlay").addEventListener("click", e => {
-  if (e.target === $("importTournamentOverlay")) closeImportTournamentModal();
+$("importTournamentOverlay").addEventListener("click", event => {
+  if (event.target === $("importTournamentOverlay")) closeImportTournamentModal();
+});
+$("btnImportBack").addEventListener("click", () => {
+  pendingImportPreview = null;
+  $("importMappingStep").style.display = "none";
+  $("importJsonStep").style.display = "";
+  $("importRankingPreview").style.display = "none";
+  $("importTournamentStatus").textContent = "";
 });
 
-function decodeImportedTournament(value){
-  const text = value.trim();
-  if (!text) return null;
-  let code = "";
-  try{
-    const url = new URL(text, location.href);
-    if (url.hash.startsWith("#t=")) code = url.hash.slice(3);
-  }catch(e){}
-  if (!code){
-    const match = text.match(/(?:^|[#?&])t=([^&\s]+)/);
-    code = match ? match[1] : text;
-  }
-  try{ code = decodeURIComponent(code); }catch(e){}
-  return decodeState(code);
+function invalidateImportPreview(){
+  pendingImportPreview = null;
+  $("importRankingPreview").style.display = "none";
+  $("btnConfirmImportTournament").textContent = "Förhandsvisa ranking";
+}
+$("importMappingStep").addEventListener("input", invalidateImportPreview);
+$("importMappingStep").addEventListener("change", invalidateImportPreview);
+
+function validateImportedJson(value){
+  if (!value || typeof value !== "object") throw new Error("JSON-datan är inte ett objekt.");
+  if (!String(value.name || "").trim()) throw new Error("Tävlingen saknar namn.");
+  if (!Array.isArray(value.players) || value.players.length < 2)
+    throw new Error("Tävlingen måste innehålla minst två spelare.");
+  const ids = new Set();
+  value.players.forEach(player => {
+    if (!player || !String(player.id || "") || !String(player.name || "").trim())
+      throw new Error("Varje spelare måste ha id och namn.");
+    if (ids.has(String(player.id))) throw new Error("Spelar-id förekommer flera gånger.");
+    ids.add(String(player.id));
+  });
+  const matches = [
+    ...(value.pools || []).flatMap(pool => pool.matches || []),
+    ...(value.bracketMatches || [])
+  ];
+  matches.forEach(match => {
+    if (!ids.has(String(match.player1Id)) || !ids.has(String(match.player2Id)))
+      throw new Error("En match hänvisar till en okänd spelare.");
+  });
+  return value;
 }
 
-function rebuildImportedRankingMatches(){
-  state.rankingMatches = {};
-  state.players.forEach(player => {
-    player.clubPlayerId = clubPlayerIdFor(player.name);
-    rosterRemember(player.name);
+function importedMatchPoints(match){
+  const one = Array.isArray(match.player1Score) ? match.player1Score : [];
+  const two = Array.isArray(match.player2Score) ? match.player2Score : [];
+  if (!match.completed || !one.length || one.length !== two.length) return null;
+  const points = one.map((score, index) => [Number(score), Number(two[index])]);
+  return points.every(set => Number.isFinite(set[0]) && Number.isFinite(set[1]))
+    ? points : null;
+}
+
+function importedSetScore(match){
+  const points = importedMatchPoints(match);
+  if (!points) return null;
+  return points.reduce((score, set) => {
+    if (set[0] > set[1]) score[0]++;
+    if (set[1] > set[0]) score[1]++;
+    return score;
+  }, [0, 0]);
+}
+
+function renderImportMappings(data){
+  const existing = new Map();
+  (clubSession.players || []).forEach(player =>
+    existing.set(importNameKey(player.name), {
+      name:player.name, playerId:player.playerId, ranked:true
+    }));
+  roster.forEach(name => {
+    const key = importNameKey(name);
+    if (key && !existing.has(key)) existing.set(key, {name, playerId:null, ranked:false});
+  });
+  importNameCandidates = [...existing.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "sv", {sensitivity:"base"}));
+
+  const suggestions = data.players.map(player => {
+    let bestIndex = -1, bestDistance = Infinity;
+    importNameCandidates.forEach((candidate, index) => {
+      const distance = levenshtein(player.name, candidate.name);
+      if (distance < bestDistance){
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+    const length = Math.max(importNameKey(player.name).length,
+      bestIndex >= 0 ? importNameKey(importNameCandidates[bestIndex].name).length : 1);
+    const similarity = bestIndex < 0 ? 0 : 1 - bestDistance / Math.max(1, length);
+    return {bestIndex, similarity};
   });
 
-  Object.keys(state.results || {}).forEach(key => {
-    const [a, b] = key.split("_").map(Number);
-    const result = getResult(a, b);
-    if (result && matchDecided(result))
-      syncRankingMatch("pool:" + key, a, b, result, false);
-  });
-
-  const finals = buildFinals();
-  if (!finals || !finals.ready) return;
-  const nodes = finals.mode === "place"
-    ? finals.matches
-    : finals.brackets.flatMap(bracket => bracket.rounds.flatMap(round => round.nodes));
-  nodes.forEach(node => {
-    const result = getF(node.key);
-    if (result && node.top && node.bot && node.top.p && node.bot.p &&
-        matchDecided(result, true)){
-      syncRankingMatch(
-        "final:" + node.key, node.top.p.id, node.bot.p.id, result, true
-      );
+  // Resolve suggestions greedily so two imported players aren't silently
+  // collapsed into the same existing club player.
+  const claimed = new Set();
+  const order = suggestions.map((suggestion, index) => ({...suggestion, index}))
+    .sort((a, b) => b.similarity - a.similarity);
+  const selected = new Map();
+  order.forEach(suggestion => {
+    if (suggestion.bestIndex >= 0 && suggestion.similarity >= .55 &&
+        !claimed.has(suggestion.bestIndex)){
+      selected.set(suggestion.index, suggestion.bestIndex);
+      claimed.add(suggestion.bestIndex);
     }
   });
+
+  const mapping = $("importPlayerMapping");
+  mapping.innerHTML = "";
+  data.players.forEach((player, playerIndex) => {
+    const row = document.createElement("div");
+    row.className = "importmaprow";
+    row.dataset.sourceId = String(player.id);
+    row.innerHTML = "<strong></strong><span class='arrow'>→</span><select></select>";
+    row.querySelector("strong").textContent = player.name;
+    const select = row.querySelector("select");
+    const createOption = document.createElement("option");
+    createOption.value = "new";
+    createOption.textContent = "Ny spelare: " + player.name;
+    select.appendChild(createOption);
+    importNameCandidates.forEach((candidate, index) => {
+      const option = document.createElement("option");
+      option.value = "candidate:" + index;
+      option.textContent = candidate.name + (candidate.ranked ? " · ranking" : " · sparat namn");
+      select.appendChild(option);
+    });
+    if (selected.has(playerIndex)) select.value = "candidate:" + selected.get(playerIndex);
+    row.appendChild(select);
+    mapping.appendChild(row);
+  });
+}
+
+$("btnAnalyzeImportTournament").addEventListener("click", () => {
+  const status = $("importTournamentStatus");
+  try{
+    pendingJsonImport = validateImportedJson(JSON.parse($("importTournamentJson").value));
+    const completed = [
+      ...(pendingJsonImport.pools || []).flatMap(pool => pool.matches || []),
+      ...(pendingJsonImport.bracketMatches || [])
+    ].filter(importedMatchPoints).length;
+    $("importTournamentName").value = String(pendingJsonImport.name).slice(0, 80);
+    $("importTournamentDate").value =
+      /^\d{4}-\d{2}-\d{2}/.test(String(pendingJsonImport.createdAt || ""))
+        ? String(pendingJsonImport.createdAt).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+    $("importTournamentSummary").textContent =
+      pendingJsonImport.players.length + " spelare · " +
+      (pendingJsonImport.pools || []).length + " pooler · " +
+      completed + " färdigspelade matcher";
+    renderImportMappings(pendingJsonImport);
+    $("importJsonStep").style.display = "none";
+    $("importMappingStep").style.display = "";
+    status.textContent = "";
+  }catch(error){
+    status.textContent = "Kunde inte läsa JSON: " + error.message;
+    status.style.color = "var(--danger)";
+  }
+});
+
+function selectedImportMappings(data){
+  const bySourceId = new Map();
+  const usedTargets = new Set();
+  $("importPlayerMapping").querySelectorAll(".importmaprow").forEach(row => {
+    const source = data.players.find(player => String(player.id) === row.dataset.sourceId);
+    const value = row.querySelector("select").value;
+    const candidate = value.startsWith("candidate:")
+      ? importNameCandidates[Number(value.split(":")[1])] : null;
+    const name = candidate ? candidate.name : String(source.name).trim().slice(0, 80);
+    const targetKey = candidate && candidate.playerId
+      ? "id:" + candidate.playerId : "name:" + importNameKey(name);
+    if (usedTargets.has(targetKey))
+      throw new Error("Flera importerade spelare är kopplade till " + name + ".");
+    usedTargets.add(targetKey);
+    bySourceId.set(String(source.id), {
+      name,
+      clubPlayerId:candidate && candidate.playerId ? candidate.playerId : playerUuid()
+    });
+  });
+  return bySourceId;
+}
+
+function importedPlacementGroups(data, sourceToLocal){
+  const output = [];
+  let offset = 0;
+  ["a", "b"].forEach(prefix => {
+    const matches = (data.bracketMatches || []).filter(match =>
+      String(match.id || "").startsWith(prefix + "-") && importedSetScore(match));
+    const participants = new Set(matches.flatMap(match =>
+      [String(match.player1Id), String(match.player2Id)]));
+    if (!participants.size) return;
+    const rounds = matches.map(match => {
+      const found = String(match.id).match(/-r(\d+)-/);
+      return found ? Number(found[1]) : 0;
+    });
+    const maxRound = Math.max(...rounds);
+    const placePlayers = new Map();
+    const assigned = new Set();
+    const add = (place, sourceId) => {
+      const local = sourceToLocal.get(String(sourceId));
+      if (!local || assigned.has(local.id)) return;
+      assigned.add(local.id);
+      if (!placePlayers.has(place)) placePlayers.set(place, []);
+      placePlayers.get(place).push(local.id);
+    };
+    matches.forEach((match, index) => {
+      const score = importedSetScore(match);
+      const winner = score[0] > score[1] ? match.player1Id : match.player2Id;
+      const loser = score[0] > score[1] ? match.player2Id : match.player1Id;
+      const round = rounds[index];
+      if (round === maxRound){
+        add(offset + 1, winner);
+        add(offset + 2, loser);
+      }else if (round > 0){
+        add(offset + Math.pow(2, maxRound - round) + 1, loser);
+      }else{
+        add(offset + participants.size, loser);
+      }
+    });
+    participants.forEach(sourceId => add(offset + participants.size, sourceId));
+    [...placePlayers.entries()].sort((a,b) => a[0] - b[0])
+      .forEach(([place, playerIds]) => output.push({place, playerIds}));
+    offset += participants.size;
+  });
+  return output;
+}
+
+function attachImportedBracketResults(imported, data, sourceToLocal){
+  const externalRound = match => {
+    const found = String(match.id || "").match(/-r(\d+)-/);
+    return found ? Number(found[1]) : 0;
+  };
+  const bracketMatches = (data.bracketMatches || []).map(match => {
+    const one = sourceToLocal.get(String(match.player1Id));
+    const two = sourceToLocal.get(String(match.player2Id));
+    const points = importedMatchPoints(match);
+    return one && two && points ? {match, one, two, points} : null;
+  }).filter(Boolean);
+  if (!bracketMatches.length || imported.finals === "none") return;
+
+  const previousState = state;
+  state = imported;
+  try{
+    // Each completed round reveals the participants in the following round.
+    // Rebuild until no additional external match can be attached.
+    for (let pass = 0; pass < 12; pass++){
+      const finals = buildFinals();
+      if (!finals || !finals.ready) break;
+      const nodes = finals.mode === "place"
+        ? finals.matches
+        : finals.brackets.flatMap(bracket =>
+            bracket.rounds.flatMap(round => round.nodes));
+      let added = 0;
+      nodes.forEach(node => {
+        if (imported.fresults[node.key] || !node.top?.p || !node.bot?.p) return;
+        const external = bracketMatches.find(candidate =>
+          (candidate.one.id === node.top.p.id && candidate.two.id === node.bot.p.id) ||
+          (candidate.two.id === node.top.p.id && candidate.one.id === node.bot.p.id));
+        if (!external) return;
+        let result = external.points;
+        const score = importedSetScore(external.match);
+        if (score && score[0] === score[1]){
+          // Some exports mark a bracket match complete at 1–1 but reveal the
+          // advancing player in the next round. Use that advancement only for
+          // reconstructing the tree; the ranking match remains a ±0 draw.
+          const round = externalRound(external.match);
+          const later = bracketMatches.filter(candidate =>
+            externalRound(candidate.match) > round);
+          const oneAdvanced = later.some(candidate =>
+            candidate.match.player1Id === external.match.player1Id ||
+            candidate.match.player2Id === external.match.player1Id);
+          const twoAdvanced = later.some(candidate =>
+            candidate.match.player1Id === external.match.player2Id ||
+            candidate.match.player2Id === external.match.player2Id);
+          if (oneAdvanced !== twoAdvanced)
+            result = oneAdvanced ? [2, 1] : [1, 2];
+        }
+        imported.fresults[node.key] = external.one.id === node.top.p.id
+          ? result
+          : (Array.isArray(result[0])
+              ? result.map(set => [set[1], set[0]])
+              : [result[1], result[0]]);
+        added++;
+      });
+      if (!added) break;
+    }
+  }finally{
+    state = previousState;
+  }
+}
+
+function convertJsonTournament(data, mappings){
+  const sourceToLocal = new Map();
+  data.players.forEach((source, index) => {
+    const mapped = mappings.get(String(source.id));
+    sourceToLocal.set(String(source.id), {
+      id:index + 1,
+      name:mapped.name,
+      clubPlayerId:mapped.clubPlayerId,
+      pool:0
+    });
+  });
+  const pools = (data.pools || []).slice().sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), "sv"));
+  pools.forEach((pool, poolIndex) =>
+    (pool.players || []).forEach(sourceId => {
+      const player = sourceToLocal.get(String(sourceId));
+      if (player) player.pool = poolIndex;
+    }));
+
+  const imported = {
+    phase:"play",
+    format:Number(data.setsToWin) >= 3 ? "bo5" : "bo3",
+    pools:Math.max(1, pools.length),
+    poolsManual:true,
+    finals:(data.bracketMatches || []).length ? "ab" : "none",
+    advance:2,
+    scoring:"points",
+    useSeeding:false,
+    players:[...sourceToLocal.values()],
+    results:{},
+    fresults:{},
+    rankingMatches:{},
+    importedMatchResults:[],
+    importedPlacements:[],
+    importedBracketMatches:[],
+    importSourceId:String(data.id || "").trim().slice(0, 120) || undefined,
+    nextId:data.players.length + 1,
+    round:0,
+    view:"result",
+    pool:0
+  };
+  const allMatches = [];
+  pools.forEach(pool => (pool.matches || []).forEach(match =>
+    allMatches.push({match, stage:"pool"})));
+  (data.bracketMatches || []).forEach(match =>
+    allMatches.push({match, stage:"bracket"}));
+
+  allMatches.forEach(({match, stage}) => {
+    const points = importedMatchPoints(match);
+    const one = sourceToLocal.get(String(match.player1Id));
+    const two = sourceToLocal.get(String(match.player2Id));
+    if (!points || !one || !two) return;
+    imported.importedMatchResults.push(points);
+    if (stage === "pool"){
+      imported.results[rkey(one.id, two.id)] =
+        one.id < two.id ? points : points.map(set => [set[1], set[0]]);
+    }
+    const score = importedSetScore(match);
+    const matchId = "import:" + stage + ":" +
+      String(match.id || (one.id + "-" + two.id));
+    if (score[0] === score[1]){
+      imported.rankingMatches[matchId] = {
+        matchId, playerAId:one.clubPlayerId, playerBId:two.clubPlayerId,
+        draw:true, ranked:false
+      };
+    }else{
+      const oneWon = score[0] > score[1];
+      const losingPoints = oneWon ? match.player2Score : match.player1Score;
+      imported.rankingMatches[matchId] = {
+        matchId,
+        winnerId:oneWon ? one.clubPlayerId : two.clubPlayerId,
+        loserId:oneWon ? two.clubPlayerId : one.clubPlayerId,
+        ranked:true,
+        walkover:Array.isArray(losingPoints) && losingPoints.length > 0 &&
+          losingPoints.every(point => Number(point) === 0)
+      };
+    }
+  });
+  imported.importedBracketMatches = (data.bracketMatches || []).map(match => {
+    const one = sourceToLocal.get(String(match.player1Id));
+    const two = sourceToLocal.get(String(match.player2Id));
+    const id = String(match.id || "");
+    const roundMatch = id.match(/-r(\d+)-/);
+    return one && two ? {
+      id,
+      bracket:id.startsWith("b-") ? "b" : "a",
+      round:roundMatch ? Number(roundMatch[1]) : 0,
+      player1Id:one.id,
+      player2Id:two.id,
+      result:importedMatchPoints(match)
+    } : null;
+  }).filter(match => match && match.result);
+  imported.importedPlacements = importedPlacementGroups(data, sourceToLocal);
+  attachImportedBracketResults(imported, data, sourceToLocal);
+  return imported;
+}
+
+function jsonImportPayload(name, playedAt, importedState){
+  return {
+    sourceTournamentId:importedState.importSourceId,
+    name,
+    playedAt,
+    type:"normal",
+    status:"finalized",
+    state:importedState,
+    participants:importedState.players.map(player => ({
+      playerId:player.clubPlayerId,
+      name:player.name
+    })),
+    matches:Object.values(importedState.rankingMatches || {})
+  };
+}
+
+function renderImportRankingPreview(preview){
+  const players = preview.players || [];
+  const rows = $("importRankingRows");
+  rows.innerHTML = "";
+  players.filter(player => player.change !== 0)
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change) ||
+      a.name.localeCompare(b.name, "sv"))
+    .forEach(player => {
+      const row = document.createElement("div");
+      row.className = "importrankrow";
+      row.innerHTML =
+        "<strong></strong><span class='ratings'></span><span class='change'></span>";
+      row.children[0].textContent = player.name;
+      row.children[1].textContent =
+        player.currentRating + " → " + player.proposedRating + " p";
+      row.children[2].textContent = (player.change > 0 ? "+" : "") + player.change;
+      row.children[2].classList.add(player.change > 0 ? "plus" : "minus");
+      rows.appendChild(row);
+    });
+  if (!rows.children.length)
+    rows.innerHTML = "<p class='hint'>Importen ger inga rankingförändringar.</p>";
+  const notice = $("importReplacementNotice");
+  notice.style.display = preview.replacesTournamentId ? "" : "none";
+  notice.textContent = preview.replacesTournamentId
+    ? "Den tidigare importen ”" + (preview.replacesTournamentName || "tävlingen") +
+      "” ersätts. Matcherna räknas inte en gång till."
+    : "";
+  $("importRankingPreview").style.display = "";
 }
 
 $("btnConfirmImportTournament").addEventListener("click", async () => {
-  const imported = decodeImportedTournament($("importTournamentLink").value);
+  if (!pendingJsonImport || !clubSession) return;
+  const status = $("importTournamentStatus");
+  const button = $("btnConfirmImportTournament");
   const name = $("importTournamentName").value.trim();
   const playedAt = $("importTournamentDate").value;
-  if (!imported || !imported.players || imported.players.length < 2){
-    $("importTournamentStatus").textContent = "Delningslänken innehåller ingen giltig tävling.";
-    $("importTournamentStatus").style.color = "var(--danger)";
-    return;
-  }
-  if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(playedAt)){
-    $("importTournamentStatus").textContent = "Fyll i tävlingens namn och speldatum.";
-    $("importTournamentStatus").style.color = "var(--danger)";
-    return;
-  }
-
-  $("btnConfirmImportTournament").disabled = true;
-  $("btnConfirmImportTournament").textContent = "Importerar…";
-  $("importTournamentStatus").textContent = "Sparar tävlingen och räknar om rankingen…";
-  $("importTournamentStatus").style.color = "var(--muted)";
   try{
-    if (activeTournament){
+    if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(playedAt))
+      throw new Error("Fyll i tävlingens namn och speldatum.");
+
+    if (!pendingImportPreview){
+      const mappings = selectedImportMappings(pendingJsonImport);
+      const importedState = convertJsonTournament(pendingJsonImport, mappings);
+      const payload = jsonImportPayload(name, playedAt, importedState);
+      button.disabled = true;
+      button.textContent = "Räknar…";
+      status.textContent = "Beräknar ranking utan att spara något…";
+      status.style.color = "var(--muted)";
       clearTimeout(remoteSaveTimer);
-      remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
       await remoteSaveChain;
+      const preview = await api(
+        "/clubs/" + clubSession.clubId + "/tournaments/preview-ranking",
+        {method:"POST", body:JSON.stringify(payload)}
+      );
+      pendingImportPreview = {importedState, payload};
+      renderImportRankingPreview(preview);
+      button.disabled = false;
+      button.textContent = "Bekräfta import";
+      status.textContent = "Kontrollera ändringarna och bekräfta sedan importen.";
+      status.style.color = "var(--muted)";
+      return;
     }
-    state = Object.assign(blankTournamentState(), imported);
-    rebuildImportedRankingMatches();
-    activeTournament = {name, playedAt, type:"normal", status:"finalized"};
-    await saveRemoteTournament();
+
+    button.disabled = true;
+    button.textContent = "Importerar…";
+    status.textContent = "Sparar matcher och uppdaterar klubbens ranking…";
+    status.style.color = "var(--muted)";
+    const result = await api(
+      "/clubs/" + clubSession.clubId + "/tournaments",
+      {method:"POST", body:JSON.stringify(pendingImportPreview.payload)}
+    );
+    state = pendingImportPreview.importedState;
+    activeTournament = result.tournament;
+    state.players.forEach(player => rosterRemember(player.name));
+    const token = clubSession.token;
+    const refreshedClub = await api("/clubs/" + clubSession.clubId, {method:"GET"});
+    clubSession = Object.assign(refreshedClub, {token});
     kvSave(KEY, state);
     closeImportTournamentModal();
-    closeClub();
-    refresh();
-    if (state.phase === "play") setView(state.view || "grid");
+    renderClubPortal();
+    showClubPage();
+    $("clubPageStatus").textContent = "Tävlingen importerades och rankingen uppdaterades.";
+    $("clubPageStatus").style.color = "var(--win-fg)";
   }catch(error){
-    remoteSaveChain = Promise.resolve();
-    $("importTournamentStatus").textContent = "Importen misslyckades: " + error.message;
-    $("importTournamentStatus").style.color = "var(--danger)";
-    $("btnConfirmImportTournament").disabled = false;
-    $("btnConfirmImportTournament").textContent = "Importera och ranka";
+    status.textContent = "Importen misslyckades: " + error.message;
+    status.style.color = "var(--danger)";
+    button.disabled = false;
+    button.textContent = pendingImportPreview ? "Bekräfta import" : "Förhandsvisa ranking";
   }
 });
+
 async function createClub(name, statusElement){
   statusElement.style.color = "";
   name = name.trim();
@@ -4463,12 +5958,14 @@ function setView(v){
   $("paneFinals").style.display = v === "finals" ? "" : "none";
   $("paneBracket").style.display = v === "bracket" ? "" : "none";
   $("paneResult").style.display = v === "result" ? "" : "none";
+  $("btnShare").style.display = v === "result" ? "none" : "";
   renderPoolBar();
 }
 
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => { setView(tab.dataset.view); store.save(); });
 });
+$("btnResultShare").addEventListener("click", () => $("btnShare").click());
 
 /* ---------------- Wiring ---------------- */
 $("formatSeg").addEventListener("click", e => {

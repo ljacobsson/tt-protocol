@@ -85,6 +85,19 @@ export function calculateRanking(players, tournaments) {
   const names = {...players};
   const ratings = Object.fromEntries(Object.keys(names).map(id => [id, START_RATING]));
   const eventsByPeriod = new Map();
+  const importedMatchOwners = new Map();
+  tournaments.forEach((tournament, tournamentIndex) => {
+    const stamp = String(tournament.updatedAt || tournament.createdAt || "") +
+      ":" + String(tournamentIndex).padStart(8, "0");
+    for (const match of tournament.matches || []) {
+      const matchId = String(match.matchId || "");
+      if (!matchId.startsWith("import:")) continue;
+      const current = importedMatchOwners.get(matchId);
+      if (!current || stamp > current.stamp)
+        importedMatchOwners.set(matchId, {tournament, stamp});
+    }
+  });
+  const countedImportedMatches = new Set();
 
   for (const tournament of tournaments) {
     if (tournament.status !== "finalized") continue;
@@ -92,6 +105,12 @@ export function calculateRanking(players, tournaments) {
     const period = rankingPeriod(playedAt);
     if (!eventsByPeriod.has(period)) eventsByPeriod.set(period, []);
     for (const match of tournament.matches || []) {
+      const stableImportId = String(match.matchId || "");
+      if (stableImportId.startsWith("import:")) {
+        if (importedMatchOwners.get(stableImportId)?.tournament !== tournament ||
+            countedImportedMatches.has(stableImportId)) continue;
+        countedImportedMatches.add(stableImportId);
+      }
       /* A played pool match counts when it has a winner. Only an actual draw
          is excluded, even when the pool format permits a 1-1 result. */
       if (match.draw) continue;

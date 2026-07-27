@@ -234,6 +234,10 @@ function normalizeTournament(payload, tournamentId, existing = {}) {
   }
   return {
     tournamentId,
+    sourceTournamentId: String(
+      payload.sourceTournamentId || state.importSourceId ||
+      existing.sourceTournamentId || "",
+    ).trim().slice(0, 120) || undefined,
     name,
     playedAt,
     type,
@@ -244,6 +248,27 @@ function normalizeTournament(payload, tournamentId, existing = {}) {
     createdAt: existing.createdAt || timestamp,
     updatedAt: timestamp,
   };
+}
+
+function matchingImportedTournament(tournaments, payload) {
+  const sourceTournamentId = String(
+    payload.sourceTournamentId || payload.state?.importSourceId || "",
+  ).trim();
+  if (sourceTournamentId) {
+    const exact = tournaments.find(tournament =>
+      String(tournament.sourceTournamentId || tournament.state?.importSourceId || "") ===
+      sourceTournamentId);
+    if (exact) return exact;
+  }
+  // Imports created before sourceTournamentId was stored still have stable
+  // external match IDs. Any overlap identifies the same source tournament.
+  const incomingIds = new Set((payload.matches || [])
+    .map(match => String(match.matchId || ""))
+    .filter(matchId => matchId.startsWith("import:")));
+  if (!incomingIds.size) return null;
+  return tournaments.find(tournament =>
+    (tournament.matches || []).some(match =>
+      incomingIds.has(String(match.matchId || "")))) || null;
 }
 
 async function batchWrite(requests) {
@@ -258,7 +283,7 @@ async function batchWrite(requests) {
   }
 }
 
-async function persistRankings(clubId, tournaments) {
+function rankingForTournaments(tournaments) {
   const players = {};
   for (const tournament of tournaments) {
     for (const participant of tournament.participants || []) {
@@ -267,8 +292,11 @@ async function persistRankings(clubId, tournaments) {
       if (playerId && name) players[playerId] = name;
     }
   }
+  return calculateRanking(players, tournaments);
+}
 
-  const ranking = calculateRanking(players, tournaments);
+async function persistRankings(clubId, tournaments) {
+  const ranking = rankingForTournaments(tournaments);
   const currentItems = await queryClub(clubId);
   const oldKeys = new Set(
     currentItems.filter(item => item.SK.startsWith("PLAYER#")).map(item => item.SK),
@@ -293,7 +321,14 @@ async function persistRankings(clubId, tournaments) {
 }
 
 async function saveTournament(clubId, payload, requestedId) {
-  const tournamentId = requestedId || crypto.randomUUID().replaceAll("-", "");
+  let tournamentId = requestedId;
+  if (!tournamentId) {
+    const tournaments = (await queryClub(clubId))
+      .filter(item => item.SK.startsWith("TOURNAMENT#"))
+      .map(withoutKeys);
+    tournamentId = matchingImportedTournament(tournaments, payload)?.tournamentId ||
+      crypto.randomUUID().replaceAll("-", "");
+  }
   const key = {PK: clubPk(clubId), SK: `TOURNAMENT#${tournamentId}`};
   const {Item: existing} = await db.send(new GetCommand({
     TableName: TABLE_NAME,
@@ -365,6 +400,37 @@ export async function handler(event) {
 
     if (!await authorize(event, clubId)) {
       return response(401, {message: "Ogiltig klubblänk"});
+    }
+
+    if (resource === "/clubs/{clubId}/tournaments/preview-ranking" && method === "POST") {
+      const items = await queryClub(clubId);
+      const tournaments = items
+        .filter(item => item.SK.startsWith("TOURNAMENT#"))
+        .map(withoutKeys);
+      const preview = normalizeTournament(
+        bodyOf(event), `preview-${crypto.randomUUID().replaceAll("-", "")}`,
+      );
+      const replaced = matchingImportedTournament(tournaments, bodyOf(event));
+      const proposed = rankingForTournaments([
+        ...tournaments.filter(tournament =>
+          tournament.tournamentId !== replaced?.tournamentId),
+        preview,
+      ]);
+      const currentRatings = Object.fromEntries(
+        items.filter(item => item.SK.startsWith("PLAYER#"))
+          .map(player => [player.playerId, Number(player.rating) || START_RATING]),
+      );
+      return response(200, {
+        replacesTournamentId: replaced?.tournamentId || null,
+        replacesTournamentName: replaced?.name || null,
+        players: proposed.players.map(player => ({
+          playerId: player.playerId,
+          name: player.name,
+          currentRating: currentRatings[player.playerId] ?? START_RATING,
+          proposedRating: player.rating,
+          change: player.rating - (currentRatings[player.playerId] ?? START_RATING),
+        })),
+      });
     }
 
     if (resource === "/clubs/{clubId}" && method === "GET") {

@@ -95,6 +95,17 @@ förvalt. Spelarna sorteras efter ranking och fördelas snake-vis över poolerna
 klubbspelare räknas som 1000 poäng. Checkboxen kan stängas av och
 poolplaceringarna kan alltid justeras manuellt.
 
+Via **Importera** på klubbsidan kan en avslutad tävling i JSON-format läggas
+till i efterhand. Importvyn föreslår kopplingar mellan JSON-spelarna och
+klubbens befintliga spelare med Levenshtein-avstånd; varje koppling kan
+kontrolleras och ändras före import. Innan något sparas visar en
+förhandsberäkning varje berörd spelares nuvarande ranking, föreslagna ranking
+och poängskillnad. Först efter en separat bekräftelse sparas pool- och
+slutspelsmatcherna som en avslutad tävling och klubbens ranking räknas om.
+En återimport med samma käll-id eller samma stabila importmatch-id ersätter den
+tidigare importen. Matcherna läggs alltså inte till i rankingunderlaget en gång
+till; om resultat har rättats används den senaste versionen.
+
 Avslutade tävlingar får fliken **Slutresultat** i både administratörs- och
 publik vy. Cupförlorare som åker ut i samma omgång delar placering (till
 exempel delad tredjeplats för semifinalförlorarna), och nästa platsnummer
@@ -111,6 +122,7 @@ Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 - `PUT /clubs/{clubId}/saved-names`
 - `GET /clubs/{clubId}/tournaments/{tournamentId}/public` (ingen hemlighet krävs)
 - `POST /clubs/{clubId}/tournaments`
+- `POST /clubs/{clubId}/tournaments/preview-ranking` (skriver ingen data)
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}`
 - `DELETE /clubs/{clubId}/tournaments/{tournamentId}`
 

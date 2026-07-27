@@ -70,6 +70,11 @@ Resources:
         CreateTournament:
           Type: Api
           Properties: {Path: "/clubs/{clubId}/tournaments", Method: POST}
+        PreviewTournamentRanking:
+          Type: Api
+          Properties:
+            Path: "/clubs/{clubId}/tournaments/preview-ranking"
+            Method: POST
         UpdateTournament:
           Type: Api
           Properties: {Path: "/clubs/{clubId}/tournaments/{tournamentId}", Method: PUT}
