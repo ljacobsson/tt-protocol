@@ -2621,8 +2621,8 @@ function clearResult(a, b){
 const norm = s => s.trim().toLowerCase();
 const inRoster = name => roster.some(r => norm(r) === norm(name));
 const inGame   = name => state.players.some(p => norm(p.name) === norm(name));
-const clubPlayerIdFor = name => {
-  const found = clubSession && (clubSession.players || []).find(p => norm(p.name) === norm(name));
+const clubPlayerIdFor = (name, club = clubSession) => {
+  const found = club && (club.players || []).find(p => norm(p.name) === norm(name));
   return found ? found.playerId : playerUuid();
 };
 const playerRating = player => {
@@ -4152,11 +4152,14 @@ $("overlay").addEventListener("click", e => { if (e.target === $("overlay")) clo
 /* ---------------- Club backend ---------------- */
 let remoteSaveChain = Promise.resolve();
 
-async function api(path, options){
+async function api(path, options = {}){
   if (!API_BASE) throw new Error("API-adressen saknas i config.js");
   const headers = {"Content-Type":"application/json"};
-  if (clubSession && clubSession.token) headers.Authorization = "Bearer " + clubSession.token;
-  const res = await fetch(API_BASE + path, Object.assign({}, options, {headers}));
+  const token = options.token === undefined ? clubSession?.token : options.token;
+  if (token) headers.Authorization = "Bearer " + token;
+  const request = Object.assign({}, options, {headers});
+  delete request.token;
+  const res = await fetch(API_BASE + path, request);
   let data = {};
   try{ data = await res.json(); }catch(e){}
   if (!res.ok) throw new Error(data.message || "Serverfel (" + res.status + ")");
@@ -4167,47 +4170,65 @@ function clubLink(){
   return location.origin + clubPath(clubSession.clubId);
 }
 
-function tournamentPayload(){
-  state.players.forEach(p => {
-    if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name);
+function tournamentPayload(tournament = activeTournament, sourceState = state, club = clubSession){
+  sourceState.players.forEach(p => {
+    if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name, club);
   });
   return {
-    name: activeTournament.name,
-    playedAt: activeTournament.playedAt,
-    type: activeTournament.type || "normal",
-    status: activeTournament.status || "draft",
-    state,
-    participants: state.players.map(p => ({playerId:p.clubPlayerId, name:p.name})),
-    matches: Object.values(state.rankingMatches || {})
+    name: tournament.name,
+    playedAt: tournament.playedAt,
+    type: tournament.type || "normal",
+    status: tournament.status || "draft",
+    expectedUpdatedAt: tournament.updatedAt || null,
+    state:sourceState,
+    participants: sourceState.players.map(p => ({playerId:p.clubPlayerId, name:p.name})),
+    matches: Object.values(sourceState.rankingMatches || {})
   };
 }
 
 function scheduleRemoteSave(){
   if (!clubSession || !activeTournament || !API_BASE) return;
   clearTimeout(remoteSaveTimer);
+  const save = remoteSaveSnapshot();
   remoteSaveTimer = setTimeout(() => {
-    remoteSaveChain = remoteSaveChain.then(saveRemoteTournament).catch(error => {
+    remoteSaveChain = remoteSaveChain.then(() => saveRemoteTournament(save)).catch(error => {
       $("clubStatus").textContent = "Kunde inte spara: " + error.message;
       $("clubStatus").style.color = "var(--danger)";
     });
   }, 700);
 }
 
-async function saveRemoteTournament(){
-  $("clubStatus").textContent = "Sparar…";
-  const exists = !!activeTournament.tournamentId;
-  const path = "/clubs/" + clubSession.clubId + "/tournaments" +
-    (exists ? "/" + activeTournament.tournamentId : "");
+function remoteSaveSnapshot(){
+  return {
+    club:clubSession,
+    tournament:activeTournament,
+    state:structuredClone(state)
+  };
+}
+
+async function saveRemoteTournament(save = remoteSaveSnapshot()){
+  const {club, tournament, state:savedState} = save;
+  if (clubSession === club && activeTournament === tournament)
+    $("clubStatus").textContent = "Sparar…";
+  const exists = !!tournament.tournamentId;
+  const path = "/clubs/" + club.clubId + "/tournaments" +
+    (exists ? "/" + tournament.tournamentId : "");
+  const payload = tournamentPayload(tournament, savedState, club);
   const data = await api(path, {
     method: exists ? "PUT" : "POST",
-    body: JSON.stringify(tournamentPayload())
+    body: JSON.stringify(payload),
+    token: club.token
   });
-  activeTournament = data.tournament;
-  const ix = (clubSession.tournaments || []).findIndex(
-    t => t.tournamentId === activeTournament.tournamentId);
-  if (ix < 0) clubSession.tournaments.unshift(activeTournament);
-  else clubSession.tournaments[ix] = activeTournament;
-  clubSession.players = data.ranking.players;
+  // Preserve the object identity captured by queued saves. A later save that was
+  // queued before the first POST completed will then PUT the same tournament.
+  Object.assign(tournament, data.tournament);
+  const ix = (club.tournaments || []).findIndex(
+    t => t === tournament || t.tournamentId === tournament.tournamentId);
+  if (ix < 0) club.tournaments.unshift(tournament);
+  else club.tournaments[ix] = tournament;
+  club.players = data.ranking.players;
+  if (clubSession !== club || activeTournament !== tournament) return;
+  activeTournament = tournament;
   $("clubStatus").textContent = "Sparad";
   $("clubStatus").style.color = "var(--muted)";
   renderClubPortal();
@@ -5952,7 +5973,8 @@ $("btnNewTournament").addEventListener("click", async () => {
     clearTimeout(remoteSaveTimer);
     $("clubStatus").textContent = "Sparar föregående tävling…";
     try{
-      remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+      const save = remoteSaveSnapshot();
+      remoteSaveChain = remoteSaveChain.then(() => saveRemoteTournament(save));
       await remoteSaveChain;
     }catch(error){
       remoteSaveChain = Promise.resolve();
@@ -6170,7 +6192,8 @@ $("btnConfirmFinish").addEventListener("click", async () => {
   $("btnConfirmFinish").textContent = "Uppdaterar ranking…";
   $("finishStatus").textContent = "Sparar tävlingen och räknar om rankingen…";
   try{
-    remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+    const save = remoteSaveSnapshot();
+    remoteSaveChain = remoteSaveChain.then(() => saveRemoteTournament(save));
     await remoteSaveChain;
     $("btnFinishTournament").style.display = "none";
     $("finishStatus").textContent = "Klart – rankingen är uppdaterad.";
@@ -6205,7 +6228,8 @@ $("btnShare").addEventListener("click", async () => {
   if (clubSession && activeTournament && !activeTournament.tournamentId){
     clearTimeout(remoteSaveTimer);
     try{
-      remoteSaveChain = remoteSaveChain.then(saveRemoteTournament);
+      const save = remoteSaveSnapshot();
+      remoteSaveChain = remoteSaveChain.then(() => saveRemoteTournament(save));
       await remoteSaveChain;
     }catch(error){
       remoteSaveChain = Promise.resolve();
