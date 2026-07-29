@@ -1923,6 +1923,7 @@
 
     <h2>Matchform</h2>
     <div class="seg" id="formatSeg">
+      <button data-fmt="sets1">1 set<small>först till 11 poäng</small></button>
       <button data-fmt="sets2">2 set<small>oavgjort 1–1 tillåtet</small></button>
       <button data-fmt="bo3">Bäst av 3<small>först till 2 set</small></button>
       <button data-fmt="bo5">Bäst av 5<small>först till 3 set</small></button>
@@ -2219,7 +2220,7 @@ const KEY = "matchprotokollet_v1";
 const OLD_KEY = "bergertavlan_v1";        // pre-rename saves
 let state = {
   phase: "setup",          // setup | play
-  format: "sets2",         // sets2 | bo3 | bo5
+  format: "sets2",         // sets1 | sets2 | bo3 | bo5
   pools: 1,
   poolsManual: false,      // automatic recommendation until the organizer overrides it
   finals: "none",          // none | place | ab
@@ -2371,7 +2372,8 @@ const store = {
    The whole board is packed into the hash so a link is self-contained: no
    server, no database. Kept tight on purpose — a pool result is one character,
    because the set of legal results is fixed by the match format. */
-const FMT_LIST = ["sets2", "bo3", "bo5"];
+// Append new formats so the numeric indices in existing shared links stay valid.
+const FMT_LIST = ["sets2", "bo3", "bo5", "sets1"];
 const FIN_LIST = ["none", "place", "ab"];
 
 function b64urlEncode(str){
@@ -2593,10 +2595,15 @@ function ballsOf(r){
   return [a, b];
 }
 /* how many sets the current format needs before a match is over */
-const setsToWin = () => state.format === "bo5" ? 3 : 2;
+const setsToWin = () =>
+  state.format === "sets1" ? 1
+  : state.format === "bo5" ? 3
+  : 2;
 function matchDecided(r, needWinner){
   const s = setsOf(r);
   if (!s) return false;
+  if (state.format === "sets1")
+    return s[0] + s[1] >= 1 && (!needWinner || s[0] !== s[1]);
   if (state.format === "sets2")
     return needWinner ? (s[0] + s[1] >= 2 && s[0] !== s[1]) : s[0] + s[1] >= 2;
   return s[0] >= setsToWin() || s[1] >= setsToWin();
@@ -2649,6 +2656,7 @@ function rosterForget(name){
 }
 
 const FORMATS = {
+  sets1: { label: "1 set", results: [[1,0],[0,1]] },
   sets2: { label: "2 set", results: [[2,0],[1,1],[0,2]] },
   bo3:   { label: "Bäst av 3", results: [[2,0],[2,1],[1,2],[0,2]] },
   bo5:   { label: "Bäst av 5", results: [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]] }
@@ -2657,6 +2665,7 @@ const FORMATS = {
 /* Keep the first three entries compatible with older shared links. In a
    2-set playoff, a 1–1 score is followed by a deciding third set. */
 function playoffResults(format){
+  if (format === "sets1") return FORMATS.sets1.results;
   if (format === "sets2") return [[2,0],[1,1],[0,2],[2,1],[1,2]];
   return FORMATS[format].results;
 }
@@ -4028,12 +4037,14 @@ function renderSetsModal(pa, pb, box){
 
 /* ---- set by set: pick who won and how many the loser got ---- */
 const MAX_SETS = () =>
-  state.format === "bo5" ? 5
+  state.format === "sets1" ? 1
+  : state.format === "bo5" ? 5
   : state.format === "bo3" ? 3
   : (modalKey ? 3 : 2);            // 2-set format, but a knockout needs a winner
 
 function pointsDone(sets){
   const s = setsOf(sets.length ? sets : null) || [0, 0];
+  if (state.format === "sets1") return sets.length >= 1;
   if (state.format === "sets2"){
     if (!modalKey) return sets.length >= 2;          // 1–1 is a legal pool result
     return sets.length >= 2 && s[0] !== s[1];        // play on until someone leads
@@ -4464,19 +4475,35 @@ function renderClubStatistics(){
   const details = Object.values(clubSession.playerDetails || {});
   const byPlayerId = new Map((clubSession.players || []).map(player =>
     [player.playerId, player]));
-  const mostActive = details.slice().sort((a,b) => b.matches - a.matches)[0];
-  const winLeader = details.slice().sort((a,b) =>
-    b.wins - a.wins || b.matches - a.matches)[0];
+  const maxMatches = Math.max(0, ...details.map(player => player.matches || 0));
+  const mostActive = maxMatches
+    ? details.filter(player => player.matches === maxMatches) : [];
+  const maxWins = Math.max(0, ...details.map(player => player.wins || 0));
+  const winLeaders = maxWins
+    ? details.filter(player => player.wins === maxWins) : [];
+  const leaderName = leaders => leaders.length === 1
+    ? leaders[0].name
+    : leaders.length === 2
+      ? leaders.map(player => player.name).join(" & ")
+      : leaders.length + " spelare";
   const mostFrequentEntry = [...appearances.entries()].sort((a,b) => b[1] - a[1])[0];
   const mostFrequent = mostFrequentEntry
     ? byPlayerId.get(mostFrequentEntry[0]) : null;
   const climber = (clubSession.players || []).slice().sort((a,b) =>
     (b.rating - 1000) - (a.rating - 1000))[0];
   const highlights = [
-    ["⚡", mostActive?.name || "–",
-      mostActive ? mostActive.matches + " matcher · mest aktiv" : "Inga matcher ännu"],
-    ["👑", winLeader?.name || "–",
-      winLeader ? winLeader.wins + " vinster · flest i klubben" : "Inga vinster ännu"],
+    ["⚡", mostActive.length ? leaderName(mostActive) : "–",
+      mostActive.length
+        ? maxMatches + (mostActive.length === 1
+          ? " matcher · mest aktiv"
+          : " matcher var · delar förstaplatsen")
+        : "Inga matcher ännu"],
+    ["👑", winLeaders.length ? leaderName(winLeaders) : "–",
+      winLeaders.length
+        ? maxWins + (winLeaders.length === 1
+          ? " vinster · flest i klubben"
+          : " vinster var · delar förstaplatsen")
+        : "Inga vinster ännu"],
     ["📈", climber?.name || mostFrequent?.name || "–",
       climber
         ? (climber.rating - 1000 >= 0 ? "+" : "") + (climber.rating - 1000) +
@@ -5693,7 +5720,9 @@ function convertJsonTournament(data, mappings){
 
   const imported = {
     phase:"play",
-    format:Number(data.setsToWin) >= 3 ? "bo5" : "bo3",
+    format:Number(data.setsToWin) <= 1
+      ? "sets1"
+      : Number(data.setsToWin) >= 3 ? "bo5" : "bo3",
     pools:Math.max(1, pools.length),
     poolsManual:true,
     finals:(data.bracketMatches || []).length ? "ab" : "none",
