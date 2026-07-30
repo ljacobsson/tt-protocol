@@ -116,6 +116,17 @@ export function calculateRanking(players, tournaments) {
       if (match.draw) continue;
       const {winnerId, loserId} = match;
       if (!(winnerId in names) || !(loserId in names) || winnerId === loserId) continue;
+      if (match.rankingMode === "winner-stays") {
+        const secondId = match.secondId;
+        if (!(secondId in names) || secondId === winnerId || secondId === loserId) continue;
+        eventsByPeriod.get(period).push({
+          tournamentId: tournament.tournamentId,
+          matchId: match.matchId || "winner-stays",
+          winnerId, secondId, loserId,
+          rankingMode: "winner-stays",
+        });
+        continue;
+      }
       eventsByPeriod.get(period).push({
         tournamentId: tournament.tournamentId,
         matchId: match.matchId || "",
@@ -133,6 +144,16 @@ export function calculateRanking(players, tournaments) {
     const changes = {};
     const periodMatches = [];
     for (const event of eventsByPeriod.get(period)) {
+      if (event.rankingMode === "winner-stays") {
+        const opponentAverage = (baseline[event.secondId] + baseline[event.loserId]) / 2;
+        const otherAverage = (baseline[event.winnerId] + baseline[event.secondId]) / 2;
+        const winnerPoints = matchPoints(baseline[event.winnerId], opponentAverage);
+        const loserPoints = matchPoints(otherAverage, baseline[event.loserId]);
+        changes[event.winnerId] = (changes[event.winnerId] || 0) + winnerPoints;
+        changes[event.loserId] = (changes[event.loserId] || 0) - loserPoints;
+        periodMatches.push({...event, points:winnerPoints, winnerPoints, loserPoints});
+        continue;
+      }
       const points = matchPoints(baseline[event.winnerId], baseline[event.loserId], event);
       changes[event.winnerId] = (changes[event.winnerId] || 0) + points;
       changes[event.loserId] = (changes[event.loserId] || 0) - points;

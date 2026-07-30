@@ -145,7 +145,7 @@ function publicClub(items) {
           opponentId: winner.playerId,
           opponentName: winner.name,
           outcome: "loss",
-          change: -match.points,
+          change: -(match.loserPoints ?? match.points),
         });
       }
     }

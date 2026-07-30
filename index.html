@@ -1914,6 +1914,34 @@
 <!-- ================= SETUP ================= -->
 <div id="viewSetup" class="setup" style="display:none;">
   <div class="panel" style="border-radius:var(--radius);">
+    <h2 style="margin-top:0;">Spelläge</h2>
+    <div class="seg" id="gameModeSeg">
+      <button data-mode="pool">Poolspel<small>alla möter alla</small></button>
+      <button data-mode="winner-stays">Vinnaren står kvar<small>exakt 3 spelare</small></button>
+    </div>
+    <div id="winnerStaysSetup" style="display:none;">
+      <h2>Setvinster för seger</h2>
+      <div class="poolchoice">
+        <div>
+          <strong>Först till</strong>
+          <small>Vinnaren står kvar, förloraren byts ut</small>
+        </div>
+        <select id="winnerStaysTarget" aria-label="Antal setvinster för seger">
+          <option value="1">1 set</option>
+          <option value="2">2 set</option>
+          <option value="3">3 set</option>
+          <option value="4">4 set</option>
+          <option value="5">5 set</option>
+          <option value="6">6 set</option>
+          <option value="7">7 set</option>
+          <option value="8">8 set</option>
+          <option value="9">9 set</option>
+          <option value="10">10 set</option>
+        </select>
+      </div>
+      <p class="hint">När en spelare når målet avgör en extra skiljeset om de två andra står lika.</p>
+    </div>
+    <div id="regularSetup">
     <h2 style="margin-top:0;">Vad skrivs in</h2>
     <div class="seg" id="scoringSeg">
       <button data-sc="sets">Setsiffror<small>t.ex. 2–1</small></button>
@@ -1964,6 +1992,7 @@
         </div>
         <p class="hint" id="advHint"></p>
       </div>
+    </div>
     </div>
 
     <h2>Spelare <span id="pcount" style="color:var(--muted); font-weight:600; font-size:18px;"></span></h2>
@@ -2039,6 +2068,12 @@
     <button class="btn-ghost" id="btnEdit"><span class="wide">Ändra spelare</span><span class="narrow">Spelare</span></button>
     <button class="btn-danger" id="btnReset"><span class="wide">Nollställ allt</span><span class="narrow">Nollställ</span></button>
   </div>
+</div>
+
+<div id="winnerStaysPane" class="panel" style="display:none; max-width:760px; margin:24px auto;">
+  <div class="secthead"><h2>Vinnaren står kvar</h2><span id="winnerStaysProgress"></span></div>
+  <div id="winnerStaysScore" class="standings"></div>
+  <div id="winnerStaysMatch"></div>
 </div>
 
 <!-- ================= SHARE MODAL ================= -->
@@ -2220,6 +2255,9 @@ const KEY = "matchprotokollet_v1";
 const OLD_KEY = "bergertavlan_v1";        // pre-rename saves
 let state = {
   phase: "setup",          // setup | play
+  gameMode: "pool",        // pool | winner-stays
+  winnerStaysTarget: 5,
+  winnerStays: null,
   format: "sets2",         // sets1 | sets2 | bo3 | bo5
   pools: 1,
   poolsManual: false,      // automatic recommendation until the organizer overrides it
@@ -2988,6 +3026,16 @@ function bracketResultGroups(bracket, offset){
 
 function finalResultGroups(){
   if (!state.players.length) return [];
+  if (state.gameMode === "winner-stays" && state.winnerStays?.champion){
+    const game = state.winnerStays;
+    if (!game.runnerUp || !game.third)
+      return [{place:1, players:[byId(game.champion)]}];
+    return [
+      {place:1, players:[byId(game.champion)]},
+      {place:2, players:[byId(game.runnerUp)]},
+      {place:3, players:[byId(game.third)]},
+    ];
+  }
   if (Array.isArray(state.importedPlacements) && state.importedPlacements.length){
     return state.importedPlacements.map(group => ({
       place:group.place,
@@ -3050,7 +3098,9 @@ function finalResultGroups(){
 function tournamentHighlights(){
   const decidedResults = Array.isArray(state.importedMatchResults)
     ? state.importedMatchResults
-    : [
+    : state.gameMode === "winner-stays"
+      ? (state.winnerStays?.sets || []).map(() => [1,0])
+      : [
         ...Object.values(state.results || {}).filter(result => matchDecided(result)),
         ...Object.values(state.fresults || {}).filter(result => matchDecided(result, true))
       ];
@@ -3293,6 +3343,14 @@ function smallestPool(){
 }
 
 function renderSetup(){
+  if (!state.gameMode) state.gameMode = "pool";
+  if (!state.winnerStaysTarget) state.winnerStaysTarget = 5;
+  const winnerStays = state.gameMode === "winner-stays";
+  document.querySelectorAll("#gameModeSeg button").forEach(b =>
+    b.classList.toggle("sel", b.dataset.mode === state.gameMode));
+  $("winnerStaysSetup").style.display = winnerStays ? "" : "none";
+  $("regularSetup").style.display = winnerStays ? "none" : "";
+  $("winnerStaysTarget").value = String(state.winnerStaysTarget);
   if (state.useSeeding === undefined) state.useSeeding = true;
   if (state.poolsManual === undefined) state.poolsManual = false;
   renderPoolChoice();
@@ -3346,6 +3404,7 @@ function renderSetup(){
       const played = Object.keys(state.results).some(k => k.split("_").map(Number).includes(p.id));
       if (played && !confirm(p.name + " har inspelade resultat. Ta bort ändå?")) return;
       state.players = state.players.filter(x => x.id !== p.id);
+      if (state.gameMode === "winner-stays") state.winnerStays = null;
       Object.keys(state.rankingMatches || {}).forEach(key => {
         const match = state.rankingMatches[key];
         if (match.winnerId === p.clubPlayerId || match.loserId === p.clubPlayerId)
@@ -3377,10 +3436,11 @@ function renderSetup(){
   $("oddHint").textContent = state.pools > 1 ? "" : hint;
   let poolsOk = true;
   for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) poolsOk = false;
-  $("btnStart").disabled = n < 2 || !poolsOk;
-  $("btnStart").textContent = state.pools > 1 ? "Starta poolspel" : "Starta rundpool";
-  $("nameInput").disabled = false;
-  $("btnAdd").disabled = false;
+  $("btnStart").disabled = winnerStays ? n !== 3 : n < 2 || !poolsOk;
+  $("btnStart").textContent = winnerStays ? "Starta Vinnaren står kvar" :
+    (state.pools > 1 ? "Starta poolspel" : "Starta rundpool");
+  $("nameInput").disabled = winnerStays && n >= 3;
+  $("btnAdd").disabled = winnerStays && n >= 3;
   renderRoster();
 }
 
@@ -3405,16 +3465,18 @@ function renderRoster(){
   }
   shown.forEach(nm => {
     const used = inGame(nm);
+    const modeFull = state.gameMode === "winner-stays" && state.players.length >= 3;
     const b = document.createElement("button");
     b.className = "chip" + (rosterEditMode ? " del" : (used ? " used" : ""));
     b.innerHTML = "<span class='plus'>" + (rosterEditMode ? "✕" : "+") + "</span><span class='t'></span>";
     b.querySelector(".t").textContent = nm;
-    b.disabled = !rosterEditMode && used;
+    b.disabled = !rosterEditMode && (used || modeFull);
     b.addEventListener("click", () => {
       if (rosterEditMode){ rosterForget(nm); renderSetup(); return; }
       state.players.push({
         id: state.nextId++, name: nm, pool: smallestPool(), clubPlayerId: clubPlayerIdFor(nm)
       });
+      if (state.gameMode === "winner-stays") state.winnerStays = null;
       if (state.pools > 1 && state.useSeeding !== false) autoAssignPools();
       renderSetup(); store.save();
     });
@@ -3423,6 +3485,7 @@ function renderRoster(){
 }
 
 function addPlayer(){
+  if (state.gameMode === "winner-stays" && state.players.length >= 3) return;
   const inp = $("nameInput");
   const name = sanitizeName(inp.value);
   if (!name) return;
@@ -3436,6 +3499,7 @@ function addPlayer(){
     id: state.nextId++, name: known || name, pool: smallestPool(),
     clubPlayerId: clubPlayerIdFor(known || name)
   });
+  if (state.gameMode === "winner-stays") state.winnerStays = null;
   if (state.pools > 1 && state.useSeeding !== false) autoAssignPools();
   rosterRemember(name);
   inp.value = "";
@@ -3607,6 +3671,124 @@ function renderStandings(){
       poolComplete(i) ? "färdigspelad" : "pågår";
     wrap.appendChild(head);
     wrap.appendChild(standingsTable(computeStandings(poolMembers(i))));
+  }
+}
+
+/* ---------------- Vinnaren står kvar ---------------- */
+function winnerStaysScores(){
+  const scores = Object.fromEntries(state.players.map(player => [player.id, 0]));
+  (state.winnerStays?.sets || []).forEach(set => {
+    if (!set.tiebreak && set.winnerId in scores) scores[set.winnerId]++;
+  });
+  return scores;
+}
+
+function syncWinnerStaysRanking(){
+  if (!state.rankingMatches) state.rankingMatches = {};
+  delete state.rankingMatches["winner-stays"];
+  const game = state.winnerStays;
+  if (!game?.champion || !game?.runnerUp || !game?.third) return;
+  const first = byId(game.champion), second = byId(game.runnerUp), third = byId(game.third);
+  if (!first || !second || !third) return;
+  [first, second, third].forEach(player => {
+    if (!player.clubPlayerId) player.clubPlayerId = playerUuid();
+  });
+  state.rankingMatches["winner-stays"] = {
+    matchId:"winner-stays",
+    rankingMode:"winner-stays",
+    winnerId:first.clubPlayerId,
+    secondId:second.clubPlayerId,
+    loserId:third.clubPlayerId
+  };
+}
+
+function recordWinnerStaysSet(winnerId){
+  const game = state.winnerStays;
+  if (!game || game.runnerUp) return;
+  const loserId = game.current.find(id => id !== winnerId);
+  if (!loserId) return;
+  game.sets.push({winnerId, loserId, tiebreak:Boolean(game.tiebreak)});
+  if (game.tiebreak){
+    game.runnerUp = winnerId;
+    game.third = loserId;
+    game.tiebreak = false;
+    syncWinnerStaysRanking();
+  }else{
+    const scores = winnerStaysScores();
+    if (scores[winnerId] >= state.winnerStaysTarget){
+      game.champion = winnerId;
+      const others = state.players.map(player => player.id).filter(id => id !== winnerId);
+      if (scores[others[0]] === scores[others[1]]){
+        game.tiebreak = true;
+        game.current = others;
+        game.resting = winnerId;
+      }else{
+        game.runnerUp = scores[others[0]] > scores[others[1]] ? others[0] : others[1];
+        game.third = game.runnerUp === others[0] ? others[1] : others[0];
+        syncWinnerStaysRanking();
+      }
+    }else{
+      game.current = [winnerId, game.resting];
+      game.resting = loserId;
+    }
+  }
+  renderWinnerStays();
+  store.save();
+}
+
+function renderWinnerStays(){
+  const game = state.winnerStays;
+  if (!game) return;
+  const scores = winnerStaysScores();
+  $("winnerStaysProgress").textContent = "Först till " + state.winnerStaysTarget + " set";
+  const rows = state.players.slice().sort((a,b) =>
+    (b.id === game.champion) - (a.id === game.champion) ||
+    scores[b.id] - scores[a.id] || a.name.localeCompare(b.name, "sv"));
+  const table = document.createElement("table");
+  table.className = "stand";
+  table.innerHTML = "<thead><tr><th>Spelare</th><th class='r'>Setvinster</th></tr></thead><tbody></tbody>";
+  rows.forEach(player => {
+    const tr = document.createElement("tr");
+    if (player.id === game.champion) tr.className = "top";
+    tr.innerHTML = "<td></td><td class='r pts'>" + scores[player.id] + "</td>";
+    tr.children[0].textContent = player.name;
+    table.tBodies[0].appendChild(tr);
+  });
+  $("winnerStaysScore").replaceChildren(table);
+
+  const box = $("winnerStaysMatch");
+  box.innerHTML = "";
+  if (game.runnerUp){
+    const result = document.createElement("div");
+    result.className = "banner";
+    result.innerHTML = "<strong>Klart!</strong>";
+    result.appendChild(document.createTextNode(
+      "1. " + byId(game.champion).name + " · 2. " + byId(game.runnerUp).name +
+      " · 3. " + byId(game.third).name));
+    box.appendChild(result);
+    return;
+  }
+  const title = document.createElement("h3");
+  title.textContent = game.tiebreak ? "Skiljeset om andra plats" : "Nästa set";
+  box.appendChild(title);
+  const match = document.createElement("div");
+  match.className = "seg";
+  game.current.forEach(id => {
+    const button = document.createElement("button");
+    button.textContent = byId(id).name;
+    const small = document.createElement("small");
+    small.textContent = "vann setet";
+    button.appendChild(small);
+    button.disabled = Boolean(publicSession);
+    button.addEventListener("click", () => recordWinnerStaysSet(id));
+    match.appendChild(button);
+  });
+  box.appendChild(match);
+  if (!game.tiebreak){
+    const rest = document.createElement("p");
+    rest.className = "hint";
+    rest.textContent = byId(game.resting).name + " vilar.";
+    box.appendChild(rest);
   }
 }
 
@@ -4271,6 +4453,8 @@ function scheduleClubRosterSave(){
 function blankTournamentState(){
   return {
     phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
+    gameMode:state.gameMode || "pool", winnerStaysTarget:state.winnerStaysTarget || 5,
+    winnerStays:null,
     poolsManual:false, advance:state.advance, scoring:state.scoring,
     players:[], results:{}, fresults:{},
     rankingMatches:{}, useSeeding:true, nextId:1, round:0, view:"grid", pool:0
@@ -4380,6 +4564,8 @@ function tournamentPageRow(tournament, concluded){
 
 function tournamentSetCount(tournament){
   const tournamentState = tournament.state || {};
+  if (tournamentState.gameMode === "winner-stays")
+    return (tournamentState.winnerStays?.sets || []).length;
   const results = Array.isArray(tournamentState.importedMatchResults)
     ? tournamentState.importedMatchResults
     : [
@@ -6050,6 +6236,7 @@ $("btnCopyClubLink").addEventListener("click", async () => {
 function refresh(){
   $("viewLanding").style.display = "none";
   $("viewClub").style.display = "none";
+  $("winnerStaysPane").style.display = "none";
   if (state.phase === "setup"){
     $("viewSetup").style.display = "";
     $("viewMain").style.display = "none";
@@ -6059,6 +6246,12 @@ function refresh(){
   }
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "";
+  const winnerStays = state.gameMode === "winner-stays";
+  $("viewMain").querySelector("nav").style.display = winnerStays ? "none" : "";
+  $("winnerStaysPane").style.display = winnerStays ? "" : "none";
+  ["paneGrid","paneRounds","paneStand","paneFinals","paneBracket","paneResult"].forEach(id => {
+    if (winnerStays) $(id).style.display = "none";
+  });
   $("subTitle").textContent =
     (publicSession ? "LIVE · " : "") + state.players.length + " spelare · " +
     (state.pools > 1 ? state.pools + " pooler · " : "") +
@@ -6076,6 +6269,7 @@ function refresh(){
   if (!hasFinals && (state.view === "finals" || state.view === "bracket")) setView("grid");
   if (!hasFinalResult && state.view === "result") setView("grid");
   if (state.pool >= state.pools) state.pool = 0;
+  if (winnerStays){ renderWinnerStays(); return; }
   renderPoolBar();
   renderGrid();
   renderRounds();
@@ -6104,6 +6298,25 @@ document.querySelectorAll(".tab").forEach(tab => {
 $("btnResultShare").addEventListener("click", () => $("btnShare").click());
 
 /* ---------------- Wiring ---------------- */
+$("gameModeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.dataset.mode === state.gameMode) return;
+  if ((Object.keys(state.results || {}).length || state.winnerStays?.sets?.length) &&
+      !confirm("Byte av spelläge rensar inspelade resultat. Fortsätt?")) return;
+  state.gameMode = b.dataset.mode;
+  state.results = {}; state.fresults = {}; state.rankingMatches = {};
+  state.winnerStays = null;
+  if (state.gameMode === "winner-stays"){
+    state.pools = 1; state.finals = "none"; state.format = "sets1"; state.scoring = "sets";
+  }
+  renderSetup(); store.save();
+});
+$("winnerStaysTarget").addEventListener("change", e => {
+  state.winnerStaysTarget = +e.target.value;
+  state.winnerStays = null;
+  state.rankingMatches = {};
+  renderSetup(); store.save();
+});
 $("formatSeg").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return;
@@ -6180,11 +6393,15 @@ $("btnRosterEdit").addEventListener("click", () => {
 });
 
 $("btnStart").addEventListener("click", () => {
-  if (state.players.length < 2) return;
+  if (state.gameMode === "winner-stays" && state.players.length !== 3) return;
+  if (state.gameMode !== "winner-stays" && state.players.length < 2) return;
   state.phase = "play";
   state.round = 0;
   state.pool = 0;
   state.view = "grid";
+  if (state.gameMode === "winner-stays" && !state.winnerStays)
+    state.winnerStays = {sets:[], current:[state.players[0].id, state.players[1].id],
+      resting:state.players[2].id, champion:null, tiebreak:false};
   refresh(); store.save();
 });
 $("btnEdit").addEventListener("click", () => {
@@ -6193,7 +6410,9 @@ $("btnEdit").addEventListener("click", () => {
 });
 $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
-  state = { phase:"setup", format:state.format, pools:1, poolsManual:false, finals:state.finals,
+  state = { phase:"setup", gameMode:state.gameMode || "pool",
+            winnerStaysTarget:state.winnerStaysTarget || 5, winnerStays:null,
+            format:state.format, pools:1, poolsManual:false, finals:state.finals,
             advance:state.advance, scoring:state.scoring,
             players:[], results:{}, fresults:{}, rankingMatches:{}, useSeeding:state.useSeeding,
             nextId:1, round:0, view:"grid", pool:0 };

@@ -115,3 +115,26 @@ test("reimported matches are counted once and the newest correction wins", () =>
     {a:990, b:1010},
   );
 });
+
+test("winner-stays changes only first and third using opponent averages", () => {
+  const setup = [{
+    tournamentId:"setup", playedAt:"2026-06-10", status:"finalized",
+    matches:[
+      {matchId:"1", winnerId:"a", loserId:"b"},
+      {matchId:"2", winnerId:"a", loserId:"c"},
+    ],
+  }];
+  const before = calculateRanking({a:"Ada", b:"Bo", c:"Cia"}, setup);
+  const baseline = Object.fromEntries(before.players.map(player => [player.playerId, player.rating]));
+  const result = calculateRanking({a:"Ada", b:"Bo", c:"Cia"}, [...setup, {
+    tournamentId:"winner-stays", playedAt:"2026-07-10", status:"finalized",
+    matches:[{
+      matchId:"winner-stays", rankingMode:"winner-stays",
+      winnerId:"b", secondId:"a", loserId:"c",
+    }],
+  }]);
+  const ratings = Object.fromEntries(result.players.map(player => [player.playerId, player.rating]));
+  assert.equal(ratings.a, baseline.a);
+  assert.equal(ratings.b, baseline.b + matchPoints(baseline.b, (baseline.a + baseline.c) / 2));
+  assert.equal(ratings.c, baseline.c - matchPoints((baseline.b + baseline.a) / 2, baseline.c));
+});
