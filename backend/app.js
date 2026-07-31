@@ -10,6 +10,7 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  TransactWriteCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
@@ -23,14 +24,64 @@ const ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 
 const now = () => new Date().toISOString();
 const clubPk = clubId => `CLUB#${clubId}`;
+const aliasPk = alias => `ALIAS#${alias}`;
 const tokenHash = token => crypto.createHash("sha256").update(token).digest("hex");
+const validAlias = alias => /^[a-z0-9][a-z0-9-]{1,31}$/.test(alias);
+const PASSWORD_REQUIRED = Symbol("PASSWORD_REQUIRED");
+const spectatorPasswordAccepted = (event, meta) => {
+  if (!meta.spectatorPasswordHash) return true;
+  const headers = event.headers || {};
+  const password = headers["X-Spectator-Password"] ||
+    headers["x-spectator-password"] || "";
+  const actual = Buffer.from(meta.spectatorPasswordHash, "hex");
+  const supplied = Buffer.from(tokenHash(password), "hex");
+  return actual.length === supplied.length &&
+    crypto.timingSafeEqual(actual, supplied);
+};
+const aliasFromName = name => {
+  const slug = String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32)
+    .replace(/-+$/g, "");
+  if (slug.length >= 2) return slug;
+  return slug ? `${slug}-klubb` : "klubb";
+};
+const aliasVariation = (base, attempt) => {
+  if (attempt === 0) return base;
+  const suffix = `-${attempt + 1}`;
+  return base.slice(0, 32 - suffix.length).replace(/-+$/g, "") + suffix;
+};
+
+async function resolveClubId(identifier) {
+  if (!identifier) return null;
+  const {Item: direct} = await db.send(new GetCommand({
+    TableName: TABLE_NAME,
+    Key: {PK: clubPk(identifier), SK: "META"},
+    ConsistentRead: true,
+    ProjectionExpression: "clubId",
+  }));
+  if (direct) return direct.clubId;
+  const alias = String(identifier).toLowerCase();
+  if (!validAlias(alias)) return null;
+  const {Item: reference} = await db.send(new GetCommand({
+    TableName: TABLE_NAME,
+    Key: {PK: aliasPk(alias), SK: "META"},
+    ConsistentRead: true,
+    ProjectionExpression: "clubId",
+  }));
+  return reference?.clubId || null;
+}
 
 function response(statusCode, body) {
   return {
     statusCode,
     headers: {
       "Access-Control-Allow-Origin": ORIGIN,
-      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Spectator-Password",
       "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
@@ -46,7 +97,7 @@ function bodyOf(event) {
     : raw);
 }
 
-async function authorize(event, clubId) {
+async function authorize(event, clubId, requestedClubId = clubId) {
   const headers = event.headers || {};
   const authorization = headers.Authorization || headers.authorization || "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
@@ -58,6 +109,8 @@ async function authorize(event, clubId) {
   if (!meta || !token) return null;
   /* The unguessable club id is also the credential for the canonical link. */
   if (token === clubId) return meta;
+  if (token === requestedClubId)
+    return spectatorPasswordAccepted(event, meta) ? meta : PASSWORD_REQUIRED;
   const actual = Buffer.from(meta.tokenHash, "hex");
   const supplied = Buffer.from(tokenHash(token), "hex");
   return actual.length === supplied.length && crypto.timingSafeEqual(actual, supplied)
@@ -184,6 +237,7 @@ function publicClub(items) {
   }
   return {
     clubId: meta.clubId,
+    alias: meta.alias,
     name: meta.name,
     createdAt: meta.createdAt,
     savedNames,
@@ -356,35 +410,103 @@ export async function handler(event) {
     const params = event.pathParameters || {};
 
     if (resource === "/clubs" && method === "POST") {
-      const name = String(bodyOf(event).name || "").trim().slice(0, 80);
+      const input = bodyOf(event);
+      const name = String(input.name || "").trim().slice(0, 80);
+      const requestedAlias = String(input.alias || "").trim().toLowerCase();
+      const spectatorPassword = String(input.spectatorPassword || "").slice(0, 128);
       if (!name) return response(400, {message: "Klubben måste ha ett namn"});
+      if (requestedAlias && !validAlias(requestedAlias)) return response(400, {
+        message: "Alias måste vara 2–32 tecken och bara innehålla a–z, 0–9 och bindestreck",
+      });
       const clubId = crypto.randomUUID().replaceAll("-", "");
       const token = crypto.randomBytes(32).toString("base64url");
-      await db.send(new PutCommand({
-        TableName: TABLE_NAME,
-        Item: {
-          PK: clubPk(clubId),
-          SK: "META",
-          clubId,
-          name,
-          tokenHash: tokenHash(token),
-          savedNames: [],
-          createdAt: now(),
-        },
-        ConditionExpression: "attribute_not_exists(PK)",
-      }));
-      return response(201, {clubId, accessToken: token, name});
+      const baseAlias = requestedAlias || aliasFromName(name);
+      let alias;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const candidate = aliasVariation(baseAlias, attempt);
+        try {
+          await db.send(new TransactWriteCommand({
+            TransactItems: [
+              {
+                Put: {
+                  TableName: TABLE_NAME,
+                  Item: {
+                    PK: aliasPk(candidate), SK: "META", clubId,
+                    alias: candidate, createdAt: now(),
+                  },
+                  ConditionExpression: "attribute_not_exists(PK)",
+                },
+              },
+              {
+                Put: {
+                  TableName: TABLE_NAME,
+                  Item: {
+                    PK: clubPk(clubId),
+                    SK: "META",
+                    clubId,
+                    alias: candidate,
+                    name,
+                    tokenHash: tokenHash(token),
+                    spectatorPasswordHash: spectatorPassword
+                      ? tokenHash(spectatorPassword)
+                      : undefined,
+                    savedNames: [],
+                    createdAt: now(),
+                  },
+                  ConditionExpression: "attribute_not_exists(PK)",
+                },
+              },
+            ],
+          }));
+          alias = candidate;
+          break;
+        } catch (error) {
+          if (error.name !== "TransactionCanceledException") throw error;
+        }
+      }
+      if (!alias) {
+        const suffix = crypto.randomBytes(4).toString("hex");
+        alias = baseAlias.slice(0, 23).replace(/-+$/g, "") + "-" + suffix;
+        await db.send(new TransactWriteCommand({
+          TransactItems: [
+            {
+              Put: {
+                TableName: TABLE_NAME,
+                Item: {PK: aliasPk(alias), SK: "META", clubId, alias, createdAt: now()},
+                ConditionExpression: "attribute_not_exists(PK)",
+              },
+            },
+            {
+              Put: {
+                TableName: TABLE_NAME,
+                Item: {
+                  PK: clubPk(clubId), SK: "META", clubId, alias, name,
+                  tokenHash: tokenHash(token),
+                  spectatorPasswordHash: spectatorPassword
+                    ? tokenHash(spectatorPassword)
+                    : undefined,
+                  savedNames: [], createdAt: now(),
+                },
+                ConditionExpression: "attribute_not_exists(PK)",
+              },
+            },
+          ],
+        }));
+      }
+      return response(201, {clubId, alias, accessToken: token, name});
     }
 
-    const clubId = params.clubId || "";
+    const requestedClubId = params.clubId || "";
+    const clubId = await resolveClubId(requestedClubId);
+    if (!clubId) return response(404, {message: "Klubben hittades inte"});
     if (resource === "/clubs/{clubId}/tournaments/{tournamentId}/public" && method === "GET") {
       const [{Item: club}, {Item: tournament}] = await Promise.all([
         db.send(new GetCommand({
           TableName: TABLE_NAME,
           Key: {PK: clubPk(clubId), SK: "META"},
           ConsistentRead: true,
-          ProjectionExpression: "clubId, #name",
-          ExpressionAttributeNames: {"#name": "name"},
+          ProjectionExpression: "clubId, #alias, #name, spectatorPasswordHash",
+          ExpressionAttributeNames: {"#alias": "alias", "#name": "name"},
         })),
         db.send(new GetCommand({
           TableName: TABLE_NAME,
@@ -396,14 +518,27 @@ export async function handler(event) {
         })),
       ]);
       if (!club || !tournament) return response(404, {message: "Tävlingen hittades inte"});
+      if (!spectatorPasswordAccepted(event, club)) {
+        return response(401, {
+          message: "Ange klubbens åskådarlösenord",
+          requiresPassword: true,
+        });
+      }
       const publicData = withoutKeys(tournament);
       return response(200, {
-        club: {clubId: club.clubId, name: club.name},
+        club: {clubId: club.clubId, alias: club.alias, name: club.name},
         tournament: publicData,
       });
     }
 
-    if (!await authorize(event, clubId)) {
+    const authorization = await authorize(event, clubId, requestedClubId);
+    if (authorization === PASSWORD_REQUIRED) {
+      return response(401, {
+        message: "Ange klubbens åskådarlösenord",
+        requiresPassword: true,
+      });
+    }
+    if (!authorization) {
       return response(401, {message: "Ogiltig klubblänk"});
     }
 
@@ -481,6 +616,9 @@ export async function handler(event) {
     }
     return response(404, {message: "Hittades inte"});
   } catch (error) {
+    if (error.name === "TransactionCanceledException") {
+      return response(409, {message: "Aliaset används redan av en annan klubb"});
+    }
     if (error.name === "ConditionalCheckFailedException") {
       return response(409, {
         message: "Tävlingen har ändrats på en annan enhet. Ladda om sidan innan du sparar igen.",

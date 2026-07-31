@@ -21,7 +21,7 @@ Globals:
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,Authorization'"
+      AllowHeaders: "'Content-Type,Authorization,X-Spectator-Password'"
       AllowOrigin: !Sub "'${AllowedOrigin}'"
 
 Resources:

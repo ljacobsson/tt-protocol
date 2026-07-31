@@ -117,7 +117,8 @@ skiljekriterier visas också som delade placeringar.
 Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 Äldre länkar med en separat token stöds fortsatt.
 
-- `POST /clubs`
+- `POST /clubs` (`name`, valfritt URL-vänligt `alias` och valfritt `spectatorPassword`;
+  ett ledigt alias genereras vid behov)
 - `GET /clubs/{clubId}`
 - `PUT /clubs/{clubId}/saved-names`
 - `GET /clubs/{clubId}/tournaments/{tournamentId}/public` (ingen hemlighet krävs)
@@ -125,6 +126,8 @@ Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 - `POST /clubs/{clubId}/tournaments/preview-ranking` (skriver ingen data)
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}`
 - `DELETE /clubs/{clubId}/tournaments/{tournamentId}`
+
+`{clubId}` kan även vara klubbens alias, till exempel `/clubs/bbtk`.
 
 Klientens sparning är debouncad och pågående tävlingar sparas som utkast.
 Knappen **Avsluta tävling** markerar tävlingen som avslutad och inväntar

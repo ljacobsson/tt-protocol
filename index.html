@@ -185,6 +185,7 @@
   }
   .hbtn:active{background:rgba(255,255,255,.3);}
   .clubbtn{max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  #btnClub,#btnFullscreen{display:none;}
   .clubstatus{font-size:16px; color:var(--muted); min-height:24px;}
   .clublist{display:grid; gap:8px; margin:14px 0; max-height:42vh; overflow:auto;}
   .clubitem{
@@ -214,6 +215,32 @@
     border-radius:12px; font:inherit; font-size:19px;
   }
   .formfield textarea{padding:12px 14px; resize:vertical;}
+  .clubcreateaction{
+    width:100%; min-height:58px; margin-top:4px; padding:0 20px; border-radius:12px;
+    background:var(--table); color:#fff; font-size:18px; font-weight:900;
+    box-shadow:0 5px 14px rgba(14,90,156,.22);
+  }
+  .clubcreateaction:hover{background:var(--table-dark); transform:translateY(-1px);}
+  .clubcreateaction:active{transform:translateY(1px);}
+  .publiclinknotice{
+    margin:14px 0; padding:12px 14px; border:1px solid #f0c98f; border-radius:12px;
+    background:#fff7e8; color:#694818; font-size:14px; line-height:1.4;
+  }
+  .publiclinknotice strong{display:block; margin-bottom:2px;}
+  .formfield label small{font-weight:650;}
+  .cluburlfield{
+    display:flex; align-items:center; min-height:66px; overflow:hidden;
+    border:2px solid var(--grid-line); border-radius:12px; background:#fff;
+  }
+  .cluburlfield:focus-within{border-color:var(--table); box-shadow:0 0 0 3px rgba(14,90,156,.12);}
+  .cluburlfield span{
+    padding-left:14px; color:var(--muted); font-size:clamp(12px,2.5vw,17px);
+    font-weight:700; white-space:nowrap;
+  }
+  .formfield .cluburlfield input{
+    flex:1; width:auto; min-width:70px; min-height:62px; padding:0 14px 0 0; border:0; outline:0;
+    font-size:17px; font-weight:800;
+  }
   .importmodal{width:min(900px,100%);}
   .importjson{min-height:180px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px;}
   .importmapping{display:grid; gap:8px; max-height:40vh; overflow:auto; margin:16px 0; padding-right:4px;}
@@ -267,7 +294,7 @@
   }
   .tab.active{background:var(--card); color:var(--ink); box-shadow:0 -2px 8px rgba(0,0,0,.06);}
   main{
-    max-width:1400px; margin:0 auto; padding:0 16px 90px;
+    max-width:1400px; margin:0 auto; padding:0 16px 28px;
   }
   .panel{
     background:var(--card); border-radius:0 0 var(--radius) var(--radius);
@@ -1004,26 +1031,70 @@
     max-width:1180px; margin:-34px auto 0; padding:0 24px; position:relative; z-index:3;
   }
   .recentpanel{
-    padding:24px; border:1px solid rgba(10,56,91,.08); border-radius:20px;
-    background:#fff; box-shadow:0 14px 36px rgba(10,45,72,.13);
+    padding:26px; border:2px solid rgba(14,90,156,.18); border-radius:22px;
+    background:linear-gradient(135deg,#fff 0%,#f2f8fc 100%);
+    box-shadow:0 18px 46px rgba(10,45,72,.18);
   }
-  .recenthead{display:flex; align-items:end; justify-content:space-between; gap:14px; margin-bottom:16px;}
-  .recenthead h3{margin:0 0 3px; font-size:22px;}
+  .recenthead{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px;}
+  .recenttitle{display:flex; align-items:center; gap:13px;}
+  .recenttitleicon{
+    display:grid; place-items:center; width:48px; height:48px; flex:0 0 auto;
+    border-radius:15px; background:var(--table); color:#fff; font-size:23px;
+    box-shadow:0 7px 18px rgba(14,90,156,.22);
+  }
+  .recenthead h3{margin:0 0 3px; font-size:24px;}
   .recenthead p{margin:0; color:var(--muted); font-size:14px;}
+  .recentcount{
+    padding:7px 12px; border-radius:999px; background:#e5f2fb; color:var(--table-dark);
+    font-size:13px; font-weight:900; white-space:nowrap;
+  }
   .recentlist{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
   .recentclub{
-    display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px;
-    min-height:68px; padding:10px 13px; border:1px solid #dce5eb; border-radius:14px;
-    background:#f8fafb; color:var(--ink); text-align:left;
+    display:grid; grid-template-columns:minmax(0,1fr) 38px; align-items:stretch;
+    min-height:76px; overflow:hidden; border:1px solid #d1e0e9; border-radius:15px;
+    background:#fff; color:var(--ink);
     transition:transform .15s,box-shadow .15s,border-color .15s;
   }
-  .recentclub:hover{transform:translateY(-2px); border-color:#9fbdd2; box-shadow:0 8px 18px rgba(12,63,101,.1);}
+  .recentclub:hover{transform:translateY(-2px); border-color:var(--table); box-shadow:0 9px 22px rgba(12,63,101,.14);}
+  .recentclubopen{
+    display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px;
+    min-width:0; padding:11px 10px 11px 14px; background:transparent; color:var(--ink); text-align:left;
+  }
+  .recentremove{
+    min-width:38px; padding:0; border-left:1px solid #e3eaef; border-radius:0;
+    background:#f8fafb; color:#718696; font-size:21px; font-weight:700;
+  }
+  .recentremove:hover{background:#f7e5e2; color:var(--danger);}
+  .recentremove:focus-visible,.recentclubopen:focus-visible{outline:3px solid var(--ball); outline-offset:-3px;}
   .recentinitial{
     display:grid; place-items:center; width:42px; height:42px; border-radius:12px;
     background:#e5f2fb; color:var(--table); font-size:18px; font-weight:900;
   }
-  .recentclub strong{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .recentclubcopy{min-width:0;}
+  .recentclub strong{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .recentclub small{display:block; margin-top:4px; color:var(--muted); font-size:12px; font-weight:750;}
+  .recentclubstats{display:flex!important; align-items:center; gap:6px; min-height:18px;}
+  .recentclubstats b{
+    padding:3px 6px; border-radius:999px; background:#e7f7ec; color:#18713a;
+    font-size:11px; line-height:1; white-space:nowrap;
+  }
+  .recentclubstats b:last-child{background:#edf1f4; color:#607483;}
   .recentclub .arrow{color:var(--table); font-size:20px; font-weight:900;}
+  .landinghero .recentclubs{max-width:none; margin:0; padding:0;}
+  .landinghero .recentpanel{
+    padding:20px; border-color:rgba(255,255,255,.3); border-radius:26px;
+    background:rgba(255,255,255,.97); box-shadow:0 28px 70px rgba(0,0,0,.3);
+  }
+  .landinghero .recenthead{margin-bottom:16px;}
+  .landinghero .recenttitle{gap:10px;}
+  .landinghero .recenttitleicon{width:44px; height:44px; border-radius:13px; font-size:20px;}
+  .landinghero .recenthead h3{font-size:22px; color:var(--ink);}
+  .landinghero .recentlist{
+    grid-template-columns:1fr; gap:9px; max-height:310px; overflow-y:auto;
+    padding:1px 4px 1px 1px; scrollbar-width:thin;
+  }
+  .landinghero .recentclub{min-height:66px;}
+  .landinghero .recentclubopen{padding:9px 8px 9px 11px;}
   .sectionintro{max-width:680px; margin-bottom:34px;}
   .sectionintro .kicker{color:var(--ball-dark); font-size:14px; font-weight:900; letter-spacing:1px; text-transform:uppercase;}
   .sectionintro h3{margin:8px 0 10px; font-size:clamp(32px,4vw,48px); letter-spacing:-1.2px;}
@@ -1135,6 +1206,12 @@
     .landingsection{padding:64px 16px;}
     .recentclubs{margin:-34px auto 0; padding:0 16px;}
     .recentpanel{padding:18px;}
+    .recenthead{align-items:flex-start;}
+    .recenttitleicon{width:42px; height:42px;}
+    .recentcount{padding:6px 9px;}
+    .landinghero .recentpanel{padding:13px;}
+    .landinghero .recenttitleicon{display:none;}
+    .landinghero .recenthead h3{font-size:18px;}
     .landingcta{margin:0 16px 64px; padding:38px 20px;}
     .productcard{min-height:370px; padding:15px;}
     .tourviewport{min-height:271px;}
@@ -1399,18 +1476,18 @@
   .btn-clear{background:#F3E1DE; color:var(--danger);}
   .btn-close{background:var(--table); color:#fff;}
 
-  .footerbar{
-    position:fixed; left:0; right:0; bottom:0;
-    background:rgba(246,244,238,.95);
-    border-top:1px solid var(--grid-line);
-    padding:10px 16px; display:flex; gap:10px; justify-content:flex-end;
-    backdrop-filter:blur(4px);
+  .headeractions{
+    display:none; align-items:center; gap:6px; max-width:none; margin:0; padding:0;
   }
-  .footerbar button{
-    min-height:58px; padding:0 20px; border-radius:var(--radius);
-    font-size:17px; font-weight:800;
-    min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  .headeractions button{
+    display:grid; place-items:center; gap:2px; min-width:58px; min-height:52px;
+    padding:5px 8px; border:1px solid rgba(255,255,255,.32); border-radius:11px;
+    background:rgba(255,255,255,.12); color:#fff; font-weight:850;
   }
+  .headeractions button:hover{background:rgba(255,255,255,.22);}
+  .headeractions .actionicon{font-size:18px; line-height:1;}
+  .headeractions .actionlabel{font-size:10px; line-height:1.1; white-space:nowrap;}
+  .headeractions .danger{color:#ffd4cf;}
   .btn-ghost{background:#E7E3D9; color:var(--ink);}
   .narrow{display:none;}
   .btn-danger{background:#F3E1DE; color:var(--danger);}
@@ -1428,7 +1505,7 @@
 
     nav{gap:4px; padding:10px 8px 0;}
     .tab{min-height:54px; font-size:13px; padding:0 4px; letter-spacing:0;}
-    main{padding:0 8px 92px;}
+    main{padding:0 8px 24px;}
     .panel{padding:12px 10px;}
 
     /* setup */
@@ -1507,15 +1584,17 @@
     .modalrow button{min-height:58px; font-size:16px;}
 
     /* footer */
-    .footerbar{padding:8px; gap:8px;}
-    .footerbar button{flex:1 1 0; padding:0 6px; font-size:14px; min-height:52px;}
+    .headeractions{gap:4px;}
+    .headeractions button{min-width:46px; min-height:46px; padding:4px 5px;}
+    .headeractions .actionlabel{font-size:9px;}
     .wide{display:none;} .narrow{display:inline;}
   }
 
   /* very narrow phones */
   @media (max-width:380px){
     .tab{font-size:11.5px; padding:0 2px;}
-    .footerbar button{font-size:13px;}
+    .headeractions .actionlabel{display:none;}
+    .headeractions button{min-width:42px;}
     .seg button{min-width:100%;}
   }
 
@@ -1524,7 +1603,7 @@
     header{padding:6px 12px;}
     .tab{min-height:46px;}
     .gridwrap{max-height:calc(100vh - 190px);}
-    .footerbar button{min-height:46px;}
+    .headeractions button{min-height:42px;}
   }
 </style>
 </head>
@@ -1536,6 +1615,23 @@
     <span class="brandname">Matchprotokoll by Pingis.net</span>
     <small id="subTitle"></small>
   </button>
+  <nav class="headeractions" id="headerActions" aria-label="Tävlingsåtgärder">
+    <button id="btnTournamentClub" type="button">
+      <span class="actionicon" aria-hidden="true">⌂</span><span class="actionlabel">Klubben</span>
+    </button>
+    <button id="btnShare" type="button">
+      <span class="actionicon" aria-hidden="true">↗</span><span class="actionlabel">Dela</span>
+    </button>
+    <button id="btnFinishTournament" type="button" style="display:none;">
+      <span class="actionicon" aria-hidden="true">✓</span><span class="actionlabel">Avsluta</span>
+    </button>
+    <button id="btnEdit" type="button">
+      <span class="actionicon" aria-hidden="true">♟</span><span class="actionlabel">Spelare</span>
+    </button>
+    <button class="danger" id="btnReset" type="button">
+      <span class="actionicon" aria-hidden="true">↻</span><span class="actionlabel">Nollställ</span>
+    </button>
+  </nav>
   <button class="hbtn clubbtn" id="btnClub">Klubb</button>
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
 </header>
@@ -1581,6 +1677,21 @@
           Visa demo
         </button>
       </div>
+      <section class="recentclubs" id="recentClubsSection" style="display:none;" aria-labelledby="recentClubsTitle">
+        <div class="recentpanel">
+          <div class="recenthead">
+            <div class="recenttitle">
+              <span class="recenttitleicon" aria-hidden="true">★</span>
+              <div>
+                <h3 id="recentClubsTitle">Dina klubbar</h3>
+                <p>Fortsätt direkt i en klubb du redan använder.</p>
+              </div>
+            </div>
+            <span class="recentcount" id="recentClubCount"></span>
+          </div>
+          <div class="recentlist" id="recentClubList"></div>
+        </div>
+      </section>
       <div class="productcard" id="productTour" aria-label="Så fungerar Matchprotokoll – från tävlingsstart till slutresultat">
         <div class="producttop">
           <strong>Solvikens BTK · Sommarcup</strong>
@@ -1662,18 +1773,6 @@
           <small id="tourCaption">Skapa tävlingen</small>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="recentclubs" id="recentClubsSection" style="display:none;">
-    <div class="recentpanel">
-      <div class="recenthead">
-        <div>
-          <h3>Fortsätt där du slutade</h3>
-          <p>Klubbar och grupper du har öppnat på den här enheten.</p>
-        </div>
-      </div>
-      <div class="recentlist" id="recentClubList"></div>
     </div>
   </section>
 
@@ -2062,12 +2161,6 @@
       <div id="resultBody"></div>
     </div>
   </main>
-  <div class="footerbar">
-    <button class="btn-ghost" id="btnShare">Dela</button>
-    <button class="btn-ghost" id="btnFinishTournament" style="display:none;">Avsluta tävling</button>
-    <button class="btn-ghost" id="btnEdit"><span class="wide">Ändra spelare</span><span class="narrow">Spelare</span></button>
-    <button class="btn-danger" id="btnReset"><span class="wide">Nollställ allt</span><span class="narrow">Nollställ</span></button>
-  </div>
 </div>
 
 <div id="winnerStaysPane" class="panel" style="display:none; max-width:760px; margin:24px auto;">
@@ -2088,6 +2181,23 @@
     <div class="modalrow">
       <button class="btn-clear" id="btnCloseShare">Stäng</button>
       <button class="btn-close" id="btnCopyLink">Kopiera länk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="spectatorPasswordOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="spectatorPasswordTitle">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;"
+         id="spectatorPasswordTitle">Lösenord krävs</div>
+    <p class="hint">Den här klubben kräver ett lösenord för åskådare.</p>
+    <div class="formfield">
+      <label for="spectatorPasswordInput">Lösenord</label>
+      <input id="spectatorPasswordInput" type="password" maxlength="128"
+             autocomplete="current-password">
+    </div>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCancelSpectatorPassword">Avbryt</button>
+      <button class="btn-close" id="btnSubmitSpectatorPassword">Öppna</button>
     </div>
   </div>
 </div>
@@ -2115,11 +2225,28 @@
     <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="clubTitle">Klubb</div>
     <p class="clubstatus" id="clubStatus"></p>
     <div id="clubCreate">
-      <div class="addrow">
-        <input id="clubName" type="text" placeholder="Klubbnamn…" maxlength="80">
-        <button id="btnCreateClub">Skapa</button>
+      <div class="formfield">
+        <label for="clubName">Klubbnamn</label>
+        <input id="clubName" type="text" placeholder="Björkstadens BTK" maxlength="80">
       </div>
-      <p class="hint">Klubben får en unik administratörslänk. Spara länken – den är nyckeln till klubbens data.</p>
+      <div class="formfield">
+        <label for="clubAlias">URL</label>
+        <div class="cluburlfield">
+          <span aria-hidden="true">https://protokoll.pingis.net/clubs/</span>
+          <input id="clubAlias" type="text" placeholder="bbtk" maxlength="32"
+                 aria-label="URL-slug" autocapitalize="none" spellcheck="false">
+        </div>
+      </div>
+      <p class="publiclinknotice">
+        <strong>Offentlig länk</strong>
+        Alla på internet som har länken kan öppna tävlingarnas publikvy.
+      </p>
+      <div class="formfield">
+        <label for="clubSpectatorPassword">Lösenord för åskådare <small>(valfritt)</small></label>
+        <input id="clubSpectatorPassword" type="password" maxlength="128"
+               placeholder="Lämna tomt för publik åtkomst" autocomplete="new-password">
+      </div>
+      <button class="clubcreateaction" id="btnCreateClub">Skapa klubb</button>
     </div>
     <div id="clubPortal" style="display:none;">
       <div class="modalrow" style="margin-top:8px;">
@@ -2295,6 +2422,7 @@ let rosterEditMode = false;
 const homePath = () => "/";
 const localTournamentPath = () => "/local";
 const clubPath = clubId => "/clubs/" + encodeURIComponent(clubId);
+const clubIdentifier = club => club.alias || club.clubId;
 const tournamentPath = (clubId, tournamentId, results = false) =>
   clubPath(clubId) + "/tournaments/" + encodeURIComponent(tournamentId) +
   (results ? "/results" : "");
@@ -2347,10 +2475,66 @@ function recentClubs(){
 }
 
 function rememberClub(club){
-  const item = {clubId:String(club.clubId), name:String(club.name), visitedAt:Date.now()};
+  const item = {
+    clubId:String(club.clubId), alias:club.alias ? String(club.alias) : null,
+    name:String(club.name), visitedAt:Date.now()
+  };
   const clubs = recentClubs().filter(existing => existing.clubId !== item.clubId);
   clubs.unshift(item);
   localStorage.setItem(RECENT_CLUBS_KEY, JSON.stringify(clubs.slice(0, 6)));
+}
+
+function forgetClub(clubId){
+  const clubs = recentClubs().filter(club => club.clubId !== clubId);
+  localStorage.setItem(RECENT_CLUBS_KEY, JSON.stringify(clubs));
+  renderRecentClubs();
+}
+
+function rememberResolvedAlias(clubId, alias){
+  if (!alias) return;
+  const clubs = recentClubs();
+  const saved = clubs.find(club => club.clubId === clubId);
+  if (!saved || saved.alias === alias) return;
+  saved.alias = alias;
+  localStorage.setItem(RECENT_CLUBS_KEY, JSON.stringify(clubs));
+}
+
+async function openRecentClub(club){
+  if (club.alias){
+    location.href = clubPath(club.alias);
+    return;
+  }
+  try{
+    const token = localStorage.getItem("matchprotokollet_club_token_" + club.clubId) || club.clubId;
+    const data = await api(
+      "/clubs/" + encodeURIComponent(club.clubId), {method:"GET", token}
+    );
+    if (data.alias){
+      club.alias = data.alias;
+      rememberResolvedAlias(club.clubId, data.alias);
+    }
+  }catch(error){/* The legacy ID link remains a valid fallback. */}
+  location.href = clubPath(club.alias || club.clubId);
+}
+
+async function loadRecentClubStats(club, stats){
+  try{
+    const token = localStorage.getItem("matchprotokollet_club_token_" + club.clubId) || club.clubId;
+    const data = await api("/clubs/" + encodeURIComponent(club.clubId), {method:"GET", token});
+    if (!stats.isConnected) return;
+    if (data.alias){
+      club.alias = data.alias;
+      rememberResolvedAlias(club.clubId, data.alias);
+    }
+    const tournaments = Array.isArray(data.tournaments) ? data.tournaments : [];
+    const completed = tournaments.filter(tournament => tournament.status === "finalized").length;
+    const ongoing = tournaments.length - completed;
+    stats.innerHTML = "<b></b><b></b>";
+    stats.children[0].textContent = ongoing + " pågående";
+    stats.children[1].textContent = completed + (completed === 1 ? " avslutad" : " avslutade");
+  }catch(error){
+    if (stats.isConnected) stats.textContent = "Statistik kunde inte hämtas";
+  }
 }
 
 function renderRecentClubs(){
@@ -2359,18 +2543,32 @@ function renderRecentClubs(){
   const list = $("recentClubList");
   list.innerHTML = "";
   section.style.display = clubs.length ? "" : "none";
+  $("productTour").style.display = clubs.length ? "none" : "";
+  $("recentClubCount").textContent = clubs.length + (clubs.length === 1 ? " klubb" : " klubbar");
+  $("btnClub").textContent = clubs.length ? "Mina klubbar (" + clubs.length + ")" : "Skapa klubb";
   clubs.forEach(club => {
-    const button = document.createElement("button");
-    button.className = "recentclub";
-    button.innerHTML =
-      "<span class='recentinitial'></span><strong></strong><span class='arrow'>→</span>";
-    button.querySelector(".recentinitial").textContent = club.name.trim().charAt(0).toUpperCase();
-    button.querySelector("strong").textContent = club.name;
-    button.title = "Öppna " + club.name;
-    button.addEventListener("click", () => {
-      location.href = clubPath(club.clubId);
-    });
-    list.appendChild(button);
+    const card = document.createElement("div");
+    card.className = "recentclub";
+    const openButton = document.createElement("button");
+    openButton.className = "recentclubopen";
+    openButton.innerHTML =
+      "<span class='recentinitial'></span>" +
+      "<span class='recentclubcopy'><strong></strong><small class='recentclubstats'>Hämtar statistik…</small></span>" +
+      "<span class='arrow' aria-hidden='true'>→</span>";
+    openButton.querySelector(".recentinitial").textContent = club.name.trim().charAt(0).toUpperCase();
+    openButton.querySelector("strong").textContent = club.name;
+    openButton.setAttribute("aria-label", "Öppna " + club.name);
+    openButton.title = "Öppna " + club.name;
+    openButton.addEventListener("click", () => openRecentClub(club));
+    const removeButton = document.createElement("button");
+    removeButton.className = "recentremove";
+    removeButton.textContent = "×";
+    removeButton.setAttribute("aria-label", "Ta bort " + club.name + " från listan");
+    removeButton.title = "Glöm klubben på den här enheten";
+    removeButton.addEventListener("click", () => forgetClub(club.clubId));
+    card.append(openButton, removeButton);
+    list.appendChild(card);
+    loadRecentClubStats(club, openButton.querySelector(".recentclubstats"));
   });
 }
 
@@ -2547,13 +2745,13 @@ function decodeState(code){
 function shareUrl(){
   if (publicSession)
     return location.origin + tournamentPath(
-      publicSession.club.clubId,
+      clubIdentifier(publicSession.club),
       activeTournament.tournamentId,
       state.view === "result"
     );
   if (clubSession && activeTournament && activeTournament.tournamentId){
     return location.origin + tournamentPath(
-      clubSession.clubId,
+      clubIdentifier(clubSession),
       activeTournament.tournamentId,
       state.view === "result"
     );
@@ -4347,7 +4545,7 @@ let remoteSaveChain = Promise.resolve();
 
 async function api(path, options = {}){
   if (!API_BASE) throw new Error("API-adressen saknas i config.js");
-  const headers = {"Content-Type":"application/json"};
+  const headers = Object.assign({"Content-Type":"application/json"}, options.headers || {});
   const token = options.token === undefined ? clubSession?.token : options.token;
   if (token) headers.Authorization = "Bearer " + token;
   const request = Object.assign({}, options, {headers});
@@ -4355,12 +4553,17 @@ async function api(path, options = {}){
   const res = await fetch(API_BASE + path, request);
   let data = {};
   try{ data = await res.json(); }catch(e){}
-  if (!res.ok) throw new Error(data.message || "Serverfel (" + res.status + ")");
+  if (!res.ok){
+    const error = new Error(data.message || "Serverfel (" + res.status + ")");
+    error.status = res.status;
+    error.requiresPassword = !!data.requiresPassword;
+    throw error;
+  }
   return data;
 }
 
 function clubLink(){
-  return location.origin + clubPath(clubSession.clubId);
+  return location.origin + clubPath(clubSession.alias || clubSession.clubId);
 }
 
 function tournamentPayload(tournament = activeTournament, sourceState = state, club = clubSession){
@@ -4545,7 +4748,7 @@ function tournamentPageRow(tournament, concluded){
   open.textContent = concluded ? "Visa slutresultat" : "Öppna tävling";
   if (concluded){
     open.href = tournamentPath(
-      clubSession.clubId, tournament.tournamentId, true
+      clubIdentifier(clubSession), tournament.tournamentId, true
     );
   }else{
     open.addEventListener("click", () => openTournament(tournament));
@@ -5266,6 +5469,7 @@ function showPlayerDetails(playerId){
 
 function showClubPage(){
   if (!clubSession) return;
+  $("headerActions").style.display = "none";
   $("viewLanding").style.display = "none";
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "none";
@@ -5339,16 +5543,45 @@ async function animateLandingPrompt(){
 }
 
 function showLanding(){
+  $("headerActions").style.display = "none";
   $("viewLanding").style.display = "";
   $("viewClub").style.display = "none";
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "none";
   $("subTitle").textContent = "";
-  $("btnClub").textContent = "Skapa klubb";
   renderRecentClubs();
   animateLandingPrompt();
   startProductTour();
 }
+
+let spectatorPasswordResolve = null;
+function requestSpectatorPassword(){
+  if (spectatorPasswordResolve) return Promise.resolve("");
+  const overlay = $("spectatorPasswordOverlay");
+  const input = $("spectatorPasswordInput");
+  input.value = "";
+  overlay.classList.add("open");
+  setTimeout(() => input.focus(), 0);
+  return new Promise(resolve => { spectatorPasswordResolve = resolve; });
+}
+function closeSpectatorPassword(value){
+  $("spectatorPasswordOverlay").classList.remove("open");
+  const resolve = spectatorPasswordResolve;
+  spectatorPasswordResolve = null;
+  if (resolve) resolve(value);
+}
+$("btnSubmitSpectatorPassword").addEventListener("click", () =>
+  closeSpectatorPassword($("spectatorPasswordInput").value));
+$("btnCancelSpectatorPassword").addEventListener("click", () =>
+  closeSpectatorPassword(""));
+$("spectatorPasswordInput").addEventListener("keydown", event => {
+  if (event.key === "Enter")
+    closeSpectatorPassword($("spectatorPasswordInput").value);
+  if (event.key === "Escape") closeSpectatorPassword("");
+});
+$("spectatorPasswordOverlay").addEventListener("click", event => {
+  if (event.target === $("spectatorPasswordOverlay")) closeSpectatorPassword("");
+});
 
 async function loadClubFromLink(){
   const route = currentRoute();
@@ -5362,8 +5595,34 @@ async function loadClubFromLink(){
   clubSession = {clubId, token, name:"Klubb", tournaments:[], players:[]};
   localStorage.setItem("matchprotokollet_club_token_" + clubId, token);
   try{
-    const data = await api("/clubs/" + clubId, {method:"GET"});
+    const passwordKey = "matchprotokollet_spectator_password_" + clubId;
+    const path = "/clubs/" + encodeURIComponent(clubId);
+    let password = sessionStorage.getItem(passwordKey) || "";
+    let data;
+    try{
+      data = await api(path, {
+        method:"GET",
+        headers:password ? {"X-Spectator-Password":password} : {}
+      });
+    }catch(error){
+      if (!error.requiresPassword) throw error;
+      password = await requestSpectatorPassword();
+      if (!password) throw new Error("Ett åskådarlösenord krävs");
+      data = await api(path, {
+        method:"GET", headers:{"X-Spectator-Password":password}
+      });
+      sessionStorage.setItem(passwordKey, password);
+    }
     clubSession = Object.assign(data, {token});
+    if (data.alias && route.clubId !== data.alias){
+      const canonicalPath = route.kind === "tournament"
+        ? tournamentPath(data.alias, route.tournamentId, route.view === "result")
+        : clubPath(data.alias);
+      history.replaceState(null, "", canonicalPath + location.hash);
+    }
+    localStorage.setItem("matchprotokollet_club_token_" + data.clubId, token);
+    if (data.alias)
+      localStorage.setItem("matchprotokollet_club_token_" + data.alias, token);
     rememberClub(clubSession);
     const hasBackendNames = Array.isArray(data.savedNames);
     const backendNames = hasBackendNames ? data.savedNames : data.players.map(player => player.name);
@@ -5386,11 +5645,26 @@ async function loadPublicTournamentFromLink(){
   const tournamentId = route.tournamentId;
   if (!clubId || !tournamentId || !API_BASE) return false;
   try{
-    const data = await api(
-      "/clubs/" + encodeURIComponent(clubId) + "/tournaments/" +
-      encodeURIComponent(tournamentId) + "/public",
-      {method:"GET", cache:"no-store"}
-    );
+    const passwordKey = "matchprotokollet_spectator_password_" + clubId;
+    const publicPath = "/clubs/" + encodeURIComponent(clubId) + "/tournaments/" +
+      encodeURIComponent(tournamentId) + "/public";
+    let password = sessionStorage.getItem(passwordKey) || "";
+    let data;
+    try{
+      data = await api(publicPath, {
+        method:"GET", cache:"no-store",
+        headers:password ? {"X-Spectator-Password":password} : {}
+      });
+    }catch(error){
+      if (!error.requiresPassword) throw error;
+      password = await requestSpectatorPassword();
+      if (!password) throw new Error("Ett åskådarlösenord krävs");
+      data = await api(publicPath, {
+        method:"GET", cache:"no-store",
+        headers:{"X-Spectator-Password":password}
+      });
+      sessionStorage.setItem(passwordKey, password);
+    }
     publicSession = data;
     activeTournament = data.tournament;
     state = Object.assign(blankTournamentState(), data.tournament.state || {});
@@ -5424,19 +5698,32 @@ $("btnHome").addEventListener("click", () => {
   showLanding();
   scrollTo({top:0, behavior:"smooth"});
 });
+$("btnTournamentClub").addEventListener("click", () => {
+  if (clubSession){
+    history.pushState(null, "", clubPath(clubIdentifier(clubSession)));
+    showClubPage();
+  }else if (publicSession){
+    location.href = clubPath(clubIdentifier(publicSession.club));
+  }
+});
 $("btnClub").addEventListener("click", () => {
   if (publicSession){
-    location.href = clubPath(publicSession.club.clubId);
+    location.href = clubPath(clubIdentifier(publicSession.club));
     return;
   }
   if (clubSession){
-    history.pushState(null, "", clubPath(clubSession.clubId));
+    history.pushState(null, "", clubPath(clubIdentifier(clubSession)));
     showClubPage();
     return;
   }
   if ($("viewLanding").style.display !== "none"){
-    $("landingClubName").focus();
-    $("landingClubName").scrollIntoView({behavior:"smooth", block:"center"});
+    const clubSection = $("recentClubsSection");
+    if (recentClubs().length && clubSection.style.display !== "none"){
+      clubSection.scrollIntoView({behavior:"smooth", block:"center"});
+    }else{
+      $("landingClubName").focus();
+      $("landingClubName").scrollIntoView({behavior:"smooth", block:"center"});
+    }
     return;
   }
   renderClubPortal();
@@ -5486,7 +5773,7 @@ $("btnClubPageBack").addEventListener("click", () => {
   if (activeTournament){
     if (activeTournament.tournamentId)
       history.pushState(null, "", tournamentPath(
-        clubSession.clubId, activeTournament.tournamentId,
+        clubIdentifier(clubSession), activeTournament.tournamentId,
         activeTournament.status === "finalized" && state.view === "result"
       ));
     refresh();
@@ -6091,11 +6378,17 @@ $("btnConfirmImportTournament").addEventListener("click", async () => {
   }
 });
 
-async function createClub(name, statusElement){
+async function createClub(name, aliasInput, spectatorPassword, statusElement){
   statusElement.style.color = "";
   name = name.trim();
+  const alias = aliasInput.trim().toLowerCase();
   if (!name){
     statusElement.textContent = "Skriv klubbens namn först.";
+    return false;
+  }
+  if (!/^[a-z0-9][a-z0-9-]{1,31}$/.test(alias)){
+    statusElement.textContent =
+      "URL-sluggen måste vara 2–32 tecken: a–z, 0–9 eller bindestreck.";
     return false;
   }
   statusElement.textContent = "Skapar klubben…";
@@ -6107,9 +6400,11 @@ async function createClub(name, statusElement){
     clearTimeout(clubRosterSaveTimer);
     await remoteSaveChain.catch(() => {});
     remoteSaveChain = Promise.resolve();
-    const data = await api("/clubs", {method:"POST", body:JSON.stringify({name})});
+    const data = await api("/clubs", {
+      method:"POST", body:JSON.stringify({name, alias, spectatorPassword})
+    });
     clubSession = {
-      clubId:data.clubId, token:data.accessToken, name:data.name,
+      clubId:data.clubId, alias:data.alias, token:data.accessToken, name:data.name,
       tournaments:[], players:[], savedNames:[]
     };
     publicSession = null;
@@ -6121,7 +6416,8 @@ async function createClub(name, statusElement){
     roster = [];
     kvSave(rosterStorageKey(), roster);
     localStorage.setItem("matchprotokollet_club_token_" + data.clubId, data.accessToken);
-    history.replaceState(null, "", clubPath(data.clubId));
+    localStorage.setItem("matchprotokollet_club_token_" + data.alias, data.accessToken);
+    history.replaceState(null, "", clubPath(data.alias));
     statusElement.textContent = "";
     renderClubPortal();
     closeClub();
@@ -6134,16 +6430,50 @@ async function createClub(name, statusElement){
   }
 }
 $("btnCreateClub").addEventListener("click", async () => {
-  await createClub($("clubName").value, $("clubStatus"));
+  await createClub(
+    $("clubName").value,
+    $("clubAlias").value,
+    $("clubSpectatorPassword").value,
+    $("clubStatus")
+  );
 });
-$("btnLandingCreate").addEventListener("click", async () => {
-  const button = $("btnLandingCreate");
-  button.disabled = true;
-  await createClub($("landingClubName").value, $("landingCreateStatus"));
-  button.disabled = false;
+function aliasFromClubName(name){
+  const slug = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+    .slice(0, 32).replace(/-+$/g, "");
+  return slug.length >= 2 ? slug : (slug ? slug + "-klubb" : "klubb");
+}
+$("clubName").addEventListener("input", () => {
+  $("clubAlias").value = aliasFromClubName($("clubName").value);
+});
+$("btnLandingCreate").addEventListener("click", () => {
+  const name = $("landingClubName").value.trim();
+  if (!name){
+    $("landingCreateStatus").textContent = "Skriv klubbens namn först.";
+    return;
+  }
+  $("landingCreateStatus").textContent = "";
+  $("clubName").value = name;
+  $("clubAlias").value = aliasFromClubName(name);
+  $("clubSpectatorPassword").value = "";
+  $("clubStatus").textContent = "";
+  $("clubCreate").style.display = "";
+  $("clubPortal").style.display = "none";
+  $("clubTitle").textContent = "Skapa klubb";
+  $("clubOverlay").classList.add("open");
+  setTimeout(() => {
+    $("clubAlias").focus();
+    $("clubAlias").select();
+  }, 0);
 });
 $("landingClubName").addEventListener("keydown", event => {
   if (event.key === "Enter") $("btnLandingCreate").click();
+});
+$("clubAlias").addEventListener("keydown", event => {
+  if (event.key === "Enter") $("btnCreateClub").click();
+});
+$("clubSpectatorPassword").addEventListener("keydown", event => {
+  if (event.key === "Enter") $("btnCreateClub").click();
 });
 $("landingClubName").addEventListener("focus", () => {
   landingPromptRun++;
@@ -6238,6 +6568,7 @@ function refresh(){
   $("viewClub").style.display = "none";
   $("winnerStaysPane").style.display = "none";
   if (state.phase === "setup"){
+    $("headerActions").style.display = "none";
     $("viewSetup").style.display = "";
     $("viewMain").style.display = "none";
     $("subTitle").textContent = "";
@@ -6246,6 +6577,8 @@ function refresh(){
   }
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "";
+  $("headerActions").style.display = "flex";
+  $("btnTournamentClub").style.display = clubSession || publicSession ? "" : "none";
   const winnerStays = state.gameMode === "winner-stays";
   $("viewMain").querySelector("nav").style.display = winnerStays ? "none" : "";
   $("winnerStaysPane").style.display = winnerStays ? "" : "none";
@@ -6568,8 +6901,10 @@ window.addEventListener("popstate", () => location.reload());
     return;
   }
   if (requestedClub){
-    state = blankTournamentState();
-    refresh();
+    showLanding();
+    $("clubCreate").style.display = "none";
+    $("clubPortal").style.display = "none";
+    $("clubTitle").textContent = "Kunde inte öppna klubben";
     $("clubOverlay").classList.add("open");
     return;
   }
