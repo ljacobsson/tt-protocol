@@ -10,6 +10,7 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  ScanCommand,
   TransactWriteCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
@@ -73,7 +74,39 @@ async function resolveClubId(identifier) {
     ConsistentRead: true,
     ProjectionExpression: "clubId",
   }));
-  return reference?.clubId || null;
+  if (reference?.clubId) return reference.clubId;
+
+  /*
+   * Backward compatibility for aliases added directly to an existing META
+   * record before alias lookup records were introduced. This slow path runs
+   * only once per migrated alias and repairs the lookup for future requests.
+   */
+  let startKey;
+  do {
+    const page = await db.send(new ScanCommand({
+      TableName: TABLE_NAME,
+      FilterExpression: "SK = :meta AND #alias = :alias",
+      ExpressionAttributeNames: {"#alias": "alias"},
+      ExpressionAttributeValues: {":meta": "META", ":alias": alias},
+      ProjectionExpression: "clubId",
+      ExclusiveStartKey: startKey,
+    }));
+    const clubId = page.Items?.find(item => item.clubId)?.clubId;
+    if (clubId) {
+      try {
+        await db.send(new PutCommand({
+          TableName: TABLE_NAME,
+          Item: {PK: aliasPk(alias), SK: "META", clubId, alias, createdAt: now()},
+          ConditionExpression: "attribute_not_exists(PK)",
+        }));
+      } catch (error) {
+        if (error.name !== "ConditionalCheckFailedException") throw error;
+      }
+      return clubId;
+    }
+    startKey = page.LastEvaluatedKey;
+  } while (startKey);
+  return null;
 }
 
 function response(statusCode, body) {
