@@ -5665,6 +5665,7 @@ async function loadPublicTournamentFromLink(){
       });
       sessionStorage.setItem(passwordKey, password);
     }
+    rememberClub(data.club);
     publicSession = data;
     activeTournament = data.tournament;
     state = Object.assign(blankTournamentState(), data.tournament.state || {});
