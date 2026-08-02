@@ -845,7 +845,9 @@
   .playerback{display:inline-flex; align-items:center; gap:7px; margin-bottom:18px; padding:8px 11px; border-radius:9px; background:rgba(255,255,255,.14); color:#fff; font-size:13px; font-weight:850;}
   .playerback:hover{background:rgba(255,255,255,.23);}
   .playerdetailhero small{display:block; margin-bottom:5px; color:#bcdcf2; font-weight:850; letter-spacing:.5px; text-transform:uppercase;}
-  .playerdetailhero #playerDetailsName{font-size:30px; font-weight:950;}
+  .playerdetailhero #playerDetailsName{width:min(520px,100%); min-height:52px; padding:0 48px 0 14px; border:1px solid rgba(255,255,255,.3); border-radius:12px; background-color:rgba(255,255,255,.12); color:#fff; font-size:28px; font-weight:950; cursor:pointer;}
+  .playerdetailhero #playerDetailsName:hover,.playerdetailhero #playerDetailsName:focus{background-color:rgba(255,255,255,.2); border-color:rgba(255,255,255,.55); outline:none;}
+  .playerdetailhero #playerDetailsName option{background:#fff; color:var(--ink); font-size:17px;}
   .playerdetailbody{padding:22px 28px 26px;}
   .playerstats{grid-template-columns:repeat(6,1fr); margin:0 0 22px;}
   .playerstat{background:#f0f5f8;}
@@ -2412,7 +2414,8 @@
   <main class="playerdetailmodal">
     <header class="playerdetailhero">
       <button type="button" class="playerback" id="btnClosePlayerDetails">← Till klubben</button>
-      <small>Spelarprofil</small><div id="playerDetailsName"></div>
+      <label for="playerDetailsName"><small>Spelarprofil · välj spelare</small></label>
+      <select id="playerDetailsName" aria-label="Välj spelare"></select>
     </header>
     <div class="playerdetailbody">
       <div class="playerstats" id="playerStats"></div>
@@ -5500,7 +5503,16 @@ function showPlayerDetails(playerId, updateUrl = true){
   $("viewPlayer").style.display = "";
   $("subTitle").textContent = "Spelarprofil";
   window.scrollTo({top:0, left:0, behavior:"auto"});
-  $("playerDetailsName").textContent = player.name;
+  const playerSelector = $("playerDetailsName");
+  playerSelector.innerHTML = "";
+  (clubSession.players || []).slice().sort((a,b) =>
+    a.name.localeCompare(b.name, "sv")).forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.playerId;
+      option.textContent = item.name;
+      option.selected = item.playerId === playerId;
+      playerSelector.appendChild(option);
+    });
   const ranked = (clubSession.players || []).slice().sort((a,b) =>
     b.rating - a.rating || a.name.localeCompare(b.name, "sv"));
   const position = ranked.findIndex(item => item.playerId === playerId) + 1;
@@ -6034,6 +6046,9 @@ function closePlayerDetails(){
   showClubPage();
 }
 $("btnClosePlayerDetails").addEventListener("click", closePlayerDetails);
+$("playerDetailsName").addEventListener("change", event => {
+  if (event.target.value) showPlayerDetails(event.target.value);
+});
 function closeDeleteTournamentModal(){
   $("deleteTournamentOverlay").classList.remove("open");
   tournamentToDelete = null;
