@@ -183,6 +183,26 @@ function publicClub(items) {
   const tournamentById = Object.fromEntries(
     tournaments.map(tournament => [tournament.tournamentId, tournament]),
   );
+  const setsOf = result => {
+    if (!Array.isArray(result)) return null;
+    if (!Array.isArray(result[0])) return result.length >= 2
+      ? [Number(result[0]) || 0, Number(result[1]) || 0] : null;
+    return result.reduce(([a, b], set) => [
+      a + (Number(set?.[0]) > Number(set?.[1]) ? 1 : 0),
+      b + (Number(set?.[1]) > Number(set?.[0]) ? 1 : 0),
+    ], [0, 0]);
+  };
+  const storedSetScore = (tournament, match) => {
+    if (Array.isArray(match.setScore)) return match.setScore;
+    const [stage, key] = String(match.matchId || "").split(/:(.*)/s);
+    let score = null;
+    if (stage === "pool") score = setsOf(tournament.state?.results?.[key]);
+    if (stage === "final") score = setsOf(tournament.state?.fresults?.[key]);
+    /* Legacy results are stored in bracket/pool order. A ranked match is
+       exposed winner-first, so normalize the recovered score the same way. */
+    if (score && !match.draw && score[0] < score[1]) score = [score[1], score[0]];
+    return score;
+  };
   const playerDetails = Object.fromEntries(ranking.players.map(player => [
     player.playerId,
     {
@@ -204,6 +224,9 @@ function publicClub(items) {
     }
     for (const match of period.matches) {
       const tournament = tournamentById[match.tournamentId] || {};
+      const sourceMatch = (tournament.matches || []).find(item =>
+        String(item.matchId || "") === String(match.matchId || ""));
+      const setScore = storedSetScore(tournament, sourceMatch || match);
       const winner = playerDetails[match.winnerId];
       const loser = playerDetails[match.loserId];
       if (winner && loser) {
@@ -221,6 +244,7 @@ function publicClub(items) {
           opponentName: loser.name,
           outcome: "win",
           change: match.points,
+          setScore,
         });
         loser.rankingMatches.push({
           matchId: match.matchId,
@@ -232,6 +256,7 @@ function publicClub(items) {
           opponentName: winner.name,
           outcome: "loss",
           change: -(match.loserPoints ?? match.points),
+          setScore: setScore ? [setScore[1], setScore[0]] : null,
         });
       }
     }
@@ -255,6 +280,7 @@ function publicClub(items) {
         opponentName: playerB.name,
         outcome: "draw",
         change: 0,
+        setScore: storedSetScore(tournament, match),
       });
       playerB.rankingMatches.push({
         matchId: match.matchId,
@@ -265,6 +291,10 @@ function publicClub(items) {
         opponentName: playerA.name,
         outcome: "draw",
         change: 0,
+        setScore: (() => {
+          const score = storedSetScore(tournament, match);
+          return score ? [score[1], score[0]] : null;
+        })(),
       });
     }
   }
@@ -317,6 +347,7 @@ function normalizeTournament(payload, tournamentId, existing = {}) {
       playerBId: playerB.clubPlayerId,
       draw: true,
       ranked: false,
+      setScore: sets,
     });
   }
   return {

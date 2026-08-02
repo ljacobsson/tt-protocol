@@ -132,6 +132,7 @@ export function calculateRanking(players, tournaments) {
         matchId: match.matchId || "",
         winnerId,
         loserId,
+        setScore: match.setScore,
         championship: tournament.type === "championship",
         walkover: Boolean(match.walkover),
       });

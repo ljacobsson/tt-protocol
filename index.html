@@ -839,6 +839,44 @@
   .rankingchange.plus{color:var(--win-fg);}
   .rankingchange.minus{color:var(--loss-fg);}
   .periodnote{font-size:13px; color:var(--muted); margin-top:10px;}
+  .playerpage{max-width:980px; margin:28px auto 60px; padding:0 18px;}
+  .playerdetailmodal{overflow:hidden; padding:0; border:1px solid #d9e4eb; border-radius:22px; background:#fff; box-shadow:0 16px 45px rgba(11,54,82,.12);}
+  .playerdetailhero{padding:26px 28px 22px; background:linear-gradient(135deg,#073d69,#0e69a8); color:#fff;}
+  .playerback{display:inline-flex; align-items:center; gap:7px; margin-bottom:18px; padding:8px 11px; border-radius:9px; background:rgba(255,255,255,.14); color:#fff; font-size:13px; font-weight:850;}
+  .playerback:hover{background:rgba(255,255,255,.23);}
+  .playerdetailhero small{display:block; margin-bottom:5px; color:#bcdcf2; font-weight:850; letter-spacing:.5px; text-transform:uppercase;}
+  .playerdetailhero #playerDetailsName{font-size:30px; font-weight:950;}
+  .playerdetailbody{padding:22px 28px 26px;}
+  .playerstats{grid-template-columns:repeat(6,1fr); margin:0 0 22px;}
+  .playerstat{background:#f0f5f8;}
+  .playerstat.primary{background:#e1f0fa; color:var(--table-dark);}
+  .playerstat small{display:block; margin-top:3px;}
+  .playersectiontitle{display:flex; align-items:end; justify-content:space-between; gap:12px; margin:22px 0 10px;}
+  .playersectiontitle h3{margin:0; font-size:18px;}
+  .playersectiontitle small{color:var(--muted);}
+  .rankingchart{position:relative; height:245px; padding:12px 10px 4px; border:1px solid #dce7ee; border-radius:15px; background:#fbfdfe;}
+  .rankingchart svg{display:block; width:100%; height:100%; overflow:visible;}
+  .chartgrid{stroke:#dfe8ed; stroke-width:1; stroke-dasharray:4 5;}
+  .chartarea{fill:url(#rankingArea);}
+  .chartline{fill:none; stroke:#0e69a8; stroke-width:3; stroke-linecap:round; stroke-linejoin:round;}
+  .chartpoint{fill:#fff; stroke:#0e69a8; stroke-width:3; cursor:pointer;}
+  .chartpoint:hover,.chartpoint:focus{fill:#ff9d2e; stroke:#fff; stroke-width:4; outline:none;}
+  .charttooltip{position:absolute; z-index:5; min-width:170px; max-width:240px; padding:9px 11px; border-radius:10px; background:#102f47; color:#fff; font-size:12px; line-height:1.4; box-shadow:0 8px 22px rgba(5,31,50,.28); pointer-events:none; opacity:0; transform:translate(-50%,calc(-100% - 12px)); transition:opacity .1s;}
+  .charttooltip.open{opacity:1;}
+  .charttooltip strong,.charttooltip span{display:block;}
+  .charttooltip span{margin-top:2px; color:#c9deec;}
+  .chartlabel{fill:#718797; font-size:11px; font-weight:750;}
+  .chartvalue{fill:#163e5b; font-size:11px; font-weight:900;}
+  .opponenttable{border:1px solid #dce7ee; border-radius:14px; overflow:hidden;}
+  .opponentrow{display:grid; grid-template-columns:minmax(0,1fr) 100px 120px 92px; gap:12px; align-items:center; min-height:52px; padding:0 14px; border-bottom:1px solid #e5ecef;}
+  .opponentrow:last-child{border-bottom:0;}
+  .opponentrow.head{min-height:38px; background:#f1f5f7; color:var(--muted); font-size:11px; font-weight:900; letter-spacing:.35px; text-transform:uppercase;}
+  .opponentrow span:not(:first-child){text-align:right;}
+  .opponentrow .record{font-weight:800; color:#5c7282;}
+  .opponentrow .setscore{font-size:17px; font-weight:950; color:var(--table-dark);}
+  .opponentrow button{padding:0; background:transparent; color:var(--ink); text-align:left; font-weight:900;}
+  .opponentrow button:hover{color:var(--table); text-decoration:underline;}
+  .rankingmatches{max-height:330px; border-top:1px solid var(--grid-line);}
   @media (max-width:650px){
     .clubpage{margin-top:14px; padding:0 10px;}
     .clubhero{align-items:flex-start; flex-direction:column; padding:25px 20px; border-radius:18px;}
@@ -882,6 +920,16 @@
     .networktoolbar{align-items:flex-end;}
     .networklegend{font-size:11px; gap:5px 9px;}
     .playerstats{grid-template-columns:repeat(2,1fr);}
+    .playerpage{margin:14px auto 35px; padding:0 10px;}
+    .playerdetailmodal{border-radius:17px;}
+    .playerdetailhero{padding:22px 18px 18px;}
+    .playerdetailbody{padding:16px 16px 22px;}
+    .playerstats{grid-template-columns:repeat(3,1fr);}
+    .playerstat strong{font-size:21px;}
+    .rankingchart{height:210px; padding-left:2px;}
+    .opponentrow{grid-template-columns:minmax(0,1fr) 60px 76px; gap:7px; padding:0 10px;}
+    .opponentrow .record{display:none;}
+    .opponentrow.head span:nth-child(3){display:none;}
   }
 
   /* ---------- Consumer landing ---------- */
@@ -2359,18 +2407,26 @@
   </div>
 </div>
 
-<!-- ================= PLAYER DETAILS MODAL ================= -->
-<div class="overlay" id="playerDetailsOverlay">
-  <div class="modal">
-    <div style="font-size:26px; font-weight:900;" id="playerDetailsName"></div>
-    <div class="playerstats" id="playerStats"></div>
-    <h3>Rankinggrundande matcher</h3>
-    <div class="rankingmatches" id="playerRankingMatches"></div>
-    <p class="periodnote" id="playerPeriodNote"></p>
-    <div class="modalrow">
-      <button class="btn-clear" id="btnClosePlayerDetails">Stäng</button>
+<!-- ================= PLAYER PAGE ================= -->
+<div id="viewPlayer" class="playerpage" style="display:none;">
+  <main class="playerdetailmodal">
+    <header class="playerdetailhero">
+      <button type="button" class="playerback" id="btnClosePlayerDetails">← Till klubben</button>
+      <small>Spelarprofil</small><div id="playerDetailsName"></div>
+    </header>
+    <div class="playerdetailbody">
+      <div class="playerstats" id="playerStats"></div>
+      <div class="playersectiontitle"><h3>Rankingutveckling</h3><small id="playerChartSummary"></small></div>
+      <div class="rankingchart" id="playerRankingChart"></div>
+      <div class="playersectiontitle"><h3>Spelarnätverk</h3><small>Vald spelare i centrum</small></div>
+      <div id="playerProfileNetwork"></div>
+      <div class="playersectiontitle"><h3>Motståndare</h3><small>Sorterat efter flest matcher</small></div>
+      <div class="opponenttable" id="playerOpponents"></div>
+      <div class="playersectiontitle"><h3>Matchhistorik</h3><small>Senaste först</small></div>
+      <div class="rankingmatches" id="playerRankingMatches"></div>
+      <p class="periodnote" id="playerPeriodNote"></p>
     </div>
-  </div>
+  </main>
 </div>
 
 <script src="/config.js"></script>
@@ -2422,11 +2478,18 @@ let rosterEditMode = false;
 const homePath = () => "/";
 const localTournamentPath = () => "/local";
 const clubPath = clubId => "/clubs/" + encodeURIComponent(clubId);
+const playerPath = (clubId, playerId) =>
+  clubPath(clubId) + "/players/" + encodeURIComponent(playerId);
 const clubIdentifier = club => club.alias || club.clubId;
 const tournamentPath = (clubId, tournamentId, results = false) =>
   clubPath(clubId) + "/tournaments/" + encodeURIComponent(tournamentId) +
   (results ? "/results" : "");
 function currentRoute(){
+  const playerMatch = location.pathname.match(/^\/clubs\/([^/]+)\/players\/([^/]+)\/?$/);
+  if (playerMatch) return {
+    kind:"player", clubId:decodeURIComponent(playerMatch[1]),
+    playerId:decodeURIComponent(playerMatch[2]), legacy:false
+  };
   const match = location.pathname.match(
     /^\/clubs\/([^/]+)(?:\/tournaments\/([^/]+)(\/results)?)?\/?$/
   );
@@ -3014,7 +3077,8 @@ function syncRankingMatch(matchId, a, b, result, isFinal){
       playerAId:pa.clubPlayerId,
       playerBId:pb.clubPlayerId,
       draw:true,
-      ranked:false
+      ranked:false,
+      setScore:sets
     };
     return;
   }
@@ -3023,7 +3087,8 @@ function syncRankingMatch(matchId, a, b, result, isFinal){
     matchId,
     winnerId: aWon ? pa.clubPlayerId : pb.clubPlayerId,
     loserId: aWon ? pb.clubPlayerId : pa.clubPlayerId,
-    ranked: true
+    ranked: true,
+    setScore:aWon ? sets : [sets[1], sets[0]]
   };
 }
 function clearFinalRankingMatches(){
@@ -4970,7 +5035,7 @@ function clubMatchNetwork(){
   return {players, playerById, edges:[...edges.values()]};
 }
 
-function renderPlayerNetwork(container){
+function renderPlayerNetwork(container, initialPlayerId = null){
   const {players, playerById, edges} = clubMatchNetwork();
   if (!players.length){
     container.innerHTML =
@@ -5271,7 +5336,10 @@ function renderPlayerNetwork(container){
       }
     });
   });
-  focusPlayer(players.slice().sort((a,b) => b.rating-a.rating)[0].playerId);
+  const initialPlayer = playerById.has(initialPlayerId)
+    ? initialPlayerId
+    : players.slice().sort((a,b) => b.rating-a.rating)[0].playerId;
+  focusPlayer(initialPlayer);
 
   let pan = null;
   stage.addEventListener("pointerdown", event => {
@@ -5414,7 +5482,7 @@ function renderClubPage(){
     "<small>Spelare läggs till automatiskt när de deltar i en tävling.</small></div></div>";
 }
 
-function showPlayerDetails(playerId){
+function showPlayerDetails(playerId, updateUrl = true){
   const player = (clubSession.players || []).find(item => item.playerId === playerId);
   const detail = (clubSession.playerDetails || {})[playerId] || {
     ...player, matches:0, wins:0, draws:0, losses:0,
@@ -5422,17 +5490,113 @@ function showPlayerDetails(playerId){
     rankingMatches:[], periods:[]
   };
   if (!player) return;
+  if (updateUrl) history.pushState(null, "",
+    playerPath(clubIdentifier(clubSession), playerId) + location.hash);
+  $("headerActions").style.display = "none";
+  $("viewLanding").style.display = "none";
+  $("viewSetup").style.display = "none";
+  $("viewMain").style.display = "none";
+  $("viewClub").style.display = "none";
+  $("viewPlayer").style.display = "";
+  $("subTitle").textContent = "Spelarprofil";
+  window.scrollTo({top:0, left:0, behavior:"auto"});
   $("playerDetailsName").textContent = player.name;
+  const ranked = (clubSession.players || []).slice().sort((a,b) =>
+    b.rating - a.rating || a.name.localeCompare(b.name, "sv"));
+  const position = ranked.findIndex(item => item.playerId === playerId) + 1;
+  const rankingHistory = [{period:"Start", label:"Start", rating:1000}];
+  let runningRating = 1000;
+  const periodChanges = new Map((detail.periods || []).map(period =>
+    [period.period, Number(period.change || 0)]));
+  const grossByPeriod = new Map();
+  (detail.rankingMatches || []).forEach(match => {
+    if (!match.period) return;
+    grossByPeriod.set(match.period,
+      (grossByPeriod.get(match.period) || 0) + Number(match.change || 0));
+  });
+  const chartMatches = (detail.rankingMatches || []).slice().sort((a,b) =>
+    String(a.playedAt || "").localeCompare(String(b.playedAt || "")) ||
+    String(a.tournamentId || "").localeCompare(String(b.tournamentId || "")) ||
+    String(a.matchId || "").localeCompare(String(b.matchId || "")));
+  chartMatches.forEach(match => {
+    const gross = grossByPeriod.get(match.period);
+    const applied = periodChanges.get(match.period);
+    const scale = match.period && gross && Number.isFinite(applied) ? applied / gross : 1;
+    runningRating += Number(match.change || 0) * scale;
+    rankingHistory.push({
+      period:match.playedAt || match.period || "Match",
+      label:(match.outcome === "win" ? "Vinst mot " : match.outcome === "loss"
+        ? "Förlust mot " : "Oavgjort mot ") + match.opponentName,
+      score:Array.isArray(match.setScore)
+        ? match.setScore[0] + "–" + match.setScore[1] + " i set"
+        : "Resultat saknas",
+      rating:runningRating
+    });
+  });
+  if (rankingHistory.length > 1) rankingHistory.at(-1).rating = player.rating;
+  const peak = Math.max(1000, player.rating, ...rankingHistory.map(item => item.rating));
+  const winRate = detail.matches ? Math.round(detail.wins / detail.matches * 100) : 0;
   const stats = [
-    [player.rating, "Ranking"],
+    [player.rating, "Ranking", "primary"],
+    [position ? "#" + position : "–", "Placering"],
+    [(detail.totalChange >= 0 ? "+" : "") + detail.totalChange, "Sedan start"],
+    [peak, "Högsta ranking"],
+    [winRate + "%", "Vinstprocent"],
     [detail.matches, "Matcher"],
-    [detail.wins, "Vinster"],
-    [detail.draws || 0, "Oavgjorda"],
-    [detail.losses, "Förluster"]
   ];
-  $("playerStats").innerHTML = stats.map(([value, label]) =>
-    "<div class='playerstat'><strong>" + value + "</strong><small>" + label + "</small></div>"
+  $("playerStats").innerHTML = stats.map(([value, label, className]) =>
+    "<div class='playerstat " + (className || "") + "'><strong>" + value +
+    "</strong><small>" + label + "</small></div>"
   ).join("");
+
+  renderPlayerRankingChart(rankingHistory);
+  const profileNetwork = $("playerProfileNetwork");
+  profileNetwork.innerHTML = "";
+  renderPlayerNetwork(profileNetwork, playerId);
+  $("playerChartSummary").textContent = rankingHistory.length > 1
+    ? rankingHistory.length - 1 + " match" + (rankingHistory.length === 2 ? "" : "er")
+    : "Ingen förändring ännu";
+
+  const opponents = new Map();
+  (detail.rankingMatches || []).forEach(match => {
+    if (!match.opponentId) return;
+    if (!opponents.has(match.opponentId)) opponents.set(match.opponentId, {
+      playerId:match.opponentId, name:match.opponentName || "Okänd spelare",
+      matches:0, wins:0, draws:0, losses:0, setsFor:0, setsAgainst:0, scoredMatches:0
+    });
+    const opponent = opponents.get(match.opponentId);
+    opponent.matches++;
+    if (match.outcome === "win") opponent.wins++;
+    else if (match.outcome === "loss") opponent.losses++;
+    else opponent.draws++;
+    if (Array.isArray(match.setScore)) {
+      opponent.setsFor += Number(match.setScore[0]) || 0;
+      opponent.setsAgainst += Number(match.setScore[1]) || 0;
+      opponent.scoredMatches++;
+    }
+  });
+  const opponentList = [...opponents.values()].sort((a,b) =>
+    b.matches - a.matches || a.name.localeCompare(b.name, "sv"));
+  const opponentTable = $("playerOpponents");
+  opponentTable.innerHTML = "<div class='opponentrow head'><span>Spelare</span>" +
+    "<span>Matcher</span><span>V–O–F</span><span>Set</span></div>";
+  opponentList.forEach(opponent => {
+    const row = document.createElement("div");
+    row.className = "opponentrow";
+    row.innerHTML = "<button type='button'></button><span></span>" +
+      "<span class='record'></span><span class='setscore'></span>";
+    row.querySelector("button").textContent = opponent.name;
+    row.querySelector("button").addEventListener("click", () =>
+      showPlayerDetails(opponent.playerId));
+    row.children[1].textContent = opponent.matches;
+    row.querySelector(".record").textContent =
+      opponent.wins + "–" + opponent.draws + "–" + opponent.losses;
+    row.querySelector(".setscore").textContent = opponent.scoredMatches
+      ? opponent.setsFor + "–" + opponent.setsAgainst : "–";
+    opponentTable.appendChild(row);
+  });
+  if (!opponentList.length)
+    opponentTable.innerHTML = "<p class='hint' style='padding:4px 14px'>Inga motståndare ännu.</p>";
 
   const list = $("playerRankingMatches");
   list.innerHTML = "";
@@ -5446,7 +5610,8 @@ function showPlayerDetails(playerId){
       : match.outcome === "draw" ? "Oavgjort mot " : "Förlust mot ";
     row.querySelector("strong").textContent = outcome + match.opponentName;
     row.querySelector("small").textContent =
-      match.tournamentName + (match.playedAt ? " · " + match.playedAt : "");
+      match.tournamentName + (match.playedAt ? " · " + match.playedAt : "") +
+      (Array.isArray(match.setScore) ? " · " + match.setScore[0] + "–" + match.setScore[1] + " i set" : "");
     const change = row.querySelector(".rankingchange");
     change.textContent = match.change === 0 ? "±0" : (match.change > 0 ? "+" : "") + match.change;
     change.classList.add(match.change >= 0 ? "plus" : "minus");
@@ -5464,7 +5629,76 @@ function showPlayerDetails(playerId){
   $("playerPeriodNote").textContent =
     "Total förändring från 1000: " + (detail.totalChange >= 0 ? "+" : "") + detail.totalChange +
     (capped.length ? " · Periodtaket ±250 har påverkat den faktiska förändringen." : "");
-  $("playerDetailsOverlay").classList.add("open");
+}
+
+function renderPlayerRankingChart(history){
+  const container = $("playerRankingChart");
+  const width = 820, height = 220;
+  const pad = {left:48, right:18, top:20, bottom:34};
+  const values = history.map(item => item.rating);
+  let min = Math.min(...values), max = Math.max(...values);
+  const margin = Math.max(20, Math.ceil((max - min) * .18));
+  min = Math.floor((min - margin) / 10) * 10;
+  max = Math.ceil((max + margin) / 10) * 10;
+  if (max === min) max = min + 40;
+  const x = index => pad.left + (history.length === 1 ? 0 : index /
+    (history.length - 1) * (width - pad.left - pad.right));
+  const y = value => pad.top + (max - value) / (max - min) *
+    (height - pad.top - pad.bottom);
+  const points = history.map((item,index) => [x(index), y(item.rating)]);
+  const line = points.map(point => point.join(",")).join(" ");
+  const area = pad.left + "," + (height-pad.bottom) + " " + line + " " +
+    points.at(-1)[0] + "," + (height-pad.bottom);
+  const grid = [0,.5,1].map(part => {
+    const value = Math.round(max - (max-min)*part);
+    const py = y(value);
+    return "<line class='chartgrid' x1='"+pad.left+"' x2='"+(width-pad.right)+
+      "' y1='"+py+"' y2='"+py+"'/><text class='chartlabel' x='"+(pad.left-8)+
+      "' y='"+(py+4)+"' text-anchor='end'>"+value+"</text>";
+  }).join("");
+  const labelIndexes = new Set([0, history.length-1]);
+  if (history.length > 3) labelIndexes.add(Math.floor((history.length-1)/2));
+  const labels = [...labelIndexes].map(index => {
+    const item = history[index], px = x(index);
+    const label = item.period === "Start" ? "Start" : String(item.period).slice(0,7);
+    return "<text class='chartlabel' x='"+px+"' y='"+(height-10)+
+      "' text-anchor='middle'>"+label+"</text>";
+  }).join("");
+  const dots = points.map((point,index) =>
+    "<circle class='chartpoint' data-index='"+index+"' tabindex='0' cx='"+
+    point[0]+"' cy='"+point[1]+"' r='5'></circle>"
+  ).join("");
+  container.innerHTML = "<svg viewBox='0 0 "+width+" "+height+"' role='img' " +
+    "aria-label='Rankingutveckling'><defs><linearGradient id='rankingArea' x1='0' y1='0' x2='0' y2='1'>"+
+    "<stop offset='0' stop-color='#3b9bd5' stop-opacity='.3'/><stop offset='1' stop-color='#3b9bd5' stop-opacity='.03'/>"+
+    "</linearGradient></defs>"+grid+"<polygon class='chartarea' points='"+area+"'/>"+
+    "<polyline class='chartline' points='"+line+"'/>"+dots+labels+"</svg>";
+  const tooltip = document.createElement("div");
+  tooltip.className = "charttooltip";
+  tooltip.innerHTML = "<strong></strong><span></span><span></span>";
+  container.appendChild(tooltip);
+  const showTooltip = (node, item) => {
+    const chartRect = container.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const left = Math.max(95, Math.min(chartRect.width - 95,
+      nodeRect.left - chartRect.left + nodeRect.width / 2));
+    tooltip.style.left = left + "px";
+    tooltip.style.top = Math.max(78,
+      nodeRect.top - chartRect.top + nodeRect.height / 2) + "px";
+    tooltip.querySelector("strong").textContent = item.label;
+    tooltip.children[1].textContent = item.score || "Resultat saknas";
+    tooltip.children[2].textContent = item.period + " · " +
+      Math.round(item.rating) + " rankingpoäng";
+    tooltip.classList.add("open");
+  };
+  container.querySelectorAll(".chartpoint").forEach(node => {
+    const item = history[Number(node.dataset.index)];
+    node.addEventListener("mouseenter", () => showTooltip(node, item));
+    node.addEventListener("focus", () => showTooltip(node, item));
+    node.addEventListener("click", () => showTooltip(node, item));
+    node.addEventListener("mouseleave", () => tooltip.classList.remove("open"));
+    node.addEventListener("blur", () => tooltip.classList.remove("open"));
+  });
 }
 
 function showClubPage(){
@@ -5473,6 +5707,7 @@ function showClubPage(){
   $("viewLanding").style.display = "none";
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "none";
+  $("viewPlayer").style.display = "none";
   $("viewClub").style.display = "";
   $("subTitle").textContent = "Klubbsida";
   renderClubPage();
@@ -5546,6 +5781,7 @@ function showLanding(){
   $("headerActions").style.display = "none";
   $("viewLanding").style.display = "";
   $("viewClub").style.display = "none";
+  $("viewPlayer").style.display = "none";
   $("viewSetup").style.display = "none";
   $("viewMain").style.display = "none";
   $("subTitle").textContent = "";
@@ -5617,6 +5853,8 @@ async function loadClubFromLink(){
     if (data.alias && route.clubId !== data.alias){
       const canonicalPath = route.kind === "tournament"
         ? tournamentPath(data.alias, route.tournamentId, route.view === "result")
+        : route.kind === "player"
+          ? playerPath(data.alias, route.playerId)
         : clubPath(data.alias);
       history.replaceState(null, "", canonicalPath + location.hash);
     }
@@ -5791,11 +6029,11 @@ $("btnClubPageCopy").addEventListener("click", async () => {
     $("clubPageStatus").style.color = "var(--danger)";
   }
 });
-function closePlayerDetails(){ $("playerDetailsOverlay").classList.remove("open"); }
+function closePlayerDetails(){
+  history.pushState(null, "", clubPath(clubIdentifier(clubSession)) + location.hash);
+  showClubPage();
+}
 $("btnClosePlayerDetails").addEventListener("click", closePlayerDetails);
-$("playerDetailsOverlay").addEventListener("click", event => {
-  if (event.target === $("playerDetailsOverlay")) closePlayerDetails();
-});
 function closeDeleteTournamentModal(){
   $("deleteTournamentOverlay").classList.remove("open");
   tournamentToDelete = null;
@@ -6238,7 +6476,7 @@ function convertJsonTournament(data, mappings){
     if (score[0] === score[1]){
       imported.rankingMatches[matchId] = {
         matchId, playerAId:one.clubPlayerId, playerBId:two.clubPlayerId,
-        draw:true, ranked:false
+        draw:true, ranked:false, setScore:score
       };
     }else{
       const oneWon = score[0] > score[1];
@@ -6248,6 +6486,7 @@ function convertJsonTournament(data, mappings){
         winnerId:oneWon ? one.clubPlayerId : two.clubPlayerId,
         loserId:oneWon ? two.clubPlayerId : one.clubPlayerId,
         ranked:true,
+        setScore:oneWon ? score : [score[1], score[0]],
         walkover:Array.isArray(losingPoints) && losingPoints.length > 0 &&
           losingPoints.every(point => Number(point) === 0)
       };
@@ -6897,7 +7136,10 @@ window.addEventListener("popstate", () => location.reload());
     if (!activeTournament){
       state = blankTournamentState();
       renderClubPortal();
-      showClubPage();
+      const loadedRoute = currentRoute();
+      if (loadedRoute.kind === "player" && (clubSession.players || []).some(player =>
+        player.playerId === loadedRoute.playerId)) showPlayerDetails(loadedRoute.playerId, false);
+      else showClubPage();
     }
     return;
   }
