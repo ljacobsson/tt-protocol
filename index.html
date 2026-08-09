@@ -5835,8 +5835,9 @@ async function loadClubFromLink(){
   const route = currentRoute();
   const clubId = route.clubId;
   const hash = new URLSearchParams(location.hash.slice(1));
-  const token = hash.get("clubToken") ||
-    localStorage.getItem("matchprotokollet_club_token_" + clubId) || clubId;
+  const linkedToken = hash.get("clubToken");
+  const requestedIdToken = localStorage.getItem("matchprotokollet_club_token_" + clubId);
+  let token = linkedToken || requestedIdToken || clubId;
   if (!clubId || !API_BASE) return false;
   clearTimeout(clubRosterSaveTimer);
   roster = [];
@@ -5861,6 +5862,14 @@ async function loadClubFromLink(){
       });
       sessionStorage.setItem(passwordKey, password);
     }
+    // Public tournament links use the club alias. The owner's credential is
+    // normally stored under the canonical club id, so recover it after the GET
+    // has resolved that alias. Otherwise the alias is retained as the token and
+    // creating a tournament appears to work locally but its POST is rejected.
+    const canonicalToken = localStorage.getItem(
+      "matchprotokollet_club_token_" + data.clubId
+    );
+    if (!linkedToken && canonicalToken) token = canonicalToken;
     clubSession = Object.assign(data, {token});
     if (data.alias && route.clubId !== data.alias){
       const canonicalPath = route.kind === "tournament"
@@ -7023,6 +7032,14 @@ $("btnConfirmFinish").addEventListener("click", async () => {
   if (!clubSession || !activeTournament || activeTournament.status === "finalized") return;
   let completed = false;
   clearTimeout(remoteSaveTimer);
+  // Checkpoint every entered result locally before attempting the final server
+  // write. This keeps the completed scorecard recoverable if auth or networking
+  // fails while the tournament is being finalized.
+  await kvSave(KEY, state);
+  const canonicalToken = localStorage.getItem(
+    "matchprotokollet_club_token_" + clubSession.clubId
+  );
+  if (canonicalToken) clubSession.token = canonicalToken;
   activeTournament.status = "finalized";
   $("btnConfirmFinish").disabled = true;
   $("btnConfirmFinish").textContent = "Uppdaterar ranking…";
