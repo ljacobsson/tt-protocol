@@ -989,6 +989,7 @@
     display:grid; place-items:center; width:28px; height:28px;
     border-radius:50%; background:#fff; color:var(--table-dark); font-size:12px;
   }
+  .landingsecondaryactions{display:flex; flex-wrap:wrap; gap:10px;}
   .landingerror{min-height:24px; margin:9px 4px 0; color:#FFD2C8; font-size:15px; font-weight:700;}
   .landingerror:empty{display:none;}
   .nopass{display:flex; flex-wrap:wrap; gap:18px; margin-top:14px; font-size:14px; color:rgba(255,255,255,.8);}
@@ -1722,10 +1723,16 @@
           <span>Inget lösenord</span>
           <span>Kom igång direkt</span>
         </div>
-        <button class="demobutton" id="btnShowDemo">
-          <span class="playicon">▶</span>
-          Visa demo
-        </button>
+        <div class="landingsecondaryactions">
+          <button class="demobutton" id="btnLoadLocalTournament" type="button">
+            <span class="playicon" aria-hidden="true">↻</span>
+            Ladda lokal tävling
+          </button>
+          <button class="demobutton" id="btnShowDemo" type="button">
+            <span class="playicon" aria-hidden="true">▶</span>
+            Visa demo
+          </button>
+        </div>
       </div>
       <section class="recentclubs" id="recentClubsSection" style="display:none;" aria-labelledby="recentClubsTitle">
         <div class="recentpanel">
@@ -6745,6 +6752,14 @@ $("landingClubName").addEventListener("focus", () => {
 });
 $("landingClubName").addEventListener("blur", () => {
   if (!$("landingClubName").value) animateLandingPrompt();
+});
+$("btnLoadLocalTournament").addEventListener("click", async () => {
+  const saved = await store.load() || await kvLoad(OLD_KEY);
+  if (!saved || !Array.isArray(saved.players)){
+    $("landingCreateStatus").textContent = "Det finns ingen lokalt sparad tävling på den här enheten.";
+    return;
+  }
+  location.href = localTournamentPath();
 });
 async function openDemo(){
   const overlay = $("demoOverlay");
