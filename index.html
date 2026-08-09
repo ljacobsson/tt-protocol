@@ -5843,13 +5843,11 @@ async function loadClubFromLink(){
   const clubId = route.clubId;
   const hash = new URLSearchParams(location.hash.slice(1));
   const linkedToken = hash.get("clubToken");
-  const requestedIdToken = localStorage.getItem("matchprotokollet_club_token_" + clubId);
-  let token = linkedToken || requestedIdToken || clubId;
+  let token = linkedToken || clubId;
   if (!clubId || !API_BASE) return false;
   clearTimeout(clubRosterSaveTimer);
   roster = [];
   clubSession = {clubId, token, name:"Klubb", tournaments:[], players:[]};
-  localStorage.setItem("matchprotokollet_club_token_" + clubId, token);
   try{
     const passwordKey = "matchprotokollet_spectator_password_" + clubId;
     const path = "/clubs/" + encodeURIComponent(clubId);
@@ -5858,6 +5856,7 @@ async function loadClubFromLink(){
     try{
       data = await api(path, {
         method:"GET",
+        token:clubId,
         headers:password ? {"X-Spectator-Password":password} : {}
       });
     }catch(error){
@@ -5865,7 +5864,8 @@ async function loadClubFromLink(){
       password = await requestSpectatorPassword();
       if (!password) throw new Error("Ett åskådarlösenord krävs");
       data = await api(path, {
-        method:"GET", headers:{"X-Spectator-Password":password}
+        method:"GET", token:clubId,
+        headers:{"X-Spectator-Password":password}
       });
       sessionStorage.setItem(passwordKey, password);
     }
@@ -5876,7 +5876,7 @@ async function loadClubFromLink(){
     const canonicalToken = localStorage.getItem(
       "matchprotokollet_club_token_" + data.clubId
     );
-    if (!linkedToken && canonicalToken) token = canonicalToken;
+    token = linkedToken || canonicalToken || clubId;
     clubSession = Object.assign(data, {token});
     if (data.alias && route.clubId !== data.alias){
       const canonicalPath = route.kind === "tournament"
