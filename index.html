@@ -5843,6 +5843,7 @@ async function loadClubFromLink(){
   const clubId = route.clubId;
   const hash = new URLSearchParams(location.hash.slice(1));
   const linkedToken = hash.get("clubToken");
+  const requestedIdToken = localStorage.getItem("matchprotokollet_club_token_" + clubId);
   let token = linkedToken || clubId;
   if (!clubId || !API_BASE) return false;
   clearTimeout(clubRosterSaveTimer);
@@ -5876,7 +5877,7 @@ async function loadClubFromLink(){
     const canonicalToken = localStorage.getItem(
       "matchprotokollet_club_token_" + data.clubId
     );
-    token = linkedToken || canonicalToken || clubId;
+    token = linkedToken || canonicalToken || requestedIdToken || clubId;
     clubSession = Object.assign(data, {token});
     if (data.alias && route.clubId !== data.alias){
       const canonicalPath = route.kind === "tournament"

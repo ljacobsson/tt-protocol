@@ -142,7 +142,10 @@ async function authorize(event, clubId, requestedClubId = clubId) {
   if (!meta || !token) return null;
   /* The unguessable club id is also the credential for the canonical link. */
   if (token === clubId) return meta;
-  if (token === requestedClubId)
+  /* Club links are collaborative: the configured alias may also submit
+     results after the frontend has resolved it to the canonical club id. */
+  if (token === requestedClubId ||
+      (meta.alias && token.toLowerCase() === String(meta.alias).toLowerCase()))
     return spectatorPasswordAccepted(event, meta) ? meta : PASSWORD_REQUIRED;
   const actual = Buffer.from(meta.tokenHash, "hex");
   const supplied = Buffer.from(tokenHash(token), "hex");
