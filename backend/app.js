@@ -230,6 +230,40 @@ function publicClub(items) {
       const sourceMatch = (tournament.matches || []).find(item =>
         String(item.matchId || "") === String(match.matchId || ""));
       const setScore = storedSetScore(tournament, sourceMatch || match);
+      if (match.draw) {
+        const playerA = playerDetails[match.playerAId];
+        const playerB = playerDetails[match.playerBId];
+        if (!playerA || !playerB) continue;
+        playerA.matches++;
+        playerA.draws++;
+        playerB.matches++;
+        playerB.draws++;
+        playerA.rankingMatches.push({
+          matchId: match.matchId,
+          tournamentId: match.tournamentId,
+          tournamentName: tournament.name || "Tävling",
+          playedAt: tournament.playedAt,
+          period: period.period,
+          opponentId: playerB.playerId,
+          opponentName: playerB.name,
+          outcome: "draw",
+          change: match.pointsA,
+          setScore,
+        });
+        playerB.rankingMatches.push({
+          matchId: match.matchId,
+          tournamentId: match.tournamentId,
+          tournamentName: tournament.name || "Tävling",
+          playedAt: tournament.playedAt,
+          period: period.period,
+          opponentId: playerA.playerId,
+          opponentName: playerA.name,
+          outcome: "draw",
+          change: match.pointsB,
+          setScore: setScore ? [setScore[1], setScore[0]] : null,
+        });
+        continue;
+      }
       const winner = playerDetails[match.winnerId];
       const loser = playerDetails[match.loserId];
       if (winner && loser) {
@@ -262,43 +296,6 @@ function publicClub(items) {
           setScore: setScore ? [setScore[1], setScore[0]] : null,
         });
       }
-    }
-  }
-  for (const tournament of tournaments.filter(item => item.status === "finalized")) {
-    for (const match of tournament.matches || []) {
-      if (!match.draw) continue;
-      const playerA = playerDetails[match.playerAId];
-      const playerB = playerDetails[match.playerBId];
-      if (!playerA || !playerB) continue;
-      playerA.matches++;
-      playerA.draws++;
-      playerB.matches++;
-      playerB.draws++;
-      playerA.rankingMatches.push({
-        matchId: match.matchId,
-        tournamentId: tournament.tournamentId,
-        tournamentName: tournament.name,
-        playedAt: tournament.playedAt,
-        opponentId: playerB.playerId,
-        opponentName: playerB.name,
-        outcome: "draw",
-        change: 0,
-        setScore: storedSetScore(tournament, match),
-      });
-      playerB.rankingMatches.push({
-        matchId: match.matchId,
-        tournamentId: tournament.tournamentId,
-        tournamentName: tournament.name,
-        playedAt: tournament.playedAt,
-        opponentId: playerA.playerId,
-        opponentName: playerA.name,
-        outcome: "draw",
-        change: 0,
-        setScore: (() => {
-          const score = storedSetScore(tournament, match);
-          return score ? [score[1], score[0]] : null;
-        })(),
-      });
     }
   }
   return {

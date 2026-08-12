@@ -955,6 +955,9 @@
     background:rgba(255,255,255,.1); font-size:14px; font-weight:900;
     letter-spacing:.9px; text-transform:uppercase;
   }
+  .eyebrow svg,.featureicon svg,.playicon svg,.recenttitleicon svg{
+    width:1em; height:1em; display:block; flex:none;
+  }
   .landinghero h1{
     max-width:720px; margin:22px 0 18px; font-size:clamp(44px,7vw,78px);
     line-height:.98; letter-spacing:-2.5px;
@@ -989,6 +992,7 @@
     display:grid; place-items:center; width:28px; height:28px;
     border-radius:50%; background:#fff; color:var(--table-dark); font-size:12px;
   }
+  .demobutton .playicon svg{width:14px; height:14px;}
   .landingsecondaryactions{display:flex; flex-wrap:wrap; gap:10px;}
   .landingerror{min-height:24px; margin:9px 4px 0; color:#FFD2C8; font-size:15px; font-weight:700;}
   .landingerror:empty{display:none;}
@@ -1706,7 +1710,12 @@
   <section class="landinghero">
     <div class="landinginner herogrid">
       <div>
-        <span class="eyebrow">🏓 Turneringar utan krångel</span>
+        <span class="eyebrow">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          Turneringar utan krångel
+        </span>
         <h1>Spela mer.<br>Administrera mindre.</h1>
         <p class="lead">
           Skapa poolspel, slutspel, live-resultat och klubbranking på några minuter.
@@ -1725,11 +1734,21 @@
         </div>
         <div class="landingsecondaryactions">
           <button class="demobutton" id="btnLoadLocalTournament" type="button">
-            <span class="playicon" aria-hidden="true">↻</span>
+            <span class="playicon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </span>
             Ladda lokal tävling
           </button>
           <button class="demobutton" id="btnShowDemo" type="button">
-            <span class="playicon" aria-hidden="true">▶</span>
+            <span class="playicon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+            </span>
             Visa demo
           </button>
         </div>
@@ -1738,7 +1757,11 @@
         <div class="recentpanel">
           <div class="recenthead">
             <div class="recenttitle">
-              <span class="recenttitleicon" aria-hidden="true">★</span>
+              <span class="recenttitleicon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
               <div>
                 <h3 id="recentClubsTitle">Dina klubbar</h3>
                 <p>Fortsätt direkt i en klubb du redan använder.</p>
@@ -1841,17 +1864,35 @@
     </div>
     <div class="featuregrid">
       <article class="featurecard">
-        <div class="featureicon">↗</div>
+        <div class="featureicon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.25a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"></path>
+          </svg>
+        </div>
         <h4>Live för alla</h4>
         <p>Dela en skrivskyddad länk. Spelare och publik ser senaste resultat, tabeller och slutspel direkt.</p>
       </article>
       <article class="featurecard">
-        <div class="featureicon">★</div>
+        <div class="featureicon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+            <polyline points="17 6 23 6 23 12"></polyline>
+          </svg>
+        </div>
         <h4>Ranking som lever</h4>
         <p>Ranking räknas efter avslutad tävling, med matchhistorik och tydliga plus- och minuspoäng.</p>
       </article>
       <article class="featurecard">
-        <div class="featureicon">⌁</div>
+        <div class="featureicon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </div>
         <h4>Smart seedning</h4>
         <p>Sprid topprankade spelare mellan poolerna och få jämnare, roligare tävlingar automatiskt.</p>
       </article>
@@ -3087,7 +3128,7 @@ function syncRankingMatch(matchId, a, b, result, isFinal){
       playerAId:pa.clubPlayerId,
       playerBId:pb.clubPlayerId,
       draw:true,
-      ranked:false,
+      ranked:true,
       setScore:sets
     };
     return;

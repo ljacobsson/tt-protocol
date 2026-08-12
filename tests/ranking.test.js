@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {calculateRanking, matchPoints, rankingPeriod} from "../backend/ranking.js";
+import {calculateRanking, drawPoints, matchPoints, rankingPeriod} from "../backend/ranking.js";
 
 test("ranking table, championship bonus and walkover cap", () => {
   assert.equal(matchPoints(1000, 1000), 10);
@@ -9,6 +9,29 @@ test("ranking table, championship bonus and walkover cap", () => {
   assert.equal(matchPoints(1000, 1100), 13);
   assert.equal(matchPoints(1000, 1100, {championship: true}), 19);
   assert.equal(matchPoints(500, 1100, {walkover: true}), 10);
+});
+
+test("draws reward the underdog and penalize the favorite", () => {
+  assert.equal(drawPoints(1000, 1000), 0);
+  assert.equal(drawPoints(1100, 1000), -3);
+  assert.equal(drawPoints(1000, 1100), 3);
+
+  const result = calculateRanking({a: "Ada", b: "Bo"}, [
+    {
+      tournamentId: "setup", playedAt: "2026-06-10", status: "finalized",
+      matches: Array.from({length: 10}, (_, index) => ({
+        matchId: `setup-${index}`, winnerId: "a", loserId: "b",
+      })),
+    },
+    {
+      tournamentId: "draw", playedAt: "2026-07-10", status: "finalized",
+      matches: [{matchId: "draw", playerAId: "a", playerBId: "b", draw: true}],
+    },
+  ]);
+  assert.deepEqual(
+    Object.fromEntries(result.players.map(player => [player.playerId, player.rating])),
+    {a: 1094, b: 906},
+  );
 });
 
 test("ranking period starts on first Monday or next Swedish workday", () => {
@@ -27,7 +50,7 @@ test("players start at 1000 and recalculation is reproducible", () => {
     status: "finalized",
     matches: [
       {matchId: "m1", winnerId: "a", loserId: "b", ranked: true},
-      {matchId: "draw", winnerId: "a", loserId: "b", draw: true},
+      {matchId: "draw", playerAId: "a", playerBId: "b", draw: true},
     ],
   }];
   const result = calculateRanking({a: "Ada", b: "Bo"}, tournaments);

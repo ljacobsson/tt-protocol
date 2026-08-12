@@ -81,6 +81,16 @@ export function matchPoints(winnerRating, loserRating, {
   return points;
 }
 
+export function drawPoints(playerRating, opponentRating, options = {}) {
+  if (playerRating === opponentRating) return 0;
+  const favoriteRating = Math.max(playerRating, opponentRating);
+  const underdogRating = Math.min(playerRating, opponentRating);
+  const favoriteWin = matchPoints(favoriteRating, underdogRating, options);
+  const underdogWin = matchPoints(underdogRating, favoriteRating, options);
+  const underdogGain = Math.round((underdogWin - favoriteWin) / 2);
+  return playerRating < opponentRating ? underdogGain : -underdogGain;
+}
+
 export function calculateRanking(players, tournaments) {
   const names = {...players};
   const ratings = Object.fromEntries(Object.keys(names).map(id => [id, START_RATING]));
@@ -111,9 +121,20 @@ export function calculateRanking(players, tournaments) {
             countedImportedMatches.has(stableImportId)) continue;
         countedImportedMatches.add(stableImportId);
       }
-      /* A played pool match counts when it has a winner. Only an actual draw
-         is excluded, even when the pool format permits a 1-1 result. */
-      if (match.draw) continue;
+      if (match.draw) {
+        const {playerAId, playerBId} = match;
+        if (!(playerAId in names) || !(playerBId in names) || playerAId === playerBId) continue;
+        eventsByPeriod.get(period).push({
+          tournamentId: tournament.tournamentId,
+          matchId: match.matchId || "",
+          playerAId,
+          playerBId,
+          draw: true,
+          setScore: match.setScore,
+          championship: tournament.type === "championship",
+        });
+        continue;
+      }
       const {winnerId, loserId} = match;
       if (!(winnerId in names) || !(loserId in names) || winnerId === loserId) continue;
       if (match.rankingMode === "winner-stays") {
@@ -145,6 +166,13 @@ export function calculateRanking(players, tournaments) {
     const changes = {};
     const periodMatches = [];
     for (const event of eventsByPeriod.get(period)) {
+      if (event.draw) {
+        const pointsA = drawPoints(baseline[event.playerAId], baseline[event.playerBId], event);
+        changes[event.playerAId] = (changes[event.playerAId] || 0) + pointsA;
+        changes[event.playerBId] = (changes[event.playerBId] || 0) - pointsA;
+        periodMatches.push({...event, pointsA, pointsB: -pointsA});
+        continue;
+      }
       if (event.rankingMode === "winner-stays") {
         const opponentAverage = (baseline[event.secondId] + baseline[event.loserId]) / 2;
         const otherAverage = (baseline[event.winnerId] + baseline[event.secondId]) / 2;

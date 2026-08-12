@@ -141,8 +141,11 @@ Alla spelare börjar på 1000 poäng. Beräkningen följer SBTF:s poängtabell:
 vinnaren får plus och förloraren lika mycket minus beroende på skillnaden vid
 rankingperiodens början. SM/RM/DM ger 1,5 gånger poängen (avrundat nedåt),
 WO begränsas till 10 poäng och periodförändringen begränsas till ±250.
-Faktiskt oavgjorda matcher rankas inte. En avgjord poolmatch, exempelvis 2–0,
-är rankinggrundande även när poolformatet också tillåter resultatet 1–1.
+Vid oavgjort får den lägre rankade spelaren poäng och den högre rankade tappar
+lika mycket; lika rankade spelare får ±0. Förändringen är halva skillnaden
+mellan tabellens poäng för en favorit- respektive skrällseger. En avgjord
+poolmatch, exempelvis 2–0, är rankinggrundande även när poolformatet också
+tillåter resultatet 1–1.
 
 Rankingperioden avgränsas av månadens första måndag, eller nästa vardag när
 dagen är en svensk helgdag. SBTF:s årliga normalisering och inaktivitetsregler
