@@ -32,6 +32,11 @@ test("draws reward the underdog and penalize the favorite", () => {
     Object.fromEntries(result.players.map(player => [player.playerId, player.rating])),
     {a: 1094, b: 906},
   );
+  const draw = result.periods[1].matches[0];
+  assert.equal(draw.playerARating, 1100);
+  assert.equal(draw.playerBRating, 900);
+  assert.equal(draw.favoriteWinPoints, 5);
+  assert.equal(draw.underdogWinPoints, 17);
 });
 
 test("ranking period starts on first Monday or next Swedish workday", () => {
@@ -59,6 +64,11 @@ test("players start at 1000 and recalculation is reproducible", () => {
     ["Bo", 990],
   ]);
   assert.deepEqual(calculateRanking({a: "Ada", b: "Bo"}, tournaments), result);
+  assert.deepEqual(result.periods[0].rawChanges, {a: 10, b: -10});
+  assert.deepEqual(result.periods[0].ratingsBefore, {a: 1000, b: 1000});
+  assert.deepEqual(result.periods[0].ratingsAfter, {a: 1010, b: 990});
+  assert.equal(result.periods[0].matches[0].winnerRating, 1000);
+  assert.equal(result.periods[0].matches[0].loserRating, 1000);
 });
 
 test("period change is capped at 250", () => {

@@ -223,7 +223,13 @@ function publicClub(items) {
   for (const period of ranking.periods) {
     for (const [playerId, change] of Object.entries(period.changes)) {
       if (playerDetails[playerId]) {
-        playerDetails[playerId].periods.push({period: period.period, change});
+        playerDetails[playerId].periods.push({
+          period: period.period,
+          ratingBefore: period.ratingsBefore?.[playerId],
+          rawChange: period.rawChanges?.[playerId] ?? change,
+          change,
+          ratingAfter: period.ratingsAfter?.[playerId],
+        });
       }
     }
     for (const match of period.matches) {
@@ -249,6 +255,11 @@ function publicClub(items) {
           opponentName: playerB.name,
           outcome: "draw",
           change: match.pointsA,
+          ratingBefore: match.playerARating,
+          opponentRating: match.playerBRating,
+          favoriteWinPoints: match.favoriteWinPoints,
+          underdogWinPoints: match.underdogWinPoints,
+          championship: match.championship,
           setScore,
         });
         playerB.rankingMatches.push({
@@ -261,6 +272,11 @@ function publicClub(items) {
           opponentName: playerA.name,
           outcome: "draw",
           change: match.pointsB,
+          ratingBefore: match.playerBRating,
+          opponentRating: match.playerARating,
+          favoriteWinPoints: match.favoriteWinPoints,
+          underdogWinPoints: match.underdogWinPoints,
+          championship: match.championship,
           setScore: setScore ? [setScore[1], setScore[0]] : null,
         });
         continue;
@@ -282,6 +298,12 @@ function publicClub(items) {
           opponentName: loser.name,
           outcome: "win",
           change: match.points,
+          ratingBefore: match.winnerRating,
+          opponentRating: match.winnerOpponentRating ?? match.loserRating,
+          opponentRatingIsAverage: match.rankingMode === "winner-stays",
+          basePoints: match.basePoints,
+          championship: match.championship,
+          walkover: match.walkover,
           setScore,
         });
         loser.rankingMatches.push({
@@ -294,6 +316,12 @@ function publicClub(items) {
           opponentName: winner.name,
           outcome: "loss",
           change: -(match.loserPoints ?? match.points),
+          ratingBefore: match.loserRating,
+          opponentRating: match.loserOpponentRating ?? match.winnerRating,
+          opponentRatingIsAverage: match.rankingMode === "winner-stays",
+          basePoints: match.basePoints,
+          championship: match.championship,
+          walkover: match.walkover,
           setScore: setScore ? [setScore[1], setScore[0]] : null,
         });
       }

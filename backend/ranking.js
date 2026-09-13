@@ -167,10 +167,24 @@ export function calculateRanking(players, tournaments) {
     const periodMatches = [];
     for (const event of eventsByPeriod.get(period)) {
       if (event.draw) {
-        const pointsA = drawPoints(baseline[event.playerAId], baseline[event.playerBId], event);
+        const playerARating = baseline[event.playerAId];
+        const playerBRating = baseline[event.playerBId];
+        const favoriteRating = Math.max(playerARating, playerBRating);
+        const underdogRating = Math.min(playerARating, playerBRating);
+        const favoriteWinPoints = matchPoints(favoriteRating, underdogRating, event);
+        const underdogWinPoints = matchPoints(underdogRating, favoriteRating, event);
+        const pointsA = drawPoints(playerARating, playerBRating, event);
         changes[event.playerAId] = (changes[event.playerAId] || 0) + pointsA;
         changes[event.playerBId] = (changes[event.playerBId] || 0) - pointsA;
-        periodMatches.push({...event, pointsA, pointsB: -pointsA});
+        periodMatches.push({
+          ...event,
+          pointsA,
+          pointsB: -pointsA,
+          playerARating,
+          playerBRating,
+          favoriteWinPoints,
+          underdogWinPoints,
+        });
         continue;
       }
       if (event.rankingMode === "winner-stays") {
@@ -180,13 +194,28 @@ export function calculateRanking(players, tournaments) {
         const loserPoints = matchPoints(otherAverage, baseline[event.loserId]);
         changes[event.winnerId] = (changes[event.winnerId] || 0) + winnerPoints;
         changes[event.loserId] = (changes[event.loserId] || 0) - loserPoints;
-        periodMatches.push({...event, points:winnerPoints, winnerPoints, loserPoints});
+        periodMatches.push({
+          ...event,
+          points:winnerPoints,
+          winnerPoints,
+          loserPoints,
+          winnerRating: baseline[event.winnerId],
+          loserRating: baseline[event.loserId],
+          winnerOpponentRating: opponentAverage,
+          loserOpponentRating: otherAverage,
+        });
         continue;
       }
       const points = matchPoints(baseline[event.winnerId], baseline[event.loserId], event);
       changes[event.winnerId] = (changes[event.winnerId] || 0) + points;
       changes[event.loserId] = (changes[event.loserId] || 0) - points;
-      periodMatches.push({...event, points});
+      periodMatches.push({
+        ...event,
+        points,
+        basePoints: matchPoints(baseline[event.winnerId], baseline[event.loserId]),
+        winnerRating: baseline[event.winnerId],
+        loserRating: baseline[event.loserId],
+      });
     }
     const applied = {};
     for (const [playerId, rawDelta] of Object.entries(changes)) {
@@ -195,7 +224,14 @@ export function calculateRanking(players, tournaments) {
       ratings[playerId] += delta;
       applied[playerId] = delta;
     }
-    history.push({period, changes: applied, matches: periodMatches});
+    history.push({
+      period,
+      changes: applied,
+      rawChanges: {...changes},
+      ratingsBefore: baseline,
+      ratingsAfter: {...ratings},
+      matches: periodMatches,
+    });
   }
 
   return {

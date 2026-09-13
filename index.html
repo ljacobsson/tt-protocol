@@ -839,6 +839,22 @@
   .rankingchange.plus{color:var(--win-fg);}
   .rankingchange.minus{color:var(--loss-fg);}
   .periodnote{font-size:13px; color:var(--muted); margin-top:10px;}
+  .rankingcalculation{display:grid; gap:10px;}
+  .calculationperiod{border:1px solid #dce7ee; border-radius:14px; background:#fbfdfe; overflow:hidden;}
+  .calculationperiod summary{display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:12px; padding:13px 15px; cursor:pointer; font-weight:850;}
+  .calculationperiod summary::marker{color:var(--table);}
+  .calculationperiod summary small{color:var(--muted); font-weight:700;}
+  .calculationperiod summary b{font-size:18px; color:var(--table-dark);}
+  .calculationbody{padding:0 15px 14px;}
+  .calculationintro{margin:0 0 8px; color:var(--muted); font-size:12px;}
+  .calculationmatch{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; padding:10px 0; border-top:1px solid var(--grid-line);}
+  .calculationmatch strong,.calculationmatch small{display:block;}
+  .calculationmatch small{margin-top:3px; color:var(--muted);}
+  .calculationformula{text-align:right; align-self:center; font-size:13px; color:var(--muted);}
+  .calculationformula b{display:block; margin-top:2px; color:var(--ink); font-size:15px;}
+  .calculationtotal{display:grid; grid-template-columns:1fr auto; gap:5px 12px; padding-top:10px; border-top:2px solid #cbdce7; font-size:13px;}
+  .calculationtotal b{text-align:right;}
+  .calculationtotal .cap{color:#a15b00;}
   .playerpage{max-width:980px; margin:28px auto 60px; padding:0 18px;}
   .playerdetailmodal{overflow:hidden; padding:0; border:1px solid #d9e4eb; border-radius:22px; background:#fff; box-shadow:0 16px 45px rgba(11,54,82,.12);}
   .playerdetailhero{padding:26px 28px 22px; background:linear-gradient(135deg,#073d69,#0e69a8); color:#fff;}
@@ -929,6 +945,11 @@
     .playerstats{grid-template-columns:repeat(3,1fr);}
     .playerstat strong{font-size:21px;}
     .rankingchart{height:210px; padding-left:2px;}
+    .calculationperiod summary{grid-template-columns:minmax(0,1fr) auto; gap:4px 8px;}
+    .calculationperiod summary small{grid-column:1; grid-row:2;}
+    .calculationperiod summary b{grid-column:2; grid-row:1 / 3;}
+    .calculationmatch{grid-template-columns:1fr; gap:6px;}
+    .calculationformula{text-align:left;}
     .opponentrow{grid-template-columns:minmax(0,1fr) 60px 76px; gap:7px; padding:0 10px;}
     .opponentrow .record{display:none;}
     .opponentrow.head span:nth-child(3){display:none;}
@@ -2470,6 +2491,8 @@
       <div class="playerstats" id="playerStats"></div>
       <div class="playersectiontitle"><h3>Rankingutveckling</h3><small id="playerChartSummary"></small></div>
       <div class="rankingchart" id="playerRankingChart"></div>
+      <div class="playersectiontitle"><h3>Rankingberäkning</h3><small>Period för period</small></div>
+      <div class="rankingcalculation" id="playerRankingCalculation"></div>
       <div class="playersectiontitle"><h3>Spelarnätverk</h3><small>Vald spelare i centrum</small></div>
       <div id="playerProfileNetwork"></div>
       <div class="playersectiontitle"><h3>Motståndare</h3><small>Sorterat efter flest matcher</small></div>
@@ -5051,7 +5074,122 @@ function latestPlayerTrend(playerId){
     match.tournamentId === latestTournament.tournamentId);
   if (!matches.length) return null;
   return matches.reduce(
-    (sum, match) => sum + Number(match.change || 0), 0);
+      (sum, match) => sum + Number(match.change || 0), 0);
+}
+
+function rankingNumber(value){
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "–";
+  return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(".", ",");
+}
+
+function signedRanking(value){
+  const number = Number(value) || 0;
+  return number === 0 ? "±0" : (number > 0 ? "+" : "−") + rankingNumber(Math.abs(number));
+}
+
+function rankingRuleText(match){
+  const change = Number(match.change || 0);
+  if (match.outcome === "draw") {
+    const favorite = rankingNumber(match.favoriteWinPoints);
+    const underdog = rankingNumber(match.underdogWinPoints);
+    const role = Number(match.ratingBefore) === Number(match.opponentRating)
+      ? "lika ranking"
+      : Number(match.ratingBefore) < Number(match.opponentRating) ? "lägre rankad" : "högre rankad";
+    return "Oavgjort: (" + underdog + " − " + favorite + ") ÷ 2 · " + role +
+      " = " + signedRanking(change) + " p";
+  }
+  let rule = "Tabellvärde " + rankingNumber(match.basePoints ?? Math.abs(change)) + " p";
+  if (match.championship)
+    rule += " · mästerskap × 1,5";
+  if (match.walkover)
+    rule += " · WO, högst 10 p";
+  return rule + " · " + (match.outcome === "win" ? "vinst " : "förlust ") +
+    signedRanking(change) + " p";
+}
+
+function renderPlayerRankingCalculation(detail){
+  const container = $("playerRankingCalculation");
+  container.innerHTML = "";
+  const periods = (detail.periods || []).slice().sort((a, b) =>
+    String(b.period || "").localeCompare(String(a.period || "")));
+  if (!periods.length) {
+    container.innerHTML = "<p class='hint'>Ingen rankingberäkning ännu.</p>";
+    return;
+  }
+  periods.forEach((period, index) => {
+    const matches = (detail.rankingMatches || []).filter(match =>
+      match.period === period.period).sort((a, b) =>
+      String(a.playedAt || "").localeCompare(String(b.playedAt || "")) ||
+      String(a.tournamentId || "").localeCompare(String(b.tournamentId || "")) ||
+      String(a.matchId || "").localeCompare(String(b.matchId || "")));
+    const rawChange = Number(period.rawChange ?? matches.reduce(
+      (sum, match) => sum + Number(match.change || 0), 0));
+    const appliedChange = Number(period.change || 0);
+    const ratingBefore = Number.isFinite(Number(period.ratingBefore))
+      ? Number(period.ratingBefore)
+      : Number(period.ratingAfter) - appliedChange;
+    const ratingAfter = Number.isFinite(Number(period.ratingAfter))
+      ? Number(period.ratingAfter)
+      : ratingBefore + appliedChange;
+    const section = document.createElement("details");
+    section.className = "calculationperiod";
+    section.open = index === 0;
+    const summary = document.createElement("summary");
+    summary.innerHTML = "<span></span><small></small><b></b>";
+    summary.children[0].textContent = "Rankingperiod " + period.period;
+    summary.children[1].textContent = rankingNumber(ratingBefore) + " → " +
+      rankingNumber(ratingAfter) + " p";
+    summary.children[2].textContent = signedRanking(appliedChange);
+    section.appendChild(summary);
+    const body = document.createElement("div");
+    body.className = "calculationbody";
+    const intro = document.createElement("p");
+    intro.className = "calculationintro";
+    intro.textContent = "Alla matcher i perioden räknas med rankingen vid periodens start.";
+    body.appendChild(intro);
+    matches.forEach(match => {
+      const row = document.createElement("div");
+      row.className = "calculationmatch";
+      row.innerHTML = "<div><strong></strong><small></small></div>" +
+        "<div class='calculationformula'><span></span><b></b></div>";
+      const outcome = match.outcome === "win" ? "Vinst mot "
+        : match.outcome === "draw" ? "Oavgjort mot " : "Förlust mot ";
+      row.querySelector("strong").textContent = outcome + match.opponentName;
+      row.querySelector("small").textContent = match.tournamentName +
+        (match.playedAt ? " · " + match.playedAt : "") +
+        (Array.isArray(match.setScore)
+          ? " · " + match.setScore[0] + "–" + match.setScore[1] + " i set" : "");
+      row.querySelector(".calculationformula span").textContent =
+        rankingNumber(match.ratingBefore) + " mot " + rankingNumber(match.opponentRating) +
+        " · skillnad " + rankingNumber(
+          Math.abs(Number(match.ratingBefore) - Number(match.opponentRating))) +
+        (match.opponentRatingIsAverage ? " · motståndarsnitt" : "");
+      row.querySelector(".calculationformula b").textContent = rankingRuleText(match);
+      body.appendChild(row);
+    });
+    const total = document.createElement("div");
+    total.className = "calculationtotal";
+    const adjustmentLabel = Math.abs(rawChange) > 250
+      ? "Efter periodtaket ±250"
+      : ratingBefore <= 300 && rawChange < 0
+        ? "Efter rankinggolvet vid 300"
+        : "Tillämpad periodförändring";
+    total.innerHTML = "<span>Summa matchpoäng</span><b></b>" +
+      (rawChange !== appliedChange
+        ? "<span class='cap'></span><b class='cap'></b>" : "") +
+      "<span>Ny ranking</span><b></b>";
+    if (rawChange !== appliedChange)
+      total.querySelector("span.cap").textContent = adjustmentLabel;
+    const values = total.querySelectorAll("b");
+    values[0].textContent = signedRanking(rawChange) + " p";
+    if (rawChange !== appliedChange) values[1].textContent = signedRanking(appliedChange) + " p";
+    values[values.length - 1].textContent = rankingNumber(ratingBefore) + " " +
+      signedRanking(appliedChange) + " = " + rankingNumber(ratingAfter) + " p";
+    body.appendChild(total);
+    section.appendChild(body);
+    container.appendChild(section);
+  });
 }
 
 function clubParticipationSummary(){
@@ -5619,6 +5757,7 @@ function showPlayerDetails(playerId, updateUrl = true){
   ).join("");
 
   renderPlayerRankingChart(rankingHistory);
+  renderPlayerRankingCalculation(detail);
   const profileNetwork = $("playerProfileNetwork");
   profileNetwork.innerHTML = "";
   renderPlayerNetwork(profileNetwork, playerId);
