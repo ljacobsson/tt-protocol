@@ -16,6 +16,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 import {START_RATING, calculateRanking} from "./ranking.js";
+import {collectPages} from "./pagination.js";
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
   marshallOptions: {removeUndefinedValues: true},
@@ -155,13 +156,13 @@ async function authorize(event, clubId, requestedClubId = clubId) {
 }
 
 async function queryClub(clubId) {
-  const {Items = []} = await db.send(new QueryCommand({
+  return collectPages(startKey => db.send(new QueryCommand({
     TableName: TABLE_NAME,
     KeyConditionExpression: "PK = :pk",
     ExpressionAttributeValues: {":pk": clubPk(clubId)},
     ConsistentRead: true,
-  }));
-  return Items;
+    ExclusiveStartKey: startKey,
+  })));
 }
 
 const withoutKeys = ({PK: _pk, SK: _sk, ...item}) => item;
@@ -413,11 +414,11 @@ function rankingForTournaments(tournaments) {
   return calculateRanking(players, tournaments);
 }
 
-async function persistRankings(clubId, tournaments) {
+async function persistRankings(clubId, tournaments, currentItems) {
   const ranking = rankingForTournaments(tournaments);
-  const currentItems = await queryClub(clubId);
+  const clubItems = currentItems || await queryClub(clubId);
   const oldKeys = new Set(
-    currentItems.filter(item => item.SK.startsWith("PLAYER#")).map(item => item.SK),
+    clubItems.filter(item => item.SK.startsWith("PLAYER#")).map(item => item.SK),
   );
   const newKeys = new Set(ranking.players.map(player => `PLAYER#${player.playerId}`));
   const requests = [];
@@ -460,10 +461,14 @@ async function saveTournament(clubId, payload, requestedId) {
     put.ExpressionAttributeValues = {":expectedUpdatedAt": payload.expectedUpdatedAt};
   }
   await db.send(new PutCommand(put));
-  const tournaments = (await queryClub(clubId))
+  const clubItems = await queryClub(clubId);
+  const tournaments = clubItems
     .filter(item => item.SK.startsWith("TOURNAMENT#"))
     .map(withoutKeys);
-  return {tournament, ranking: await persistRankings(clubId, tournaments)};
+  return {
+    tournament,
+    ranking: await persistRankings(clubId, tournaments, clubItems),
+  };
 }
 
 export async function handler(event) {
@@ -637,6 +642,15 @@ export async function handler(event) {
       });
     }
 
+    if (resource === "/clubs/{clubId}/ranking/recalculate" && method === "POST") {
+      const items = await queryClub(clubId);
+      const tournaments = items
+        .filter(item => item.SK.startsWith("TOURNAMENT#"))
+        .map(withoutKeys);
+      await persistRankings(clubId, tournaments, items);
+      return response(200, publicClub(await queryClub(clubId)));
+    }
+
     if (resource === "/clubs/{clubId}" && method === "GET") {
       return response(200, publicClub(await queryClub(clubId)));
     }
@@ -673,10 +687,13 @@ export async function handler(event) {
         TableName: TABLE_NAME,
         Key: {PK: clubPk(clubId), SK: `TOURNAMENT#${params.tournamentId}`},
       }));
-      const tournaments = (await queryClub(clubId))
+      const clubItems = await queryClub(clubId);
+      const tournaments = clubItems
         .filter(item => item.SK.startsWith("TOURNAMENT#"))
         .map(withoutKeys);
-      return response(200, {ranking: await persistRankings(clubId, tournaments)});
+      return response(200, {
+        ranking: await persistRankings(clubId, tournaments, clubItems),
+      });
     }
     return response(404, {message: "Hittades inte"});
   } catch (error) {

@@ -75,6 +75,11 @@ Resources:
           Properties:
             Path: "/clubs/{clubId}/tournaments/preview-ranking"
             Method: POST
+        RecalculateClubRanking:
+          Type: Api
+          Properties:
+            Path: "/clubs/{clubId}/ranking/recalculate"
+            Method: POST
         UpdateTournament:
           Type: Api
           Properties: {Path: "/clubs/{clubId}/tournaments/{tournamentId}", Method: PUT}

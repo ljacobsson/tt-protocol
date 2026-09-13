@@ -2052,6 +2052,7 @@
     <div class="clubactions">
       <button id="btnClubPageNew">＋ Ny tävling</button>
       <button class="secondary" id="btnClubPageImport" hidden>↥ Importera</button>
+      <button class="secondary" id="btnClubPageRecalculate">↻ Räkna om ranking</button>
       <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
@@ -4739,6 +4740,13 @@ async function saveRemoteTournament(save = remoteSaveSnapshot()){
   if (ix < 0) club.tournaments.unshift(tournament);
   else club.tournaments[ix] = tournament;
   club.players = data.ranking.players;
+  if (payload.status === "finalized") {
+    const refreshed = await api("/clubs/" + club.clubId, {
+      method:"GET",
+      token:club.token
+    });
+    Object.assign(club, refreshed, {token:club.token});
+  }
   if (clubSession !== club || activeTournament !== tournament) return;
   activeTournament = tournament;
   $("clubStatus").textContent = "Sparad";
@@ -5033,14 +5041,17 @@ function renderClubStatistics(){
 
 function latestPlayerTrend(playerId){
   const detail = (clubSession.playerDetails || {})[playerId];
-  const matches = (detail?.rankingMatches || []).slice().sort((a, b) =>
+  const latestTournament = effectiveFinalizedTournaments().slice().sort((a, b) =>
     String(b.playedAt || "").localeCompare(String(a.playedAt || "")) ||
-    String(b.tournamentId || "").localeCompare(String(a.tournamentId || "")));
+    String(b.createdAt || "").localeCompare(String(a.createdAt || "")) ||
+    String(b.tournamentId || "").localeCompare(String(a.tournamentId || ""))
+  )[0];
+  if (!latestTournament) return null;
+  const matches = (detail?.rankingMatches || []).filter(match =>
+    match.tournamentId === latestTournament.tournamentId);
   if (!matches.length) return null;
-  const latest = matches[0];
-  return matches.filter(match =>
-    match.tournamentId === latest.tournamentId).reduce(
-      (sum, match) => sum + Number(match.change || 0), 0);
+  return matches.reduce(
+    (sum, match) => sum + Number(match.change || 0), 0);
 }
 
 function clubParticipationSummary(){
@@ -5514,9 +5525,7 @@ function renderClubPage(){
     const trend = latestPlayerTrend(player.playerId);
     const indicator = row.querySelector(".rankingtrend");
     if (trend === null){
-      indicator.classList.add("flat");
-      indicator.textContent = "Ny";
-      indicator.title = "Ingen tidigare rankingförändring";
+      indicator.hidden = true;
     }else{
       indicator.classList.add(trend > 0 ? "up" : trend < 0 ? "down" : "flat");
       indicator.textContent =
@@ -6046,6 +6055,31 @@ $("btnClubPageNew").addEventListener("click", () => $("btnNewTournament").click(
 $("btnClubPageImport").hidden = !hackerMode;
 $("btnImportTournament").hidden = !hackerMode;
 $("btnClubPageImport").addEventListener("click", () => $("btnImportTournament").click());
+$("btnClubPageRecalculate").addEventListener("click", async () => {
+  if (!clubSession) return;
+  const button = $("btnClubPageRecalculate");
+  button.disabled = true;
+  button.textContent = "Räknar om…";
+  $("clubPageStatus").textContent = "Räknar om alla avslutade matcher…";
+  $("clubPageStatus").style.color = "var(--muted)";
+  try{
+    const token = clubSession.token;
+    const data = await api(
+      "/clubs/" + clubSession.clubId + "/ranking/recalculate",
+      {method:"POST"}
+    );
+    clubSession = Object.assign(data, {token});
+    renderClubPage();
+    $("clubPageStatus").textContent = "Klart – alla matcher har räknats om.";
+    $("clubPageStatus").style.color = "var(--win-fg)";
+  }catch(error){
+    $("clubPageStatus").textContent = "Kunde inte räkna om rankingen: " + error.message;
+    $("clubPageStatus").style.color = "var(--danger)";
+  }finally{
+    button.disabled = false;
+    button.textContent = "↻ Räkna om ranking";
+  }
+});
 $("btnPlayerList").addEventListener("click", () => {
   clubPlayerView = "list";
   $("btnPlayerList").classList.add("active");

@@ -124,6 +124,7 @@ Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 - `GET /clubs/{clubId}/tournaments/{tournamentId}/public` (ingen hemlighet krävs)
 - `POST /clubs/{clubId}/tournaments`
 - `POST /clubs/{clubId}/tournaments/preview-ranking` (skriver ingen data)
+- `POST /clubs/{clubId}/ranking/recalculate`
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}`
 - `DELETE /clubs/{clubId}/tournaments/{tournamentId}`
 
