@@ -488,7 +488,20 @@ async function saveTournament(clubId, payload, requestedId) {
     put.ConditionExpression = "updatedAt = :expectedUpdatedAt";
     put.ExpressionAttributeValues = {":expectedUpdatedAt": payload.expectedUpdatedAt};
   }
-  await db.send(new PutCommand(put));
+  try {
+    await db.send(new PutCommand(put));
+  } catch (error) {
+    if (error.name !== "ConditionalCheckFailedException") throw error;
+    // Hand the current server copy back so the client can merge both devices'
+    // results instead of discarding one of them.
+    const {Item: current} = await db.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: key,
+      ConsistentRead: true,
+    }));
+    error.currentTournament = current ? withoutKeys(current) : null;
+    throw error;
+  }
   const clubItems = await queryClub(clubId);
   const tournaments = clubItems
     .filter(item => item.SK.startsWith("TOURNAMENT#"))
@@ -730,7 +743,9 @@ export async function handler(event) {
     }
     if (error.name === "ConditionalCheckFailedException") {
       return response(409, {
-        message: "Tävlingen har ändrats på en annan enhet. Ladda om sidan innan du sparar igen.",
+        message: "Tävlingen har ändrats på en annan enhet.",
+        conflict: true,
+        tournament: error.currentTournament || null,
       });
     }
     if (error instanceof SyntaxError || [

@@ -1452,6 +1452,13 @@
   .lrow.won .ls{color:var(--win-fg);}
   .lrow.pend .ln{color:var(--muted); font-weight:600; font-style:italic;}
 
+  .syncbanner{
+    position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:45;
+    max-width:calc(100% - 32px); padding:10px 16px; border-radius:12px;
+    background:var(--danger); color:#fff; font-weight:700;
+  }
+  .syncbanner[hidden]{display:none;}
+
   /* ---------- Modal ---------- */
   .overlay{
     position:fixed; inset:0; background:rgba(10,25,40,.6);
@@ -1711,6 +1718,7 @@
   <button class="hbtn clubbtn" id="btnClub">Klubb</button>
   <button class="hbtn" id="btnFullscreen" title="Helskärm">⛶</button>
 </header>
+<div class="syncbanner" id="syncBanner" role="alert" hidden></div>
 
 <button type="button" class="cookiesettings" id="btnCookieSettings">Cookies</button>
 <aside class="cookiebanner" id="cookieBanner" aria-labelledby="cookieTitle" hidden>
@@ -2416,6 +2424,18 @@
     <div class="modalrow">
       <button class="btn-clear" id="btnCancelFinish">Fortsätt spela</button>
       <button class="btn-close" id="btnConfirmFinish">Avsluta och uppdatera</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SYNC CONFLICT MODAL ================= -->
+<div class="overlay" id="conflictOverlay" style="z-index:60;">
+  <div class="modal">
+    <div style="font-size:24px; font-weight:900;">Ändrad på en annan enhet</div>
+    <p class="hint" id="conflictText" style="margin-top:10px;"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnConflictUseRemote">Använd den andra enhetens</button>
+      <button class="btn-close" id="btnConflictKeepLocal">Behåll den här enhetens</button>
     </div>
   </div>
 </div>
@@ -4697,6 +4717,7 @@ async function api(path, options = {}){
     const error = new Error(data.message || "Serverfel (" + res.status + ")");
     error.status = res.status;
     error.requiresPassword = !!data.requiresPassword;
+    error.data = data;
     throw error;
   }
   return data;
@@ -4727,9 +4748,11 @@ function scheduleRemoteSave(){
   clearTimeout(remoteSaveTimer);
   const save = remoteSaveSnapshot();
   remoteSaveTimer = setTimeout(() => {
-    remoteSaveChain = remoteSaveChain.then(() => saveRemoteTournament(save)).catch(error => {
+    remoteSaveChain = remoteSaveChain.then(() =>
+      saveRemoteTournament(save, {skipUnchanged:true})).catch(error => {
       $("clubStatus").textContent = "Kunde inte spara: " + error.message;
       $("clubStatus").style.color = "var(--danger)";
+      showSyncError("Kunde inte spara till klubben: " + error.message);
     });
   }, 700);
 }
@@ -4742,19 +4765,140 @@ function remoteSaveSnapshot(){
   };
 }
 
-async function saveRemoteTournament(save = remoteSaveSnapshot()){
-  const {club, tournament, state:savedState} = save;
-  if (clubSession === club && activeTournament === tournament)
-    $("clubStatus").textContent = "Sparar…";
+/* Several devices may keep the same tournament open. tournament.state is the
+   copy last read from or written to the server, so it is the common ancestor
+   of this device's board and whatever another device saved in the meantime. */
+const LOCAL_ONLY_STATE_KEYS = ["view", "round", "pool"];
+const MERGEABLE_STATE_KEYS = ["results", "fresults", "rankingMatches"];
+
+function stableJson(value){
+  if (Array.isArray(value)) return "[" + value.map(stableJson).join(",") + "]";
+  if (value && typeof value === "object")
+    return "{" + Object.keys(value).filter(key => value[key] !== undefined).sort()
+      .map(key => JSON.stringify(key) + ":" + stableJson(value[key])).join(",") + "}";
+  return JSON.stringify(value ?? null);
+}
+function sameValue(a, b){ return stableJson(a) === stableJson(b); }
+function sameTournamentContent(a, b){
+  const strip = s => Object.fromEntries(Object.entries(s || {})
+    .filter(([key]) => !LOCAL_ONLY_STATE_KEYS.includes(key)));
+  return sameValue(strip(a), strip(b));
+}
+
+// Three-way merge of two boards. Results are merged match by match; anything
+// else must only have changed on one side. Returns null on a real conflict.
+function mergeTournamentStates(base, local, remote){
+  const merged = structuredClone(remote);
+  LOCAL_ONLY_STATE_KEYS.forEach(key => { if (key in local) merged[key] = local[key]; });
+  const changed = {localSetup:false, remoteSetup:false, localResults:false, remoteResults:false};
+  const setupKeys = new Set([...Object.keys(local), ...Object.keys(remote)].filter(key =>
+    !LOCAL_ONLY_STATE_KEYS.includes(key) && !MERGEABLE_STATE_KEYS.includes(key)));
+  for (const key of setupKeys){
+    if (sameValue(local[key], remote[key])) continue;
+    if (sameValue(remote[key], base[key])){
+      merged[key] = structuredClone(local[key]);
+      changed.localSetup = true;
+    } else if (sameValue(local[key], base[key])) changed.remoteSetup = true;
+    else return null;
+  }
+  for (const key of MERGEABLE_STATE_KEYS){
+    const b = base[key] || {}, l = local[key] || {}, r = remote[key] || {};
+    const out = {};
+    for (const id of new Set([...Object.keys(b), ...Object.keys(l), ...Object.keys(r)])){
+      let value;
+      if (sameValue(l[id], r[id])) value = l[id];
+      else if (sameValue(r[id], b[id])){ value = l[id]; changed.localResults = true; }
+      else if (sameValue(l[id], b[id])){ value = r[id]; changed.remoteResults = true; }
+      else return null;
+      if (value !== undefined) out[id] = structuredClone(value);
+    }
+    merged[key] = out;
+  }
+  // Results only make sense on the board they were entered on. If one device
+  // changed players, pools or format, the other device's results can't be
+  // carried over safely.
+  if ((changed.localSetup && changed.remoteResults) ||
+      (changed.remoteSetup && changed.localResults)) return null;
+  return merged;
+}
+
+let conflictChoice = null;
+function askTournamentConflict(name){
+  $("conflictText").textContent = "\u201d" + name + "\u201d har ändrats på en annan enhet, " +
+    "och samma matcher eller spelare har ändrats på båda ställena. " +
+    "Välj vilken version som ska gälla – den andra skrivs över.";
+  $("conflictOverlay").classList.add("open");
+  return new Promise(resolve => { conflictChoice = resolve; });
+}
+function answerTournamentConflict(keepLocal){
+  $("conflictOverlay").classList.remove("open");
+  const resolve = conflictChoice;
+  conflictChoice = null;
+  if (resolve) resolve(keepLocal);
+}
+$("btnConflictKeepLocal").addEventListener("click", () => answerTournamentConflict(true));
+$("btnConflictUseRemote").addEventListener("click", () => answerTournamentConflict(false));
+
+async function resolveTournamentConflict(tournament, snapshot, remoteTournament, isActive){
+  const remoteState = remoteTournament.state || {};
+  // Read the live board after any await so results entered meanwhile survive.
+  const current = () => isActive() ? state : snapshot;
+  let merged = mergeTournamentStates(tournament.state || {}, current(), remoteState);
+  if (!merged){
+    const keepLocal = await askTournamentConflict(tournament.name);
+    merged = structuredClone(keepLocal ? current() : remoteState);
+    if (!keepLocal) LOCAL_ONLY_STATE_KEYS.forEach(key => {
+      if (key in current()) merged[key] = current()[key];
+    });
+  }
+  merged = Object.assign(blankTournamentState(), merged);
+  const finalized = tournament.status === "finalized";
+  Object.assign(tournament, remoteTournament);
+  if (finalized) tournament.status = "finalized";
+  if (isActive()){
+    state = merged;
+    kvSave(KEY, state);
+    refresh();
+    if (state.phase === "play") setView(state.view || "grid");
+  }
+  return structuredClone(merged);
+}
+
+function showSyncError(message){
+  $("syncBanner").textContent = message;
+  $("syncBanner").hidden = false;
+}
+
+async function saveRemoteTournament(save = remoteSaveSnapshot(), options = {}){
+  const {club, tournament} = save;
+  const isActive = () => clubSession === club && activeTournament === tournament;
+  // The live board is never older than a queued snapshot of it.
+  let savedState = isActive() ? structuredClone(state) : save.state;
   const exists = !!tournament.tournamentId;
+  // Merely opening a tournament or switching tabs must not bump its version,
+  // or the device that is actually keeping score gets a conflict.
+  if (options.skipUnchanged && exists && tournament.state &&
+      sameTournamentContent(savedState,
+        Object.assign(blankTournamentState(), tournament.state))) return;
+  if (isActive()) $("clubStatus").textContent = "Sparar…";
   const path = "/clubs/" + club.clubId + "/tournaments" +
     (exists ? "/" + tournament.tournamentId : "");
-  const payload = tournamentPayload(tournament, savedState, club);
-  const data = await api(path, {
-    method: exists ? "PUT" : "POST",
-    body: JSON.stringify(payload),
-    token: club.token
-  });
+  let payload, data;
+  for (let attempt = 0; ; attempt++){
+    payload = tournamentPayload(tournament, savedState, club);
+    try{
+      data = await api(path, {
+        method: exists ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+        token: club.token
+      });
+      break;
+    }catch(error){
+      const remote = error.status === 409 && error.data?.tournament;
+      if (!remote || attempt >= 3) throw error;
+      savedState = await resolveTournamentConflict(tournament, savedState, remote, isActive);
+    }
+  }
   // Preserve the object identity captured by queued saves. A later save that was
   // queued before the first POST completed will then PUT the same tournament.
   Object.assign(tournament, data.tournament);
@@ -4772,6 +4916,7 @@ async function saveRemoteTournament(save = remoteSaveSnapshot()){
   }
   if (clubSession !== club || activeTournament !== tournament) return;
   activeTournament = tournament;
+  $("syncBanner").hidden = true;
   $("clubStatus").textContent = "Sparad";
   $("clubStatus").style.color = "var(--muted)";
   renderClubPortal();
@@ -4813,7 +4958,7 @@ function blankTournamentState(){
 
 function openTournament(tournament){
   activeTournament = tournament;
-  state = Object.assign(blankTournamentState(), tournament.state || {});
+  state = Object.assign(blankTournamentState(), structuredClone(tournament.state || {}));
   if (!state.rankingMatches) state.rankingMatches = {};
   state.players.forEach(p => {
     if (!p.clubPlayerId) p.clubPlayerId = clubPlayerIdFor(p.name);
