@@ -1438,6 +1438,20 @@
   .match .medal{font-size:26px; min-width:44px; text-align:center;}
   .match.locked{opacity:.55;}
   .match.locked .score{border-style:dashed;}
+  .plist .davisteam{color:var(--muted); font-size:15px; font-weight:700; flex:none;}
+  .davisscore{
+    display:flex; align-items:center; gap:16px;
+    background:var(--table); color:#fff; border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:16px;
+  }
+  .davisscore .team{flex:1; min-width:0; font-size:22px; font-weight:900;}
+  .davisscore .team.right{text-align:right;}
+  .davisscore .team small{
+    display:block; font-size:15px; font-weight:600; opacity:.8;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .davisscore .total{font-size:40px; font-weight:900; white-space:nowrap; text-align:center;}
+  .davisscore .total small{display:block; font-size:14px; font-weight:700; opacity:.8;}
 
   /* ---------- Bracket tree ----------
      Every column is the same height (align-items:stretch) and every cell in a
@@ -1679,6 +1693,10 @@
     .plist li{font-size:17px; gap:8px; padding-left:12px;}
     .plist .num{width:32px; height:32px; font-size:15px;}
     .plist .poolpick{min-width:62px; height:52px; font-size:15px;}
+    .davisscore{padding:14px; gap:10px;}
+    .davisscore .team{font-size:18px;}
+    .davisscore .team small{white-space:normal;}
+    .davisscore .total{font-size:32px;}
     .plist button{width:52px; height:52px; font-size:22px;}
     .chip{min-height:52px; padding:0 14px; font-size:16px;}
     .bigstart{min-height:72px; font-size:21px;}
@@ -2225,6 +2243,7 @@
     <div class="seg" id="gameModeSeg">
       <button data-mode="pool">Poolspel<small>alla möter alla</small></button>
       <button data-mode="winner-stays">Vinnaren står kvar<small>exakt 3 spelare</small></button>
+      <button data-mode="davis-cup">Davis Cup<small>lag mot lag, 2 + 2 spelare</small></button>
     </div>
     <div id="winnerStaysSetup" style="display:none;">
       <h2>Setvinster för seger</h2>
@@ -2248,6 +2267,18 @@
       </div>
       <p class="hint">När en spelare når målet avgör en extra skiljeset om de två andra står lika.</p>
     </div>
+    <div id="davisCupSetup" style="display:none;">
+      <h2>Davis Cup</h2>
+      <label class="checkrow">
+        <input id="davisPlayAll" type="checkbox">
+        <span>Spela alla fem matcher
+          <small>Annars avslutas mötet när det är avgjort</small>
+        </span>
+      </label>
+      <p class="hint" style="margin-bottom:22px;">Lag 1 är A och B, lag 2 är X och Y. Matchordning: A–X, B–Y,
+        dubbel, A–Y, B–X. Med 2 set kan en match sluta 1–1 och mötet sluta oavgjort.
+        Bara singlarna räknas till rankingen.</p>
+    </div>
     <div id="regularSetup">
     <h2 style="margin-top:0;">Vad skrivs in</h2>
     <div class="seg" id="scoringSeg">
@@ -2265,6 +2296,7 @@
       <button data-fmt="bo7">Bäst av 7<small>först till 4 set</small></button>
     </div>
 
+    <div id="poolSetup">
     <h2>Antal pooler</h2>
     <div class="poolchoice">
       <div>
@@ -2300,6 +2332,7 @@
         </div>
         <p class="hint" id="advHint"></p>
       </div>
+    </div>
     </div>
     </div>
 
@@ -2378,6 +2411,12 @@
   <div id="winnerStaysMatch"></div>
 </div>
 
+<div id="davisCupPane" class="panel" style="display:none; max-width:760px; margin:24px auto;">
+  <div class="secthead"><h2>Davis Cup</h2><span id="davisCupProgress"></span></div>
+  <div id="davisCupScore"></div>
+  <div id="davisCupMatches"></div>
+</div>
+
 <!-- ================= SHARE MODAL ================= -->
 <div class="overlay" id="shareOverlay">
   <div class="modal">
@@ -2449,6 +2488,10 @@
     <div style="font-size:24px; font-weight:900; margin-bottom:6px;"
          id="spectatorPasswordTitle">Lösenord krävs</div>
     <p class="hint">Den här klubben kräver ett lösenord för åskådare.</p>
+    <!-- Without a username of its own, the browser's password manager pairs this
+         field with the nearest text input and fills a club name into the player
+         name field. -->
+    <input id="spectatorPasswordUser" type="text" autocomplete="username" hidden>
     <div class="formfield">
       <label for="spectatorPasswordInput">Lösenord</label>
       <input id="spectatorPasswordInput" type="password" maxlength="128"
@@ -2664,9 +2707,10 @@ const KEY = "matchprotokollet_v1";
 const OLD_KEY = "bergertavlan_v1";        // pre-rename saves
 let state = {
   phase: "setup",          // setup | play
-  gameMode: "pool",        // pool | winner-stays
+  gameMode: "pool",        // pool | winner-stays | davis-cup
   winnerStaysTarget: 5,
   winnerStays: null,
+  davisCup: {playAll:false},
   format: "sets2",         // sets1 | sets2 | bo3 | bo5 | bo7
   pools: 1,
   poolsManual: false,      // automatic recommendation until the organizer overrides it
@@ -2943,7 +2987,9 @@ function encodeState(st){
     Math.max(0, FIN_LIST.indexOf(st.finals || "none")),
     st.advance === "half" ? "h" : String(st.advance || 2),
     st.phase === "play" ? "p" : "s",
-    st.scoring === "points" ? "P" : "S"
+    st.scoring === "points" ? "P" : "S",
+    st.gameMode === "davis-cup" ? "D" : "",
+    st.davisCup?.playAll ? "A" : ""
   ].join("|");
 
   const ps = st.players || [];
@@ -3026,6 +3072,8 @@ function decodeState(code){
     });
 
     return { phase, format, pools, poolsManual:true, finals, advance, scoring,
+             gameMode: modern && fields[7] === "D" ? "davis-cup" : "pool",
+             davisCup: {playAll: modern && fields[8] === "A"},
              players, results, fresults,
              nextId: players.length + 1, round: 0, view: "grid", pool: 0 };
   }catch(e){ return null; }
@@ -3527,6 +3575,13 @@ function finalResultGroups(){
       {place:3, players:[byId(game.third)]},
     ];
   }
+  if (state.gameMode === "davis-cup"){
+    const score = davisCupStatus().wins;
+    const teams = davisCupTeams();
+    if (score[0] === score[1]) return [{place:1, players:teams.flat()}];
+    const winner = score[0] > score[1] ? 0 : 1;
+    return [{place:1, players:teams[winner]}, {place:2, players:teams[1 - winner]}];
+  }
   if (Array.isArray(state.importedPlacements) && state.importedPlacements.length){
     return state.importedPlacements.map(group => ({
       place:group.place,
@@ -3593,7 +3648,8 @@ function tournamentHighlights(){
       ? (state.winnerStays?.sets || []).map(() => [1,0])
       : [
         ...Object.values(state.results || {}).filter(result => matchDecided(result)),
-        ...Object.values(state.fresults || {}).filter(result => matchDecided(result, true))
+        ...Object.values(state.fresults || {}).filter(result =>
+          matchDecided(result, state.gameMode !== "davis-cup"))
       ];
   const setScores = decidedResults.map(setsOf).filter(Boolean);
   const totalSets = setScores.reduce((sum, score) => sum + score[0] + score[1], 0);
@@ -3833,15 +3889,27 @@ function smallestPool(){
   return best;
 }
 
+/* Modes with a fixed field; pool play takes any number of players. */
+function playerLimit(){
+  return state.gameMode === "winner-stays" ? 3
+    : state.gameMode === "davis-cup" ? 4
+    : Infinity;
+}
+
 function renderSetup(){
   if (!state.gameMode) state.gameMode = "pool";
   if (!state.winnerStaysTarget) state.winnerStaysTarget = 5;
+  if (!state.davisCup) state.davisCup = {playAll:false};
   const winnerStays = state.gameMode === "winner-stays";
+  const davisCup = state.gameMode === "davis-cup";
   document.querySelectorAll("#gameModeSeg button").forEach(b =>
     b.classList.toggle("sel", b.dataset.mode === state.gameMode));
   $("winnerStaysSetup").style.display = winnerStays ? "" : "none";
+  $("davisCupSetup").style.display = davisCup ? "" : "none";
   $("regularSetup").style.display = winnerStays ? "none" : "";
+  $("poolSetup").style.display = davisCup ? "none" : "";
   $("winnerStaysTarget").value = String(state.winnerStaysTarget);
+  $("davisPlayAll").checked = !!state.davisCup.playAll;
   if (state.useSeeding === undefined) state.useSeeding = true;
   if (state.poolsManual === undefined) state.poolsManual = false;
   renderPoolChoice();
@@ -3877,8 +3945,30 @@ function renderSetup(){
   ul.innerHTML = "";
   state.players.forEach((p, i) => {
     const li = document.createElement("li");
-    li.innerHTML = '<span class="num">' + (i+1) + '</span><span class="nm"></span>';
+    li.innerHTML = '<span class="num">' + (davisCup && i < 4 ? "ABXY"[i] : i+1) +
+      '</span><span class="nm"></span>';
     li.querySelector(".nm").textContent = p.name;
+    if (davisCup && i < 4){
+      const team = document.createElement("span");
+      team.className = "davisteam";
+      team.textContent = davisTeamName(Math.floor(i / 2));
+      li.appendChild(team);
+      if (i > 0){
+        const up = document.createElement("button");
+        up.className = "poolpick";
+        up.textContent = "↑";
+        up.title = "Flytta upp";
+        up.setAttribute("aria-label", "Flytta " + p.name + " uppåt");
+        up.addEventListener("click", () => {
+          if (Object.keys(state.fresults).length &&
+              !confirm("Ändrad laguppställning rensar inspelade resultat. Fortsätt?")) return;
+          [state.players[i - 1], state.players[i]] = [state.players[i], state.players[i - 1]];
+          state.fresults = {}; state.rankingMatches = {};
+          renderSetup(); store.save();
+        });
+        li.appendChild(up);
+      }
+    }
     if (state.pools > 1){
       const pick = document.createElement("button");
       pick.className = "poolpick";
@@ -3892,10 +3982,13 @@ function renderSetup(){
     const del = document.createElement("button");
     del.textContent = "✕";
     del.addEventListener("click", () => {
-      const played = Object.keys(state.results).some(k => k.split("_").map(Number).includes(p.id));
+      const played = davisCup ? Object.keys(state.fresults).length > 0
+        : Object.keys(state.results).some(k => k.split("_").map(Number).includes(p.id));
       if (played && !confirm(p.name + " har inspelade resultat. Ta bort ändå?")) return;
       state.players = state.players.filter(x => x.id !== p.id);
       if (state.gameMode === "winner-stays") state.winnerStays = null;
+      // Removing a player shifts the A/B/X/Y lineup, so no result still applies.
+      if (davisCup){ state.fresults = {}; state.rankingMatches = {}; }
       Object.keys(state.rankingMatches || {}).forEach(key => {
         const match = state.rankingMatches[key];
         if (match.winnerId === p.clubPlayerId || match.loserId === p.clubPlayerId)
@@ -3920,6 +4013,11 @@ function renderSetup(){
     const tooSmall = [];
     for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) tooSmall.push(poolName(i));
     if (tooSmall.length) hint += "  Pool " + tooSmall.join(", ") + " behöver minst 2 spelare.";
+  } else if (davisCup){
+    hint = n < 4 ? "Lägg till " + (4 - n) + " spelare till. De två första bildar lag 1 " +
+        "och de två sista lag 2."
+      : n > 4 ? "Davis Cup kräver exakt 4 spelare – ta bort " + (n - 4) + "."
+      : "Använd ↑ för att ändra laguppställningen.";
   } else if (n >= 3 && n % 2){
     hint = "Ojämnt antal – en spelare vilar varje rond.";
   }
@@ -3927,11 +4025,12 @@ function renderSetup(){
   $("oddHint").textContent = state.pools > 1 ? "" : hint;
   let poolsOk = true;
   for (let i = 0; i < state.pools; i++) if (poolMembers(i).length < 2) poolsOk = false;
-  $("btnStart").disabled = winnerStays ? n !== 3 : n < 2 || !poolsOk;
-  $("btnStart").textContent = winnerStays ? "Starta Vinnaren står kvar" :
-    (state.pools > 1 ? "Starta poolspel" : "Starta rundpool");
-  $("nameInput").disabled = winnerStays && n >= 3;
-  $("btnAdd").disabled = winnerStays && n >= 3;
+  $("btnStart").disabled = winnerStays || davisCup ? n !== playerLimit() : n < 2 || !poolsOk;
+  $("btnStart").textContent = winnerStays ? "Starta Vinnaren står kvar"
+    : davisCup ? "Starta Davis Cup"
+    : (state.pools > 1 ? "Starta poolspel" : "Starta rundpool");
+  $("nameInput").disabled = n >= playerLimit();
+  $("btnAdd").disabled = n >= playerLimit();
   renderRoster();
 }
 
@@ -3956,7 +4055,7 @@ function renderRoster(){
   }
   shown.forEach(nm => {
     const used = inGame(nm);
-    const modeFull = state.gameMode === "winner-stays" && state.players.length >= 3;
+    const modeFull = state.players.length >= playerLimit();
     const b = document.createElement("button");
     b.className = "chip" + (rosterEditMode ? " del" : (used ? " used" : ""));
     b.innerHTML = "<span class='plus'>" + (rosterEditMode ? "✕" : "+") + "</span><span class='t'></span>";
@@ -3976,7 +4075,7 @@ function renderRoster(){
 }
 
 function addPlayer(){
-  if (state.gameMode === "winner-stays" && state.players.length >= 3) return;
+  if (state.players.length >= playerLimit()) return;
   const inp = $("nameInput");
   const name = sanitizeName(inp.value);
   if (!name) return;
@@ -4282,6 +4381,128 @@ function renderWinnerStays(){
     rest.textContent = byId(game.resting).name + " vilar.";
     box.appendChild(rest);
   }
+}
+
+/* ---------------- Davis Cup ----------------
+   Two teams of two: players 1–2 are A and B, players 3–4 are X and Y. The five
+   matches are stored like playoff results under
+   "davis:1".."davis:5", oriented first team – second team. In the 2-set
+   format a match may end 1–1. Only the singles become ranking matches. */
+function davisCupTeams(){
+  return [state.players.slice(0, 2), state.players.slice(2, 4)];
+}
+
+const davisTeamName = index => "Lag " + (index + 1);
+
+function davisCupMatches(){
+  const [[a, b], [x, y]] = davisCupTeams();
+  return [
+    {key:"davis:1", home:[a], away:[x]},
+    {key:"davis:2", home:[b], away:[y]},
+    {key:"davis:3", home:[a, b], away:[x, y], doubles:true},
+    {key:"davis:4", home:[a], away:[y]},
+    {key:"davis:5", home:[b], away:[x]},
+  ];
+}
+
+/* The meeting is over once the trailing team can no longer catch up; a draw
+   moves neither team, so equal wins after all five matches is a drawn meeting. */
+function davisCupStatus(){
+  const wins = [0, 0];
+  let draws = 0, open = 0;
+  davisCupMatches().forEach(match => {
+    const result = getF(match.key);
+    if (!matchDecided(result)){ open++; return; }
+    const sets = setsOf(result);
+    if (sets[0] === sets[1]) draws++;
+    else wins[sets[0] > sets[1] ? 0 : 1]++;
+  });
+  const lead = wins[0] - wins[1];
+  const over = Math.abs(lead) > open || !open;
+  return {wins, draws, open, over, winner: !over || !lead ? null : lead > 0 ? 0 : 1};
+}
+
+function renderDavisCup(){
+  const teams = davisCupTeams();
+  if (teams[1].length < 2) return;
+  const playAll = !!state.davisCup?.playAll;
+  const matches = davisCupMatches();
+  const status = davisCupStatus();
+  const score = status.wins, winner = status.winner;
+  $("davisCupProgress").textContent = FORMATS[state.format].label + " · " +
+    (playAll ? "alla fem matcher spelas" : "avslutas när mötet är avgjort");
+
+  const board = document.createElement("div");
+  board.className = "davisscore";
+  [0, 1].forEach(index => {
+    const team = document.createElement("div");
+    team.className = "team" + (index ? " right" : "");
+    team.textContent = davisTeamName(index);
+    const names = document.createElement("small");
+    names.textContent = teams[index].map(player => player.name).join(" · ");
+    team.appendChild(names);
+    board.appendChild(team);
+    if (!index){
+      const total = document.createElement("div");
+      total.className = "total";
+      total.textContent = score[0] + " – " + score[1];
+      if (status.draws){
+        const draws = document.createElement("small");
+        draws.textContent = status.draws + " oavgjord" + (status.draws > 1 ? "a" : "");
+        total.appendChild(draws);
+      }
+      board.appendChild(total);
+    }
+  });
+  const parts = [board];
+  if (status.over){
+    const banner = document.createElement("div");
+    banner.className = "banner";
+    const title = document.createElement("strong");
+    title.textContent = winner === null ? "Mötet slutade oavgjort" : davisTeamName(winner) + " vann mötet";
+    banner.appendChild(title);
+    const lead = winner === null ? score : [score[winner], score[1 - winner]];
+    banner.appendChild(document.createTextNode(playAll && status.open
+      ? "De återstående matcherna spelas ändå och singlarna räknas till rankingen."
+      : lead[0] + "–" + lead[1] + " i vunna matcher" +
+        (status.draws ? ", " + status.draws + " oavgjord" + (status.draws > 1 ? "a" : "") : "") + "."));
+    parts.push(banner);
+  }
+  $("davisCupScore").replaceChildren(...parts);
+
+  const list = $("davisCupMatches");
+  list.innerHTML = "";
+  matches.forEach((match, index) => {
+    const result = getF(match.key);
+    const sets = setsOf(result);
+    const names = [match.home, match.away].map(side => side.map(player => player.name).join(" / "));
+    const skipped = !result && status.over && !playAll;
+    const div = document.createElement("div");
+    div.className = "match" + (skipped ? " locked" : "");
+    div.innerHTML =
+      "<div class='medal'></div>" +
+      "<div class='side'></div>" +
+      "<div class='score" + (result ? " done" : "") + "'>" +
+        (sets ? sets[0] + " – " + sets[1] : "· – ·") + "</div>" +
+      "<div class='side right'></div>" +
+      "<div class='tag' style='text-align:right'></div>";
+    div.children[0].textContent = index + 1;
+    div.children[1].textContent = names[0];
+    div.children[3].textContent = names[1];
+    div.children[4].textContent = skipped ? "Spelas ej" : match.doubles ? "Dubbel" : "Singel";
+    if (ballsOf(result)){
+      const sub = document.createElement("div");
+      sub.className = "setline";
+      sub.textContent = result.map(g => g[0] + "–" + g[1]).join("  ");
+      div.classList.add("hassets");
+      div.appendChild(sub);
+    }
+    if (!skipped) div.addEventListener("click", () => match.doubles
+      // Without player ids syncRankingMatch keeps the doubles out of the ranking.
+      ? openModal(null, null, match.key, names)
+      : openModal(match.home[0].id, match.away[0].id, match.key));
+    list.appendChild(div);
+  });
 }
 
 /* ---------------- Pool bar ---------------- */
@@ -4643,12 +4864,13 @@ function renderBracket(){
 }
 
 /* ---------------- Modal ---------------- */
-let modalA = null, modalB = null, modalKey = null;
+let modalA = null, modalB = null, modalKey = null, modalNames = null;
 let modalSets = null, deuceMode = false;
 
-function openModal(a, b, fkey){
+/* names overrides the sides' labels, e.g. for a Davis Cup doubles. */
+function openModal(a, b, fkey, names){
   if (tournamentLocked()) return;
-  modalA = a; modalB = b; modalKey = fkey || null;
+  modalA = a; modalB = b; modalKey = fkey || null; modalNames = names || null;
   modalSets = null; deuceMode = false;
   const cur = modalKey ? getF(modalKey) : getResult(a, b);
   if (state.scoring === "points") modalSets = (cur && isPoints(cur)) ? cloneResult(cur) : [];
@@ -4656,9 +4878,14 @@ function openModal(a, b, fkey){
   $("overlay").classList.add("open");
 }
 
+/* Playoff matches need a winner; Davis Cup matches share their storage but
+   may end 1–1 in the 2-set format. */
+const modalNeedsWinner = () => !!modalKey && state.gameMode !== "davis-cup";
+
 function renderModal(){
   const a = modalA, b = modalB;
-  const pa = byId(a), pb = byId(b);
+  const pa = modalNames ? {name:modalNames[0]} : byId(a);
+  const pb = modalNames ? {name:modalNames[1]} : byId(b);
   $("mNameA").textContent = pa.name;
   $("mNameB").textContent = pb.name;
   const box = $("mChoices");
@@ -4670,14 +4897,14 @@ function renderModal(){
 /* ---- one tap per match: pick the final set score ---- */
 function renderSetsModal(pa, pb, box){
   const cur = modalKey ? getF(modalKey) : getResult(modalA, modalB);
-  $("mSub").textContent = (modalKey ? "Slutspelsmatch – måste ha en vinnare · " : "") +
+  $("mSub").textContent = (modalNeedsWinner() ? "Slutspelsmatch – måste ha en vinnare · " : "") +
     "Tryck på slutresultatet (" + FORMATS[state.format].label.toLowerCase() + ")";
 
-  const all = modalKey ? playoffResults(state.format) : FORMATS[state.format].results;
+  const all = modalNeedsWinner() ? playoffResults(state.format) : FORMATS[state.format].results;
   const margin = r => Math.abs(r[0] - r[1]);
   const aWins = all.filter(r => r[0] > r[1]).sort((x,y) => margin(y) - margin(x));
   const bWins = all.filter(r => r[0] < r[1]).sort((x,y) => margin(y) - margin(x));
-  const draws = modalKey ? [] : all.filter(r => r[0] === r[1]);
+  const draws = modalNeedsWinner() ? [] : all.filter(r => r[0] === r[1]);
 
   function makeBtn(sa, sb){
     const btn = document.createElement("button");
@@ -4716,13 +4943,13 @@ const MAX_SETS = () =>
   : state.format === "bo7" ? 7
   : state.format === "bo5" ? 5
   : state.format === "bo3" ? 3
-  : (modalKey ? 3 : 2);            // 2-set format, but a knockout needs a winner
+  : (modalNeedsWinner() ? 3 : 2); // 2-set format, but a knockout needs a winner
 
 function pointsDone(sets){
   const s = setsOf(sets.length ? sets : null) || [0, 0];
   if (state.format === "sets1") return sets.length >= 1;
   if (state.format === "sets2"){
-    if (!modalKey) return sets.length >= 2;          // 1–1 is a legal pool result
+    if (!modalNeedsWinner()) return sets.length >= 2; // 1–1 is a legal pool result
     return sets.length >= 2 && s[0] !== s[1];        // play on until someone leads
   }
   return s[0] >= setsToWin() || s[1] >= setsToWin();
@@ -5116,7 +5343,7 @@ function blankTournamentState(){
   return {
     phase:"setup", format:state.format, pools:state.pools, finals:state.finals,
     gameMode:state.gameMode || "pool", winnerStaysTarget:state.winnerStaysTarget || 5,
-    winnerStays:null,
+    winnerStays:null, davisCup:{playAll:!!state.davisCup?.playAll},
     poolsManual:false, advance:state.advance, scoring:state.scoring,
     players:[], results:{}, fresults:{},
     rankingMatches:{}, useSeeding:true, nextId:1, round:0, view:"grid", pool:0
@@ -6356,6 +6583,7 @@ function requestSpectatorPassword(){
   if (spectatorPasswordResolve) return Promise.resolve("");
   const overlay = $("spectatorPasswordOverlay");
   const input = $("spectatorPasswordInput");
+  $("spectatorPasswordUser").value = currentRoute().clubId || "";
   input.value = "";
   overlay.classList.add("open");
   setTimeout(() => input.focus(), 0);
@@ -7422,6 +7650,7 @@ function refresh(){
   $("viewLanding").style.display = "none";
   $("viewClub").style.display = "none";
   $("winnerStaysPane").style.display = "none";
+  $("davisCupPane").style.display = "none";
   if (state.phase === "setup"){
     $("headerActions").style.display = "none";
     $("viewSetup").style.display = "";
@@ -7436,13 +7665,17 @@ function refresh(){
   $("btnTournamentClub").style.display = clubSession || publicSession ? "" : "none";
   renderPushButton();
   const winnerStays = state.gameMode === "winner-stays";
-  $("viewMain").querySelector("nav").style.display = winnerStays ? "none" : "";
+  const davisCup = state.gameMode === "davis-cup";
+  const ownPane = hasOwnPane();
+  $("viewMain").querySelector("nav").style.display = ownPane ? "none" : "";
   $("winnerStaysPane").style.display = winnerStays ? "" : "none";
+  $("davisCupPane").style.display = davisCup ? "" : "none";
   ["paneGrid","paneRounds","paneStand","paneFinals","paneBracket","paneResult"].forEach(id => {
-    if (winnerStays) $(id).style.display = "none";
+    if (ownPane) $(id).style.display = "none";
   });
   $("subTitle").textContent =
-    (publicSession ? "LIVE · " : "") + state.players.length + " spelare · " +
+    (publicSession ? "LIVE · " : "") +
+    (davisCup ? "Davis Cup" : state.players.length + " spelare") + " · " +
     (state.pools > 1 ? state.pools + " pooler · " : "") +
     FORMATS[state.format].label;
   $("btnFinishTournament").style.display =
@@ -7459,6 +7692,7 @@ function refresh(){
   if (!hasFinalResult && state.view === "result") setView("grid");
   if (state.pool >= state.pools) state.pool = 0;
   if (winnerStays){ renderWinnerStays(); return; }
+  if (davisCup){ renderDavisCup(); return; }
   renderPoolBar();
   renderGrid();
   renderRounds();
@@ -7467,17 +7701,22 @@ function refresh(){
   if (hasFinalResult) renderFinalResult();
 }
 
+/* Vinnaren står kvar and Davis Cup show everything, the final result
+   included, in a pane of their own instead of the tabbed panes. */
+const hasOwnPane = () => state.gameMode === "winner-stays" || state.gameMode === "davis-cup";
+
 function setView(v){
   state.view = v;
+  const shown = hasOwnPane() ? null : v;
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.view === v));
-  $("paneGrid").style.display   = v === "grid"   ? "" : "none";
-  $("paneRounds").style.display = v === "rounds" ? "" : "none";
-  $("paneStand").style.display  = v === "stand"  ? "" : "none";
-  $("paneFinals").style.display = v === "finals" ? "" : "none";
-  $("paneBracket").style.display = v === "bracket" ? "" : "none";
-  $("paneResult").style.display = v === "result" ? "" : "none";
-  $("btnShare").style.display = v === "result" ? "none" : "";
+  $("paneGrid").style.display   = shown === "grid"   ? "" : "none";
+  $("paneRounds").style.display = shown === "rounds" ? "" : "none";
+  $("paneStand").style.display  = shown === "stand"  ? "" : "none";
+  $("paneFinals").style.display = shown === "finals" ? "" : "none";
+  $("paneBracket").style.display = shown === "bracket" ? "" : "none";
+  $("paneResult").style.display = shown === "result" ? "" : "none";
+  $("btnShare").style.display = shown === "result" ? "none" : "";
   renderPoolBar();
 }
 
@@ -7490,7 +7729,8 @@ $("btnResultShare").addEventListener("click", () => $("btnShare").click());
 $("gameModeSeg").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b || b.dataset.mode === state.gameMode) return;
-  if ((Object.keys(state.results || {}).length || state.winnerStays?.sets?.length) &&
+  if ((Object.keys(state.results || {}).length || Object.keys(state.fresults || {}).length ||
+       state.winnerStays?.sets?.length) &&
       !confirm("Byte av spelläge rensar inspelade resultat. Fortsätt?")) return;
   state.gameMode = b.dataset.mode;
   state.results = {}; state.fresults = {}; state.rankingMatches = {};
@@ -7498,7 +7738,15 @@ $("gameModeSeg").addEventListener("click", e => {
   if (state.gameMode === "winner-stays"){
     state.pools = 1; state.finals = "none"; state.format = "sets1"; state.scoring = "sets";
   }
+  if (state.gameMode === "davis-cup"){
+    state.pools = 1; state.finals = "none"; state.format = "bo5";
+    state.players.forEach(p => p.pool = 0);
+  }
   renderSetup(); store.save();
+});
+$("davisPlayAll").addEventListener("change", e => {
+  state.davisCup.playAll = e.target.checked;
+  store.save();
 });
 $("winnerStaysTarget").addEventListener("change", e => {
   state.winnerStaysTarget = +e.target.value;
@@ -7509,7 +7757,7 @@ $("winnerStaysTarget").addEventListener("change", e => {
 $("formatSeg").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return;
-  if (Object.keys(state.results).length &&
+  if ((Object.keys(state.results).length || Object.keys(state.fresults).length) &&
       b.dataset.fmt !== state.format &&
       !confirm("Byte av matchform rensar inspelade resultat. Fortsätt?")) return;
   if (b.dataset.fmt !== state.format){
@@ -7582,8 +7830,8 @@ $("btnRosterEdit").addEventListener("click", () => {
 });
 
 $("btnStart").addEventListener("click", () => {
-  if (state.gameMode === "winner-stays" && state.players.length !== 3) return;
-  if (state.gameMode !== "winner-stays" && state.players.length < 2) return;
+  if (playerLimit() !== Infinity && state.players.length !== playerLimit()) return;
+  if (state.players.length < 2) return;
   state.phase = "play";
   state.round = 0;
   state.pool = 0;
@@ -7601,6 +7849,7 @@ $("btnReset").addEventListener("click", () => {
   if (!confirm("Nollställ allt? Spelare och resultat tas bort.")) return;
   state = { phase:"setup", gameMode:state.gameMode || "pool",
             winnerStaysTarget:state.winnerStaysTarget || 5, winnerStays:null,
+            davisCup:{playAll:!!state.davisCup?.playAll},
             format:state.format, pools:1, poolsManual:false, finals:state.finals,
             advance:state.advance, scoring:state.scoring,
             players:[], results:{}, fresults:{}, rankingMatches:{}, useSeeding:state.useSeeding,

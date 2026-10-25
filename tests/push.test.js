@@ -93,6 +93,26 @@ test("draws, playoffs and pool names are described", () => {
   assert.equal(notificationFor(final, after, "/x").title, "Cia vann mot Anna");
 });
 
+test("Davis Cup singles are announced as Davis Cup matches", () => {
+  const davis = fresults => tournament({gameMode: "davis-cup", fresults}, [
+    {matchId: "final:davis:1", winnerId: "bo", loserId: "anna", setScore: [2, 0]},
+  ]);
+  const [event, ...rest] = finishedMatchEvents(davis({}), davis({"davis:1": [0, 2]}));
+  assert.equal(rest.length, 0);
+  assert.equal(event.group, "Davis Cup");
+  assert.deepEqual(event.names, ["Bo", "Anna"]);
+  assert.deepEqual(event.setScore, [2, 0]);
+
+  const drawn = (fresults, matches) => tournament({gameMode: "davis-cup", format: "sets2", fresults}, matches);
+  const draw = {matchId: "final:davis:4", playerAId: "anna", playerBId: "cia", draw: true, setScore: [1, 1]};
+  const [tie] = finishedMatchEvents(drawn({"davis:4": [[11, 5]]}, [draw]),
+    drawn({"davis:4": [[11, 5], [6, 11]]}, [draw]));
+  assert.equal(tie.draw, true);
+  assert.equal(tie.group, "Davis Cup");
+  assert.deepEqual(tie.names, ["Anna", "Cia"]);
+  assert.deepEqual(tie.sets, [[11, 5], [6, 11]]);
+});
+
 test("subscribers can follow selected players or the whole tournament", () => {
   const event = {playerIds: ["anna", "bo"]};
   assert.equal(subscriberWants({playerIds: []}, event), true);

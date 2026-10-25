@@ -52,7 +52,9 @@ export function finishedMatchEvents(before, after) {
   for (const match of after.matches || []) {
     const now = rawResult(state, match.matchId);
     if (!now) continue;
-    const knockout = now.stage === "final";
+    /* Davis Cup matches are stored with the playoff results but may end 1–1. */
+    const davisCup = now.stage === "final" && now.key.startsWith("davis:");
+    const knockout = now.stage === "final" && !davisCup;
     if (!matchFinished(now.result, state.format, knockout)) continue;
     const previous = rawResult(before.state, match.matchId);
     if (matchFinished(previous?.result, before.state?.format, knockout)) continue;
@@ -61,7 +63,7 @@ export function finishedMatchEvents(before, after) {
     const first = String(draw ? match.playerAId : match.winnerId || "");
     const second = String(draw ? match.playerBId : match.loserId || "");
     if (!first || !second) continue;
-    const keyPlayer = knockout ? null : (state.players || [])
+    const keyPlayer = knockout || davisCup ? null : (state.players || [])
       .find(player => String(player.id) === now.key.split("_")[0]);
     let sets = Array.isArray(now.result?.[0]) ? now.result : null;
     const score = setsOf(now.result);
@@ -71,7 +73,7 @@ export function finishedMatchEvents(before, after) {
       ? !!keyPlayer && String(keyPlayer.clubPlayerId || "") !== first
       : score[0] < score[1];
     if (sets && flip) sets = sets.map(([a, b]) => [b, a]);
-    let group = knockout ? "Slutspel" : "";
+    let group = davisCup ? "Davis Cup" : knockout ? "Slutspel" : "";
     if (keyPlayer && Number(state.pools) > 1)
       group = "Pool " + poolName(Number(keyPlayer.pool) || 0);
     events.push({

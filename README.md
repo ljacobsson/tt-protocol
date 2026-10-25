@@ -95,6 +95,14 @@ förvalt. Spelarna sorteras efter ranking och fördelas snake-vis över poolerna
 klubbspelare räknas som 1000 poäng. Checkboxen kan stängas av och
 poolplaceringarna kan alltid justeras manuellt.
 
+Spelläget **Davis Cup** är ett lagmöte mellan två lag med två spelare var.
+De två första spelarna bildar lag 1 (A och B) och de två sista lag 2 (X och Y);
+ordningen kan ändras i inställningarna. Matchordningen är A–X, B–Y, dubbel,
+A–Y, B–X. Med matchformen 2 set kan en match sluta 1–1, och mötet kan då sluta
+oavgjort. Mötet avslutas när det ledande laget inte längre kan hinnas ikapp,
+om inte **Spela alla fem matcher** är valt. Endast singelmatcherna räknas till
+klubbens ranking och ger push-notiser; dubbeln påverkar bara lagresultatet.
+
 Via **Importera** på klubbsidan kan en avslutad tävling i JSON-format läggas
 till i efterhand. Importvyn föreslår kopplingar mellan JSON-spelarna och
 klubbens befintliga spelare med Levenshtein-avstånd; varje koppling kan
