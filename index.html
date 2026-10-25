@@ -279,6 +279,16 @@
   .checkrow input{width:24px; height:24px; accent-color:var(--table); flex:none;}
   .checkrow span{display:block;}
   .checkrow small{display:block; color:var(--muted); font-size:14px; font-weight:600;}
+  .pushplayers{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:8px; margin:10px 0 4px;
+  }
+  .pushplayers label{
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-radius:10px; background:#EEF1F4; font-weight:700; cursor:pointer;
+  }
+  .pushplayers input{width:20px; height:20px; accent-color:var(--table); flex:none;}
+  .pushplayers[hidden]{display:none;}
 
   /* ---------- Tabs ---------- */
   nav{
@@ -1705,6 +1715,9 @@
     <button id="btnShare" type="button">
       <span class="actionicon" aria-hidden="true">↗</span><span class="actionlabel">Dela</span>
     </button>
+    <button id="btnNotify" type="button" style="display:none;">
+      <span class="actionicon" aria-hidden="true">🔔</span><span class="actionlabel">Notiser</span>
+    </button>
     <button id="btnFinishTournament" type="button" style="display:none;">
       <span class="actionicon" aria-hidden="true">✓</span><span class="actionlabel">Avsluta</span>
     </button>
@@ -2182,6 +2195,7 @@
       <button data-fmt="sets2">2 set<small>oavgjort 1–1 tillåtet</small></button>
       <button data-fmt="bo3">Bäst av 3<small>först till 2 set</small></button>
       <button data-fmt="bo5">Bäst av 5<small>först till 3 set</small></button>
+      <button data-fmt="bo7">Bäst av 7<small>först till 4 set</small></button>
     </div>
 
     <h2>Antal pooler</h2>
@@ -2309,6 +2323,32 @@
     <div class="modalrow">
       <button class="btn-clear" id="btnCloseShare">Stäng</button>
       <button class="btn-close" id="btnCopyLink">Kopiera länk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pushOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pushTitle">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="pushTitle">Notiser</div>
+    <p class="hint" id="pushHelp" style="margin:0 0 6px;">
+      Få en notis på den här enheten när en match är färdigspelad.
+    </p>
+    <div id="pushChoices">
+      <label class="checkrow">
+        <input type="radio" name="pushScope" value="all" checked>
+        <span>Alla matcher<small>En notis för varje avslutad match i tävlingen</small></span>
+      </label>
+      <label class="checkrow">
+        <input type="radio" name="pushScope" value="players">
+        <span>Valda spelare<small>Bara matcher där någon av spelarna deltar</small></span>
+      </label>
+      <div class="pushplayers" id="pushPlayers" hidden></div>
+    </div>
+    <p class="hint" id="pushStatus" style="margin:10px 0 0;"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnClosePush">Stäng</button>
+      <button class="btn-clear" id="btnPushOff">Stäng av</button>
+      <button class="btn-close" id="btnPushOn">Slå på</button>
     </div>
   </div>
 </div>
@@ -2536,7 +2576,7 @@ let state = {
   gameMode: "pool",        // pool | winner-stays
   winnerStaysTarget: 5,
   winnerStays: null,
-  format: "sets2",         // sets1 | sets2 | bo3 | bo5
+  format: "sets2",         // sets1 | sets2 | bo3 | bo5 | bo7
   pools: 1,
   poolsManual: false,      // automatic recommendation until the organizer overrides it
   finals: "none",          // none | place | ab
@@ -2767,7 +2807,7 @@ const store = {
    server, no database. Kept tight on purpose — a pool result is one character,
    because the set of legal results is fixed by the match format. */
 // Append new formats so the numeric indices in existing shared links stay valid.
-const FMT_LIST = ["sets2", "bo3", "bo5", "sets1"];
+const FMT_LIST = ["sets2", "bo3", "bo5", "sets1", "bo7"];
 const FIN_LIST = ["none", "place", "ab"];
 
 function b64urlEncode(str){
@@ -2991,6 +3031,7 @@ function ballsOf(r){
 /* how many sets the current format needs before a match is over */
 const setsToWin = () =>
   state.format === "sets1" ? 1
+  : state.format === "bo7" ? 4
   : state.format === "bo5" ? 3
   : 2;
 function matchDecided(r, needWinner){
@@ -3053,7 +3094,8 @@ const FORMATS = {
   sets1: { label: "1 set", results: [[1,0],[0,1]] },
   sets2: { label: "2 set", results: [[2,0],[1,1],[0,2]] },
   bo3:   { label: "Bäst av 3", results: [[2,0],[2,1],[1,2],[0,2]] },
-  bo5:   { label: "Bäst av 5", results: [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]] }
+  bo5:   { label: "Bäst av 5", results: [[3,0],[3,1],[3,2],[2,3],[1,3],[0,3]] },
+  bo7:   { label: "Bäst av 7", results: [[4,0],[4,1],[4,2],[4,3],[3,4],[2,4],[1,4],[0,4]] }
 };
 
 /* Keep the first three entries compatible with older shared links. In a
@@ -4578,6 +4620,7 @@ function renderSetsModal(pa, pb, box){
 /* ---- set by set: pick who won and how many the loser got ---- */
 const MAX_SETS = () =>
   state.format === "sets1" ? 1
+  : state.format === "bo7" ? 7
   : state.format === "bo5" ? 5
   : state.format === "bo3" ? 3
   : (modalKey ? 3 : 2);            // 2-set format, but a knockout needs a winner
@@ -6825,6 +6868,7 @@ function convertJsonTournament(data, mappings){
     phase:"play",
     format:Number(data.setsToWin) <= 1
       ? "sets1"
+      : Number(data.setsToWin) >= 4 ? "bo7"
       : Number(data.setsToWin) >= 3 ? "bo5" : "bo3",
     pools:Math.max(1, pools.length),
     poolsManual:true,
@@ -7218,6 +7262,7 @@ function refresh(){
   $("viewMain").style.display = "";
   $("headerActions").style.display = "flex";
   $("btnTournamentClub").style.display = clubSession || publicSession ? "" : "none";
+  renderPushButton();
   const winnerStays = state.gameMode === "winner-stays";
   $("viewMain").querySelector("nav").style.display = winnerStays ? "none" : "";
   $("winnerStaysPane").style.display = winnerStays ? "" : "none";
@@ -7477,6 +7522,174 @@ $("btnShare").addEventListener("click", async () => {
   $("btnCopyLink").textContent = "Kopiera länk";
   $("shareOverlay").classList.add("open");
 });
+/* ---------------- Push notifications ----------------
+   The server sends a notification when a match is finished. The choice is
+   remembered per tournament so the subscription can be renewed on each visit;
+   the server forgets subscriptions a few days after their last renewal. */
+const pushStorageKey = tournamentId => "matchprotokollet_push_" + tournamentId;
+const pushSupported = () =>
+  "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let pushRenewedFor = null;
+
+function pushTarget(){
+  const club = publicSession ? publicSession.club : clubSession;
+  if (!API_BASE || !club || !activeTournament || !activeTournament.tournamentId) return null;
+  const clubId = clubIdentifier(club);
+  const password = sessionStorage.getItem(
+    "matchprotokollet_spectator_password_" + currentRoute().clubId) || "";
+  return {
+    tournamentId:activeTournament.tournamentId,
+    path:"/clubs/" + encodeURIComponent(clubId) + "/tournaments/" +
+      encodeURIComponent(activeTournament.tournamentId) + "/push-subscription",
+    url:tournamentPath(clubId, activeTournament.tournamentId),
+    headers:password ? {"X-Spectator-Password":password} : {}
+  };
+}
+function pushPreference(tournamentId){
+  try{ return JSON.parse(localStorage.getItem(pushStorageKey(tournamentId))); }
+  catch(e){ return null; }
+}
+function base64UrlToBytes(value){
+  const bin = atob(value.replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+async function sendPushSubscription(target, subscription, playerIds){
+  await api(target.path, {
+    method:"PUT", headers:target.headers,
+    body:JSON.stringify({subscription:subscription.toJSON(), playerIds, url:target.url})
+  });
+  localStorage.setItem(pushStorageKey(target.tournamentId), JSON.stringify({playerIds}));
+}
+
+function renderPushButton(){
+  const target = pushTarget();
+  const open = target && activeTournament.status !== "finalized";
+  $("btnNotify").style.display = open && (pushSupported() || isIos()) ? "" : "none";
+  const on = !!(target && pushPreference(target.tournamentId));
+  $("btnNotify").querySelector(".actionlabel").textContent = on ? "Notiser på" : "Notiser";
+  if (open && on && pushRenewedFor !== target.tournamentId){
+    pushRenewedFor = target.tournamentId;
+    renewPushSubscription(target);
+  }
+}
+async function renewPushSubscription(target){
+  if (!pushSupported() || Notification.permission !== "granted") return;
+  try{
+    const registration = await navigator.serviceWorker.getRegistration("/");
+    const subscription = registration && await registration.pushManager.getSubscription();
+    if (subscription)
+      await sendPushSubscription(target, subscription, pushPreference(target.tournamentId).playerIds);
+  }catch(e){}
+}
+
+function openPushSettings(){
+  const target = pushTarget();
+  if (!target) return;
+  const pref = pushPreference(target.tournamentId);
+  const chosen = new Set(pref ? pref.playerIds : []);
+  document.querySelector('input[name="pushScope"][value="' +
+    (chosen.size ? "players" : "all") + '"]').checked = true;
+  const list = $("pushPlayers");
+  list.innerHTML = "";
+  state.players.slice()
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"))
+    .forEach(player => {
+      if (!player.clubPlayerId) return;
+      const label = document.createElement("label");
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.value = player.clubPlayerId;
+      box.checked = chosen.has(player.clubPlayerId);
+      label.append(box, document.createTextNode(player.name));
+      list.appendChild(label);
+    });
+  list.hidden = !chosen.size;
+
+  const supported = pushSupported();
+  $("pushChoices").hidden = !supported;
+  $("btnPushOn").style.display = supported ? "" : "none";
+  $("btnPushOn").textContent = pref ? "Spara" : "Slå på";
+  $("btnPushOff").style.display = pref ? "" : "none";
+  $("pushStatus").style.color = "";
+  $("pushStatus").textContent = !supported
+    ? (isIos()
+      ? "På iPhone och iPad: tryck på Dela → Lägg till på hemskärmen, öppna appen därifrån och slå på notiser."
+      : "Den här webbläsaren stöder inte push-notiser.")
+    : Notification.permission === "denied"
+      ? "Notiser är blockerade för sidan. Tillåt dem i webbläsarens inställningar."
+      : "";
+  $("pushOverlay").classList.add("open");
+}
+
+$("btnNotify").addEventListener("click", openPushSettings);
+$("pushChoices").addEventListener("change", () => {
+  $("pushPlayers").hidden =
+    document.querySelector('input[name="pushScope"]:checked').value !== "players";
+});
+$("btnPushOn").addEventListener("click", async () => {
+  const target = pushTarget();
+  if (!target) return;
+  const playerIds = document.querySelector('input[name="pushScope"]:checked').value === "players"
+    ? [...$("pushPlayers").querySelectorAll("input:checked")].map(box => box.value)
+    : [];
+  const status = $("pushStatus");
+  status.style.color = "";
+  if (!playerIds.length &&
+      document.querySelector('input[name="pushScope"]:checked').value === "players"){
+    status.textContent = "Välj minst en spelare.";
+    return;
+  }
+  $("btnPushOn").disabled = true;
+  try{
+    // Ask first, while the click still counts as a user gesture.
+    if (await Notification.requestPermission() !== "granted")
+      throw new Error("Notiser är inte tillåtna för sidan.");
+    status.textContent = "Slår på notiser …";
+    await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription){
+      const {publicKey} = await api("/push/public-key", {method:"GET", token:null});
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly:true, applicationServerKey:base64UrlToBytes(publicKey)
+      });
+    }
+    await sendPushSubscription(target, subscription, playerIds);
+    pushRenewedFor = target.tournamentId;
+    renderPushButton();
+    $("pushOverlay").classList.remove("open");
+  }catch(error){
+    status.textContent = "Kunde inte slå på notiser: " + error.message;
+    status.style.color = "var(--danger)";
+  }finally{
+    $("btnPushOn").disabled = false;
+  }
+});
+$("btnPushOff").addEventListener("click", async () => {
+  const target = pushTarget();
+  if (!target) return;
+  try{
+    const registration = pushSupported() && await navigator.serviceWorker.getRegistration("/");
+    const subscription = registration && await registration.pushManager.getSubscription();
+    if (subscription) await api(target.path, {
+      method:"DELETE", headers:target.headers,
+      body:JSON.stringify({endpoint:subscription.endpoint})
+    });
+    localStorage.removeItem(pushStorageKey(target.tournamentId));
+    renderPushButton();
+    $("pushOverlay").classList.remove("open");
+  }catch(error){
+    $("pushStatus").textContent = "Kunde inte stänga av notiser: " + error.message;
+    $("pushStatus").style.color = "var(--danger)";
+  }
+});
+$("btnClosePush").addEventListener("click", () => $("pushOverlay").classList.remove("open"));
+$("pushOverlay").addEventListener("click", e => {
+  if (e.target === $("pushOverlay")) $("pushOverlay").classList.remove("open");
+});
+
 $("btnCloseShare").addEventListener("click", () => $("shareOverlay").classList.remove("open"));
 $("shareOverlay").addEventListener("click", e => {
   if (e.target === $("shareOverlay")) $("shareOverlay").classList.remove("open");

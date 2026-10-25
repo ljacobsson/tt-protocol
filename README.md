@@ -106,6 +106,16 @@ En återimport med samma käll-id eller samma stabila importmatch-id ersätter d
 tidigare importen. Matcherna läggs alltså inte till i rankingunderlaget en gång
 till; om resultat har rättats används den senaste versionen.
 
+Den som följer en pågående klubbtävling kan trycka på **Notiser** och få en
+push-notis när en match är färdigspelad, antingen för alla matcher eller bara
+för valda spelare. Servern jämför varje sparning med den föregående och skickar
+en notis när en match går från ej avgjord till avgjord enligt matchformen
+(bollpoäng sparas efter varje set, så ett delresultat ger ingen notis).
+VAPID-nycklarna skapas automatiskt vid första användningen och lagras i
+tabellen. Prenumerationer förnyas vid varje besök och tas bort automatiskt via
+DynamoDB TTL tre dagar efter senaste förnyelsen. På iPhone och iPad fungerar
+webbpush bara när sidan har lagts till på hemskärmen.
+
 Avslutade tävlingar får fliken **Slutresultat** i både administratörs- och
 publik vy. Cupförlorare som åker ut i samma omgång delar placering (till
 exempel delad tredjeplats för semifinalförlorarna), och nästa platsnummer
@@ -127,6 +137,10 @@ Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 - `POST /clubs/{clubId}/ranking/recalculate`
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}`
 - `DELETE /clubs/{clubId}/tournaments/{tournamentId}`
+- `GET /push/public-key` (ingen hemlighet krävs)
+- `PUT /clubs/{clubId}/tournaments/{tournamentId}/push-subscription`
+  (`subscription`, valfria `playerIds`; kräver samma åtkomst som den publika vyn)
+- `DELETE /clubs/{clubId}/tournaments/{tournamentId}/push-subscription` (`endpoint`)
 
 `{clubId}` kan även vara klubbens alias, till exempel `/clubs/bbtk`.
 

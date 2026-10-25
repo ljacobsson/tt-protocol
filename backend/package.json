@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.850.0",
-    "@aws-sdk/lib-dynamodb": "^3.850.0"
+    "@aws-sdk/lib-dynamodb": "^3.850.0",
+    "web-push": "^3.6.7"
   }
 }

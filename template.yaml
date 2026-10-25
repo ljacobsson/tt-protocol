@@ -43,6 +43,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
       SSESpecification:
         SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
 
   ApiFunction:
     Type: AWS::Serverless::Function
@@ -86,6 +89,19 @@ Resources:
         DeleteTournament:
           Type: Api
           Properties: {Path: "/clubs/{clubId}/tournaments/{tournamentId}", Method: DELETE}
+        GetPushPublicKey:
+          Type: Api
+          Properties: {Path: "/push/public-key", Method: GET}
+        SubscribeToTournament:
+          Type: Api
+          Properties:
+            Path: "/clubs/{clubId}/tournaments/{tournamentId}/push-subscription"
+            Method: PUT
+        UnsubscribeFromTournament:
+          Type: Api
+          Properties:
+            Path: "/clubs/{clubId}/tournaments/{tournamentId}/push-subscription"
+            Method: DELETE
 
 Outputs:
   ApiUrl:

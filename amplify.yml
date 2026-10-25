@@ -5,7 +5,7 @@ frontend:
     build:
       commands:
         - mkdir -p dist
-        - cp index.html config.js favicon.svg site.webmanifest robots.txt sitemap.xml og-matchprotokoll.png og-matchprotokoll.svg protokoll.mp4 dist/
+        - cp index.html config.js sw.js favicon.svg site.webmanifest robots.txt sitemap.xml og-matchprotokoll.png og-matchprotokoll.svg protokoll.mp4 dist/
         - cp index.html dist/404.html
   artifacts:
     baseDirectory: dist
