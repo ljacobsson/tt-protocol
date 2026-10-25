@@ -769,9 +769,18 @@
   }
   .teamtournament .openresult:hover{background:var(--table); color:#fff;}
   .teamtournament .openresult.icon{width:44px; padding:0;}
-  .teamtournament .openresult svg{
-    width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.2;
-    stroke-linecap:round; stroke-linejoin:round;
+  .teamtournament .openresult.icon{font-size:22px; line-height:1;}
+  .rowmenu{
+    position:fixed; z-index:1000; display:grid; min-width:170px; padding:6px;
+    background:#fff; border:1px solid #dbe5ec; border-radius:12px;
+    box-shadow:0 12px 30px rgba(12,55,86,.18);
+  }
+  .rowmenu a,.rowmenu button{
+    display:block; padding:11px 12px; border-radius:8px; background:none; text-align:left;
+    color:var(--ink); font-size:15px; font-weight:750; text-decoration:none;
+  }
+  .rowmenu a:hover,.rowmenu button:hover,.rowmenu a:focus-visible,.rowmenu button:focus-visible{
+    outline:none; background:#eef4f9;
   }
   .teamtournament .remove{
     width:44px; height:44px; border-radius:11px;
@@ -2598,7 +2607,9 @@
 <!-- ================= NEW TOURNAMENT MODAL ================= -->
 <div class="overlay" id="tournamentOverlay">
   <div class="modal">
-    <div style="font-size:24px; font-weight:900;">Ny tävling</div>
+    <div style="font-size:24px; font-weight:900;" id="tournamentModalTitle">Ny tävling</div>
+    <p class="hint" id="tournamentDuplicateHint" hidden>
+      Samma spelläge, inställningar och spelare, men utan resultat.</p>
     <div class="formfield">
       <label for="tournamentName">Namn</label>
       <input id="tournamentName" maxlength="80" placeholder="Till exempel Klubbmästerskap">
@@ -5488,6 +5499,85 @@ function miniPodium(podium, href){
   return box;
 }
 
+/* One floating menu at a time. It is fixed to the viewport because the club
+   sections clip anything that sticks out of them. */
+let rowMenu = null;
+function closeRowMenu(){
+  if (!rowMenu) return;
+  rowMenu.anchor.setAttribute("aria-expanded", "false");
+  rowMenu.remove();
+  rowMenu = null;
+}
+function toggleRowMenu(anchor, items){
+  const wasOpen = rowMenu?.anchor === anchor;
+  closeRowMenu();
+  if (wasOpen) return;
+  const menu = document.createElement("div");
+  menu.className = "rowmenu";
+  menu.setAttribute("role", "menu");
+  items.forEach(item => {
+    const entry = document.createElement(item.href ? "a" : "button");
+    entry.setAttribute("role", "menuitem");
+    entry.textContent = item.label;
+    if (item.href) entry.href = item.href;
+    else entry.type = "button";
+    entry.addEventListener("click", () => { closeRowMenu(); if (item.action) item.action(); });
+    menu.appendChild(entry);
+  });
+  document.body.appendChild(menu);
+  const box = anchor.getBoundingClientRect();
+  const below = box.bottom + 6 + menu.offsetHeight <= innerHeight - 8;
+  menu.style.top = (below ? box.bottom + 6 : box.top - 6 - menu.offsetHeight) + "px";
+  menu.style.left = Math.max(8, box.right - menu.offsetWidth) + "px";
+  menu.anchor = anchor;
+  rowMenu = menu;
+  anchor.setAttribute("aria-expanded", "true");
+  menu.firstChild.focus();
+}
+document.addEventListener("click", event => {
+  if (rowMenu && !rowMenu.contains(event.target) && !rowMenu.anchor.contains(event.target))
+    closeRowMenu();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && rowMenu){
+    const anchor = rowMenu.anchor;
+    closeRowMenu();
+    anchor.focus();
+  }
+});
+addEventListener("scroll", closeRowMenu, true);
+addEventListener("resize", closeRowMenu);
+
+/* "Klubbmästerskap" -> "Klubbmästerskap v2", "Cup v2" -> "Cup v3", skipping
+   versions the club already has. */
+function nextTournamentVersionName(name){
+  const trimmed = String(name || "").trim();
+  const match = trimmed.match(/^(.*\S)\s+v(\d+)$/i);
+  const base = match ? match[1] : trimmed;
+  const taken = new Set((clubSession?.tournaments || []).map(t => norm(String(t.name || ""))));
+  const named = version => base.slice(0, 80 - (" v" + version).length) + " v" + version;
+  let version = match ? Number(match[2]) + 1 : 2;
+  while (taken.has(norm(named(version)))) version++;
+  return named(version);
+}
+
+/* A copy keeps the mode, settings and players but starts without results;
+   anything left over from an import stays with the original. */
+function duplicateTournamentState(tournament){
+  const source = tournament.state || {};
+  const copy = blankTournamentState();
+  ["gameMode", "winnerStaysTarget", "format", "pools", "poolsManual", "finals",
+   "advance", "scoring", "useSeeding", "nextId"].forEach(key => {
+    if (source[key] !== undefined) copy[key] = structuredClone(source[key]);
+  });
+  copy.davisCup = {playAll:!!source.davisCup?.playAll};
+  copy.players = (source.players || []).map(player => ({
+    id:player.id, name:player.name, pool:player.pool || 0, clubPlayerId:player.clubPlayerId
+  }));
+  copy.nextId = Math.max(copy.nextId || 1, ...copy.players.map(player => player.id + 1));
+  return copy;
+}
+
 function tournamentPageRow(tournament, concluded){
   const row = document.createElement("div");
   row.className = "teamtournament";
@@ -5508,15 +5598,20 @@ function tournamentPageRow(tournament, concluded){
   const resultHref = concluded
     ? tournamentPath(clubIdentifier(clubSession), tournament.tournamentId, true) : null;
   const podium = concluded ? tournamentPodium(tournament) : [];
-  const open = document.createElement(concluded ? "a" : "button");
+  const open = document.createElement("button");
   open.className = "openresult";
   if (concluded){
     open.classList.add("icon");
-    open.href = resultHref;
-    open.title = "Visa slutresultat";
-    open.setAttribute("aria-label", "Visa slutresultat för " + tournament.name);
-    open.innerHTML = "<svg viewBox='0 0 24 24' aria-hidden='true'>" +
-      "<path d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'></path></svg>";
+    open.type = "button";
+    open.textContent = "⋯";
+    open.title = "Fler val";
+    open.setAttribute("aria-label", "Fler val för " + tournament.name);
+    open.setAttribute("aria-haspopup", "menu");
+    open.setAttribute("aria-expanded", "false");
+    open.addEventListener("click", () => toggleRowMenu(open, [
+      {label:"Se detaljer", href:resultHref},
+      {label:"Duplicera", action:() => openTournamentModal(tournament)},
+    ]));
   }else{
     open.textContent = "Öppna tävling";
     open.addEventListener("click", () => openTournament(tournament));
@@ -7665,7 +7760,8 @@ $("btnLandingCreateBottom").addEventListener("click", () => {
   $("landingClubName").scrollIntoView({behavior:"smooth", block:"center"});
   setTimeout(() => $("landingClubName").focus(), 350);
 });
-$("btnNewTournament").addEventListener("click", async () => {
+let tournamentDuplicateSource = null;
+async function openTournamentModal(source = null){
   if (activeTournament){
     clearTimeout(remoteSaveTimer);
     $("clubStatus").textContent = "Sparar föregående tävling…";
@@ -7680,12 +7776,17 @@ $("btnNewTournament").addEventListener("click", async () => {
       return;
     }
   }
-  $("tournamentName").value = "";
+  tournamentDuplicateSource = source;
+  $("tournamentModalTitle").textContent = source ? "Duplicera tävling" : "Ny tävling";
+  $("tournamentDuplicateHint").hidden = !source;
+  $("btnCreateTournament").textContent = source ? "Duplicera" : "Skapa tävling";
+  $("tournamentName").value = source ? nextTournamentVersionName(source.name) : "";
   $("tournamentDate").value = new Date().toISOString().slice(0,10);
   $("tournamentError").textContent = "";
   $("tournamentOverlay").classList.add("open");
-  setTimeout(() => $("tournamentName").focus(), 0);
-});
+  setTimeout(() => { $("tournamentName").focus(); $("tournamentName").select(); }, 0);
+}
+$("btnNewTournament").addEventListener("click", () => openTournamentModal());
 function closeTournamentModal(){ $("tournamentOverlay").classList.remove("open"); }
 $("btnCancelTournament").addEventListener("click", closeTournamentModal);
 $("tournamentOverlay").addEventListener("click", e => {
@@ -7699,8 +7800,9 @@ $("btnCreateTournament").addEventListener("click", () => {
     $("tournamentError").style.color = "var(--danger)";
     return;
   }
-  activeTournament = {name, playedAt, type:"normal", status:"draft"};
-  state = blankTournamentState();
+  const source = tournamentDuplicateSource;
+  activeTournament = {name, playedAt, type:source?.type || "normal", status:"draft"};
+  state = source ? duplicateTournamentState(source) : blankTournamentState();
   kvSave(KEY, state);
   closeTournamentModal(); closeClub(); refresh(); scheduleRemoteSave();
 });
