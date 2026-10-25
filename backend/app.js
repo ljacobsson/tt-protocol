@@ -586,9 +586,18 @@ async function saveTournament(clubId, payload, requestedId) {
   }));
   const tournament = normalizeTournament(payload, tournamentId, existing);
   const put = {TableName: TABLE_NAME, Item: {...key, ...tournament}};
-  if (requestedId && payload.expectedUpdatedAt) {
-    put.ConditionExpression = "updatedAt = :expectedUpdatedAt";
-    put.ExpressionAttributeValues = {":expectedUpdatedAt": payload.expectedUpdatedAt};
+  if (requestedId) {
+    /* A finalized tournament is closed for good. Checked in the write itself
+       so a device that still has the board open cannot race the finalize.
+       Re-imports go through POST and may still replace an imported result. */
+    const conditions = ["(attribute_not_exists(#status) OR #status <> :finalized)"];
+    put.ExpressionAttributeNames = {"#status": "status"};
+    put.ExpressionAttributeValues = {":finalized": "finalized"};
+    if (payload.expectedUpdatedAt) {
+      conditions.push("updatedAt = :expectedUpdatedAt");
+      put.ExpressionAttributeValues[":expectedUpdatedAt"] = payload.expectedUpdatedAt;
+    }
+    put.ConditionExpression = conditions.join(" AND ");
   }
   try {
     await db.send(new PutCommand(put));
@@ -602,6 +611,7 @@ async function saveTournament(clubId, payload, requestedId) {
       ConsistentRead: true,
     }));
     error.currentTournament = current ? withoutKeys(current) : null;
+    error.finalized = current?.status === "finalized";
     throw error;
   }
   const clubItems = await queryClub(clubId);
@@ -953,8 +963,11 @@ export async function handler(event) {
     }
     if (error.name === "ConditionalCheckFailedException") {
       return response(409, {
-        message: "Tävlingen har ändrats på en annan enhet.",
+        message: error.finalized
+          ? "Tävlingen är avslutad och kan inte längre ändras."
+          : "Tävlingen har ändrats på en annan enhet.",
         conflict: true,
+        finalized: !!error.finalized,
         tournament: error.currentTournament || null,
       });
     }

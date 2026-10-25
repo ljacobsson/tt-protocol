@@ -179,7 +179,8 @@ export function planDeliveries({
         if (!delivery.payloads.has(payload.tag)) delivery.payloads.set(payload.tag, payload);
       }
     }
-    if (subscriber.mode === "tournaments" && finished) {
+    /* Following every match includes the final result too. */
+    if (finished && CLUB_PUSH_MODES.includes(subscriber.mode)) {
       const payload = tournamentNotificationFor(tournament, resultUrl);
       delivery.payloads.set(payload.tag, payload);
     }

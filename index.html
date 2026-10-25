@@ -2403,11 +2403,11 @@
     <div id="clubPushChoices">
       <label class="checkrow">
         <input type="radio" name="clubPushMode" value="matches" checked>
-        <span>Varje matchresultat<small>En notis när en match i någon av klubbens tävlingar är färdigspelad</small></span>
+        <span>Varje matchresultat<small>En notis för varje färdigspelad match, och slutresultatet när en tävling avslutas</small></span>
       </label>
       <label class="checkrow">
         <input type="radio" name="clubPushMode" value="tournaments">
-        <span>Varje tävlingsresultat<small>En notis med pallplatserna när en tävling avslutas</small></span>
+        <span>Bara tävlingsresultat<small>En notis med pallplatserna när en tävling avslutas</small></span>
       </label>
     </div>
     <p class="hint" id="clubPushStatus" style="margin:10px 0 0;"></p>
@@ -4194,6 +4194,7 @@ function syncWinnerStaysRanking(){
 }
 
 function recordWinnerStaysSet(winnerId){
+  if (tournamentLocked()) return;
   const game = state.winnerStays;
   if (!game || game.runnerUp) return;
   const loserId = game.current.find(id => id !== winnerId);
@@ -4270,7 +4271,7 @@ function renderWinnerStays(){
     const small = document.createElement("small");
     small.textContent = "vann setet";
     button.appendChild(small);
-    button.disabled = Boolean(publicSession);
+    button.disabled = tournamentLocked();
     button.addEventListener("click", () => recordWinnerStaysSet(id));
     match.appendChild(button);
   });
@@ -4646,6 +4647,7 @@ let modalA = null, modalB = null, modalKey = null;
 let modalSets = null, deuceMode = false;
 
 function openModal(a, b, fkey){
+  if (tournamentLocked()) return;
   modalA = a; modalB = b; modalKey = fkey || null;
   modalSets = null; deuceMode = false;
   const cur = modalKey ? getF(modalKey) : getResult(a, b);
@@ -4880,6 +4882,8 @@ function tournamentPayload(tournament = activeTournament, sourceState = state, c
 
 function scheduleRemoteSave(){
   if (!clubSession || !activeTournament || !API_BASE) return;
+  // The server refuses changes to a finished tournament.
+  if (activeTournament.status === "finalized") return;
   clearTimeout(remoteSaveTimer);
   const save = remoteSaveSnapshot();
   remoteSaveTimer = setTimeout(() => {
@@ -4999,6 +5003,30 @@ async function resolveTournamentConflict(tournament, snapshot, remoteTournament,
   return structuredClone(merged);
 }
 
+/* Another device finished the tournament while this one still had the board
+   open. The server refuses the write, so switch to the final result instead
+   of keeping scores that no longer count. */
+async function adoptFinalizedTournament(club, tournament, savedState, remote, isActive){
+  const lost = !sameTournamentContent(savedState,
+    Object.assign(blankTournamentState(), remote.state || {}));
+  Object.assign(tournament, remote);
+  try{
+    const refreshed = await api("/clubs/" + club.clubId, {method:"GET", token:club.token});
+    Object.assign(club, refreshed, {token:club.token});
+  }catch(e){/* The ranking catches up on the next club load. */}
+  if (!isActive()) return;
+  state = Object.assign(blankTournamentState(), structuredClone(remote.state || {}));
+  state.view = "result";
+  kvSave(KEY, state);
+  document.querySelectorAll("#overlay.open,#finishOverlay.open")
+    .forEach(overlay => overlay.classList.remove("open"));
+  renderClubPortal();
+  refresh();
+  setView("result");
+  if (lost) showSyncError(
+    "Tävlingen avslutades på en annan enhet. Resultat som ändrades här efter det sparades inte.");
+}
+
 function showSyncError(message){
   $("syncBanner").textContent = message;
   $("syncBanner").hidden = false;
@@ -5030,6 +5058,10 @@ async function saveRemoteTournament(save = remoteSaveSnapshot(), options = {}){
       break;
     }catch(error){
       const remote = error.status === 409 && error.data?.tournament;
+      if (remote && error.data.finalized){
+        await adoptFinalizedTournament(club, tournament, savedState, remote, isActive);
+        return;
+      }
       if (!remote || attempt >= 3) throw error;
       savedState = await resolveTournamentConflict(tournament, savedState, remote, isActive);
     }
@@ -7379,7 +7411,14 @@ $("btnCopyClubLink").addEventListener("click", async () => {
 });
 
 /* ---------------- View switching ---------------- */
+/* Spectators, and everyone once a tournament is finished, get a board that
+   can no longer be edited. */
+function tournamentLocked(){
+  return !!publicSession || activeTournament?.status === "finalized";
+}
+
 function refresh(){
+  document.body.classList.toggle("viewer", tournamentLocked());
   $("viewLanding").style.display = "none";
   $("viewClub").style.display = "none";
   $("winnerStaysPane").style.display = "none";
@@ -7409,8 +7448,8 @@ function refresh(){
   $("btnFinishTournament").style.display =
     !publicSession && clubSession && activeTournament &&
     activeTournament.status !== "finalized" ? "" : "none";
-  $("btnEdit").style.display = publicSession ? "none" : "";
-  $("btnReset").style.display = publicSession ? "none" : "";
+  $("btnEdit").style.display = tournamentLocked() ? "none" : "";
+  $("btnReset").style.display = tournamentLocked() ? "none" : "";
   const hasFinals = state.pools > 1 && state.finals !== "none";
   const hasFinalResult = !!(activeTournament && activeTournament.status === "finalized");
   $("tabFinals").style.display = hasFinals ? "" : "none";

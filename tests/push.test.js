@@ -143,7 +143,7 @@ test("the podium is sanitized and summarized", () => {
   );
 });
 
-test("club subscribers get match or tournament results, each device once", () => {
+test("club subscribers get match and/or tournament results, each device once", () => {
   const sub = (PK, SK, extra) => ({PK, SK, subscription: {endpoint: SK}, ...extra});
   const events = [
     {matchId: "pool:1_2", playerIds: ["anna", "bo"], names: ["Anna", "Bo"], setScore: [2, 0]},
@@ -173,6 +173,7 @@ test("club subscribers get match or tournament results, each device once", () =>
   assert.deepEqual(both.payloads.map(payload => [payload.tag, payload.url]), [
     ["t1:pool:1_2", "/own"],
     ["t1:pool:1_3", "/t"],
+    ["t1:final", "/t/results"],
   ]);
   assert.deepEqual(both.keys, [
     {PK: "PUSH#c#t1", SK: "SUB#both"},
@@ -185,7 +186,10 @@ test("club subscribers get match or tournament results, each device once", () =>
 
   const unfinished = planDeliveries({
     tournament: info, finished: false,
-    clubSubscribers: [sub("CLUBPUSH#c", "SUB#results", {mode: "tournaments"})],
+    clubSubscribers: [
+      sub("CLUBPUSH#c", "SUB#results", {mode: "tournaments"}),
+      sub("CLUBPUSH#c", "SUB#matches", {mode: "matches"}),
+    ],
   });
   assert.deepEqual(unfinished, []);
 });
