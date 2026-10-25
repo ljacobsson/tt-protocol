@@ -1,7 +1,7 @@
 /*
- * Push notifications for finished matches. Everything here is pure so the
- * decision of what to announce can be tested without DynamoDB or a push
- * service; app.js owns storage and delivery.
+ * Push notifications for finished matches and tournaments. Everything here
+ * is pure so the decision of what to announce can be tested without DynamoDB
+ * or a push service; app.js owns storage and delivery.
  */
 
 const MAX_EVENTS_PER_SAVE = 10;
@@ -108,6 +108,85 @@ export function notificationFor(event, tournament, url) {
     tag: `${tournament.tournamentId}:${event.matchId}`,
     url,
   };
+}
+
+/* The podium is computed by the client when it finalizes a tournament, since
+   only the client knows how pools and brackets are placed. */
+export function normalizePodium(value) {
+  if (!Array.isArray(value)) return undefined;
+  const podium = value.slice(0, 3).map(group => ({
+    place: Math.trunc(Number(group?.place)),
+    names: (Array.isArray(group?.names) ? group.names : [])
+      .map(name => String(name || "").trim().slice(0, 80))
+      .filter(Boolean)
+      .slice(0, 4),
+  })).filter(group => group.place >= 1 && group.place <= 3 && group.names.length);
+  return podium.length ? podium : undefined;
+}
+
+export function tournamentFinished(before, after) {
+  return !!before && before.status !== "finalized" && after?.status === "finalized";
+}
+
+export function tournamentNotificationFor(tournament, url) {
+  const podium = (tournament.podium || [])
+    .map(group => `${group.place}. ${group.names.join(", ")}`);
+  return {
+    title: `${tournament.name} är avgjord`,
+    body: podium.length ? podium.join(" · ") : "Se slutresultatet",
+    tag: `${tournament.tournamentId}:final`,
+    url,
+  };
+}
+
+export const CLUB_PUSH_MODES = ["matches", "tournaments"];
+
+/*
+ * One device can follow a single tournament and the whole club at the same
+ * time. Both subscriptions share the endpoint hash as sort key, so each
+ * device gets every notification once.
+ */
+export function planDeliveries({
+  events = [],
+  finished = false,
+  tournament,
+  tournamentSubscribers = [],
+  clubSubscribers = [],
+  tournamentUrl,
+  resultUrl,
+}) {
+  const deliveries = new Map();
+  const deliveryFor = subscriber => {
+    if (!deliveries.has(subscriber.SK)) deliveries.set(subscriber.SK, {
+      subscription: subscriber.subscription, keys: [], payloads: new Map(),
+    });
+    const delivery = deliveries.get(subscriber.SK);
+    delivery.keys.push({PK: subscriber.PK, SK: subscriber.SK});
+    return delivery;
+  };
+  for (const subscriber of tournamentSubscribers) {
+    const delivery = deliveryFor(subscriber);
+    for (const event of events.filter(item => subscriberWants(subscriber, item))) {
+      const payload = notificationFor(event, tournament, subscriber.url);
+      delivery.payloads.set(payload.tag, payload);
+    }
+  }
+  for (const subscriber of clubSubscribers) {
+    const delivery = deliveryFor(subscriber);
+    if (subscriber.mode === "matches") {
+      for (const event of events) {
+        const payload = notificationFor(event, tournament, tournamentUrl);
+        if (!delivery.payloads.has(payload.tag)) delivery.payloads.set(payload.tag, payload);
+      }
+    }
+    if (subscriber.mode === "tournaments" && finished) {
+      const payload = tournamentNotificationFor(tournament, resultUrl);
+      delivery.payloads.set(payload.tag, payload);
+    }
+  }
+  return [...deliveries.values()]
+    .filter(delivery => delivery.payloads.size)
+    .map(delivery => ({...delivery, payloads: [...delivery.payloads.values()]}));
 }
 
 /* Only same-origin tournament paths may be opened from a notification. */

@@ -2162,6 +2162,7 @@
       <button class="secondary" id="btnClubPageImport" hidden>↥ Importera</button>
       <button class="secondary" id="btnClubPageRecalculate">↻ Räkna om ranking</button>
       <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
+      <button class="secondary" id="btnClubPageNotify" hidden>🔔 Notiser</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
   </div>
@@ -2393,6 +2394,30 @@
   </div>
 </div>
 
+<div class="overlay" id="clubPushOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clubPushTitle">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="clubPushTitle">Notiser för klubben</div>
+    <p class="hint" id="clubPushHelp" style="margin:0 0 6px;">
+      Gäller alla klubbens tävlingar, även kommande, på den här enheten.
+    </p>
+    <div id="clubPushChoices">
+      <label class="checkrow">
+        <input type="radio" name="clubPushMode" value="matches" checked>
+        <span>Varje matchresultat<small>En notis när en match i någon av klubbens tävlingar är färdigspelad</small></span>
+      </label>
+      <label class="checkrow">
+        <input type="radio" name="clubPushMode" value="tournaments">
+        <span>Varje tävlingsresultat<small>En notis med pallplatserna när en tävling avslutas</small></span>
+      </label>
+    </div>
+    <p class="hint" id="clubPushStatus" style="margin:10px 0 0;"></p>
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCloseClubPush">Stäng</button>
+      <button class="btn-clear" id="btnClubPushOff">Stäng av</button>
+      <button class="btn-close" id="btnClubPushOn">Slå på</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="pushOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pushTitle">
     <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="pushTitle">Notiser</div>
@@ -4848,7 +4873,8 @@ function tournamentPayload(tournament = activeTournament, sourceState = state, c
     expectedUpdatedAt: tournament.updatedAt || null,
     state:sourceState,
     participants: sourceState.players.map(p => ({playerId:p.clubPlayerId, name:p.name})),
-    matches: Object.values(sourceState.rankingMatches || {})
+    matches: Object.values(sourceState.rankingMatches || {}),
+    podium: tournament.status === "finalized" ? tournament.podium : undefined
   };
 }
 
@@ -5885,6 +5911,7 @@ function renderClubPage(){
   $("clubPageTitle").textContent = clubSession.name;
   $("btnClub").textContent = clubSession.name;
   $("btnClubPageBack").style.display = activeTournament ? "" : "none";
+  renderClubPushButton();
   renderClubStatistics();
   const ongoing = $("clubOngoingList"), past = $("clubPastList");
   ongoing.innerHTML = ""; past.innerHTML = "";
@@ -7567,6 +7594,11 @@ $("btnConfirmFinish").addEventListener("click", async () => {
   );
   if (canonicalToken) clubSession.token = canonicalToken;
   activeTournament.status = "finalized";
+  // Sent along so club followers can be told who won.
+  activeTournament.podium = finalResultGroups()
+    .filter(group => group.place <= 3)
+    .slice(0, 3)
+    .map(group => ({place:group.place, names:group.players.map(player => player.name)}));
   $("btnConfirmFinish").disabled = true;
   $("btnConfirmFinish").textContent = "Uppdaterar ranking…";
   $("finishStatus").textContent = "Sparar tävlingen och räknar om rankingen…";
@@ -7679,6 +7711,9 @@ function renderPushButton(){
     pushRenewedFor = target.tournamentId;
     renewPushSubscription(target);
   }
+  const clubTarget = clubPushTarget();
+  const clubPref = clubTarget && clubPushPreference(clubTarget.clubId);
+  if (clubPref) renewClubPushSubscription(clubTarget, clubPref.mode);
 }
 async function renewPushSubscription(target){
   if (!pushSupported() || Notification.permission !== "granted") return;
@@ -7719,13 +7754,12 @@ function openPushSettings(){
   $("btnPushOn").textContent = pref ? "Spara" : "Slå på";
   $("btnPushOff").style.display = pref ? "" : "none";
   $("pushStatus").style.color = "";
-  $("pushStatus").textContent = !supported
-    ? (isIos()
-      ? "På iPhone och iPad: tryck på Dela → Lägg till på hemskärmen, öppna appen därifrån och slå på notiser."
-      : "Den här webbläsaren stöder inte push-notiser.")
-    : Notification.permission === "denied"
-      ? "Notiser är blockerade för sidan. Tillåt dem i webbläsarens inställningar."
-      : "";
+  $("pushStatus").textContent = pushUnsupportedMessage();
+  const clubTarget = clubPushTarget();
+  const clubPref = clubTarget && clubPushPreference(clubTarget.clubId);
+  $("pushHelp").textContent = clubPref?.mode === "matches"
+    ? "Du får redan en notis för varje match i klubben via klubbens notisinställning."
+    : "Få en notis på den här enheten när en match är färdigspelad.";
   $("pushOverlay").classList.add("open");
 }
 
@@ -7734,6 +7768,36 @@ $("pushChoices").addEventListener("change", () => {
   $("pushPlayers").hidden =
     document.querySelector('input[name="pushScope"]:checked').value !== "players";
 });
+/* Asks for permission and returns this device's push subscription. Must be
+   called straight from a click so the permission prompt is allowed. */
+async function devicePushSubscription(status){
+  if (await Notification.requestPermission() !== "granted")
+    throw new Error("Notiser är inte tillåtna för sidan.");
+  status.textContent = "Slår på notiser …";
+  await navigator.serviceWorker.register("/sw.js");
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription){
+    const {publicKey} = await api("/push/public-key", {method:"GET", token:null});
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly:true, applicationServerKey:base64UrlToBytes(publicKey)
+    });
+  }
+  return subscription;
+}
+async function existingPushSubscription(){
+  const registration = pushSupported() && await navigator.serviceWorker.getRegistration("/");
+  return registration ? registration.pushManager.getSubscription() : null;
+}
+function pushUnsupportedMessage(){
+  if (!pushSupported()) return isIos()
+    ? "På iPhone och iPad: tryck på Dela → Lägg till på hemskärmen, öppna appen därifrån och slå på notiser."
+    : "Den här webbläsaren stöder inte push-notiser.";
+  return Notification.permission === "denied"
+    ? "Notiser är blockerade för sidan. Tillåt dem i webbläsarens inställningar."
+    : "";
+}
+
 $("btnPushOn").addEventListener("click", async () => {
   const target = pushTarget();
   if (!target) return;
@@ -7749,19 +7813,7 @@ $("btnPushOn").addEventListener("click", async () => {
   }
   $("btnPushOn").disabled = true;
   try{
-    // Ask first, while the click still counts as a user gesture.
-    if (await Notification.requestPermission() !== "granted")
-      throw new Error("Notiser är inte tillåtna för sidan.");
-    status.textContent = "Slår på notiser …";
-    await navigator.serviceWorker.register("/sw.js");
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription){
-      const {publicKey} = await api("/push/public-key", {method:"GET", token:null});
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly:true, applicationServerKey:base64UrlToBytes(publicKey)
-      });
-    }
+    const subscription = await devicePushSubscription(status);
     await sendPushSubscription(target, subscription, playerIds);
     pushRenewedFor = target.tournamentId;
     renderPushButton();
@@ -7777,8 +7829,7 @@ $("btnPushOff").addEventListener("click", async () => {
   const target = pushTarget();
   if (!target) return;
   try{
-    const registration = pushSupported() && await navigator.serviceWorker.getRegistration("/");
-    const subscription = registration && await registration.pushManager.getSubscription();
+    const subscription = await existingPushSubscription();
     if (subscription) await api(target.path, {
       method:"DELETE", headers:target.headers,
       body:JSON.stringify({endpoint:subscription.endpoint})
@@ -7794,6 +7845,110 @@ $("btnPushOff").addEventListener("click", async () => {
 $("btnClosePush").addEventListener("click", () => $("pushOverlay").classList.remove("open"));
 $("pushOverlay").addEventListener("click", e => {
   if (e.target === $("pushOverlay")) $("pushOverlay").classList.remove("open");
+});
+
+/* Club-wide notifications: one choice per club and device that covers every
+   tournament, including ones created later. The server forgets the
+   subscription a few months after the club was last visited. */
+const clubPushStorageKey = clubId => "matchprotokollet_club_push_" + clubId;
+const clubPushRenewed = new Set();
+
+function clubPushTarget(){
+  const club = publicSession ? publicSession.club : clubSession;
+  if (!API_BASE || !club || !club.clubId) return null;
+  const password = sessionStorage.getItem(
+    "matchprotokollet_spectator_password_" + currentRoute().clubId) || "";
+  return {
+    clubId:club.clubId,
+    path:"/clubs/" + encodeURIComponent(clubIdentifier(club)) + "/push-subscription",
+    headers:password ? {"X-Spectator-Password":password} : {}
+  };
+}
+function clubPushPreference(clubId){
+  try{ return JSON.parse(localStorage.getItem(clubPushStorageKey(clubId))); }
+  catch(e){ return null; }
+}
+async function sendClubPushSubscription(target, subscription, mode){
+  await api(target.path, {
+    method:"PUT", headers:target.headers,
+    body:JSON.stringify({subscription:subscription.toJSON(), mode})
+  });
+  localStorage.setItem(clubPushStorageKey(target.clubId), JSON.stringify({mode}));
+}
+function renderClubPushButton(){
+  const target = clubPushTarget();
+  const button = $("btnClubPageNotify");
+  button.hidden = !target || !(pushSupported() || isIos());
+  const pref = target && clubPushPreference(target.clubId);
+  button.textContent = pref ? "🔔 Notiser på" : "🔔 Notiser";
+  if (pref) renewClubPushSubscription(target, pref.mode);
+}
+async function renewClubPushSubscription(target, mode){
+  if (clubPushRenewed.has(target.clubId)) return;
+  clubPushRenewed.add(target.clubId);
+  if (!pushSupported() || Notification.permission !== "granted") return;
+  try{
+    const subscription = await existingPushSubscription();
+    if (subscription) await sendClubPushSubscription(target, subscription, mode);
+  }catch(e){}
+}
+
+function openClubPushSettings(){
+  const target = clubPushTarget();
+  if (!target) return;
+  const pref = clubPushPreference(target.clubId);
+  document.querySelector('input[name="clubPushMode"][value="' +
+    (pref?.mode === "tournaments" ? "tournaments" : "matches") + '"]').checked = true;
+  const supported = pushSupported();
+  $("clubPushChoices").hidden = !supported;
+  $("btnClubPushOn").style.display = supported ? "" : "none";
+  $("btnClubPushOn").textContent = pref ? "Spara" : "Slå på";
+  $("btnClubPushOff").style.display = pref ? "" : "none";
+  $("clubPushStatus").style.color = "";
+  $("clubPushStatus").textContent = pushUnsupportedMessage();
+  $("clubPushOverlay").classList.add("open");
+}
+$("btnClubPageNotify").addEventListener("click", openClubPushSettings);
+$("btnClubPushOn").addEventListener("click", async () => {
+  const target = clubPushTarget();
+  if (!target) return;
+  const mode = document.querySelector('input[name="clubPushMode"]:checked').value;
+  const status = $("clubPushStatus");
+  status.style.color = "";
+  $("btnClubPushOn").disabled = true;
+  try{
+    const subscription = await devicePushSubscription(status);
+    await sendClubPushSubscription(target, subscription, mode);
+    clubPushRenewed.add(target.clubId);
+    renderClubPushButton();
+    $("clubPushOverlay").classList.remove("open");
+  }catch(error){
+    status.textContent = "Kunde inte slå på notiser: " + error.message;
+    status.style.color = "var(--danger)";
+  }finally{
+    $("btnClubPushOn").disabled = false;
+  }
+});
+$("btnClubPushOff").addEventListener("click", async () => {
+  const target = clubPushTarget();
+  if (!target) return;
+  try{
+    const subscription = await existingPushSubscription();
+    if (subscription) await api(target.path, {
+      method:"DELETE", headers:target.headers,
+      body:JSON.stringify({endpoint:subscription.endpoint})
+    });
+    localStorage.removeItem(clubPushStorageKey(target.clubId));
+    renderClubPushButton();
+    $("clubPushOverlay").classList.remove("open");
+  }catch(error){
+    $("clubPushStatus").textContent = "Kunde inte stänga av notiser: " + error.message;
+    $("clubPushStatus").style.color = "var(--danger)";
+  }
+});
+$("btnCloseClubPush").addEventListener("click", () => $("clubPushOverlay").classList.remove("open"));
+$("clubPushOverlay").addEventListener("click", e => {
+  if (e.target === $("clubPushOverlay")) $("clubPushOverlay").classList.remove("open");
 });
 
 $("btnCloseShare").addEventListener("click", () => $("shareOverlay").classList.remove("open"));

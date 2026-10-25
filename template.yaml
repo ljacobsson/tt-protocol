@@ -102,6 +102,12 @@ Resources:
           Properties:
             Path: "/clubs/{clubId}/tournaments/{tournamentId}/push-subscription"
             Method: DELETE
+        SubscribeToClub:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/push-subscription", Method: PUT}
+        UnsubscribeFromClub:
+          Type: Api
+          Properties: {Path: "/clubs/{clubId}/push-subscription", Method: DELETE}
 
 Outputs:
   ApiUrl:

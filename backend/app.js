@@ -19,10 +19,12 @@ import webpush from "web-push";
 import {START_RATING, calculateRanking} from "./ranking.js";
 import {collectPages} from "./pagination.js";
 import {
+  CLUB_PUSH_MODES,
   finishedMatchEvents,
-  notificationFor,
+  normalizePodium,
+  planDeliveries,
   safeNotificationUrl,
-  subscriberWants,
+  tournamentFinished,
   validSubscription,
 } from "./push.js";
 
@@ -37,7 +39,10 @@ const clubPk = clubId => `CLUB#${clubId}`;
 const aliasPk = alias => `ALIAS#${alias}`;
 const pushPk = (clubId, tournamentId) => `PUSH#${clubId}#${tournamentId}`;
 const PUSH_SUBJECT = process.env.PUSH_SUBJECT || "https://protokoll.pingis.net";
+const clubPushPk = clubId => `CLUBPUSH#${clubId}`;
 const PUSH_SUBSCRIPTION_SECONDS = 3 * 24 * 60 * 60;
+/* Club-wide subscriptions are renewed whenever the club is visited. */
+const CLUB_PUSH_SUBSCRIPTION_SECONDS = 90 * 24 * 60 * 60;
 const tokenHash = token => crypto.createHash("sha256").update(token).digest("hex");
 const validAlias = alias => /^[a-z0-9][a-z0-9-]{1,31}$/.test(alias);
 const PASSWORD_REQUIRED = Symbol("PASSWORD_REQUIRED");
@@ -154,18 +159,28 @@ function vapidKeys() {
   return vapidKeysPromise;
 }
 
-async function notifyFinishedMatches(clubId, before, tournament) {
+async function notifySubscribers(clubId, clubAlias, before, tournament) {
   try {
     const events = finishedMatchEvents(before, tournament);
-    if (!events.length) return;
-    const pk = pushPk(clubId, tournament.tournamentId);
-    const subscribers = await collectPages(startKey => db.send(new QueryCommand({
+    const finished = tournamentFinished(before, tournament);
+    if (!events.length && !finished) return;
+    const subscribersOf = pk => collectPages(startKey => db.send(new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: "PK = :pk",
       ExpressionAttributeValues: {":pk": pk},
       ExclusiveStartKey: startKey,
     })));
-    if (!subscribers.length) return;
+    const [tournamentSubscribers, clubSubscribers] = await Promise.all([
+      events.length ? subscribersOf(pushPk(clubId, tournament.tournamentId)) : [],
+      subscribersOf(clubPushPk(clubId)),
+    ]);
+    const tournamentUrl = `/clubs/${encodeURIComponent(clubAlias || clubId)}` +
+      `/tournaments/${encodeURIComponent(tournament.tournamentId)}`;
+    const deliveries = planDeliveries({
+      events, finished, tournament, tournamentSubscribers, clubSubscribers,
+      tournamentUrl, resultUrl: `${tournamentUrl}/results`,
+    });
+    if (!deliveries.length) return;
     const {publicKey, privateKey} = await vapidKeys();
     const options = {
       vapidDetails: {subject: PUSH_SUBJECT, publicKey, privateKey},
@@ -173,17 +188,15 @@ async function notifyFinishedMatches(clubId, before, tournament) {
       urgency: "high",
       timeout: 4000,
     };
-    await Promise.allSettled(subscribers.map(async subscriber => {
-      for (const event of events.filter(item => subscriberWants(subscriber, item))) {
-        const payload = notificationFor(event, tournament, subscriber.url);
+    await Promise.allSettled(deliveries.map(async delivery => {
+      for (const payload of delivery.payloads) {
         try {
-          await webpush.sendNotification(subscriber.subscription, JSON.stringify(payload), options);
+          await webpush.sendNotification(delivery.subscription, JSON.stringify(payload), options);
         } catch (error) {
           /* The browser revoked or expired the subscription. */
           if (error.statusCode === 404 || error.statusCode === 410) {
-            await db.send(new DeleteCommand({
-              TableName: TABLE_NAME, Key: {PK: pk, SK: subscriber.SK},
-            }));
+            await Promise.all(delivery.keys.map(Key =>
+              db.send(new DeleteCommand({TableName: TABLE_NAME, Key}))));
             return;
           }
           console.error("Push failed", error.statusCode || error.message);
@@ -478,6 +491,9 @@ function normalizeTournament(payload, tournamentId, existing = {}) {
     state,
     participants: structuredClone(payload.participants || []),
     matches,
+    podium: status === "finalized"
+      ? normalizePodium(payload.podium) || existing.podium
+      : undefined,
     createdAt: existing.createdAt || timestamp,
     updatedAt: timestamp,
   };
@@ -592,9 +608,10 @@ async function saveTournament(clubId, payload, requestedId) {
   const tournaments = clubItems
     .filter(item => item.SK.startsWith("TOURNAMENT#"))
     .map(withoutKeys);
+  const meta = clubItems.find(item => item.SK === "META");
   const [ranking] = await Promise.all([
     persistRankings(clubId, tournaments, clubItems),
-    existing && notifyFinishedMatches(clubId, existing, tournament),
+    existing && notifySubscribers(clubId, meta?.alias, existing, tournament),
   ]);
   return {tournament, ranking};
 }
@@ -730,6 +747,51 @@ export async function handler(event) {
         club: {clubId: club.clubId, alias: club.alias, name: club.name},
         tournament: publicData,
       });
+    }
+
+    if (resource === "/clubs/{clubId}/push-subscription" &&
+        (method === "PUT" || method === "DELETE")) {
+      /* Following the club needs the same access as reading it publicly. */
+      const {Item: club} = await db.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {PK: clubPk(clubId), SK: "META"},
+        ProjectionExpression: "spectatorPasswordHash",
+      }));
+      if (!club) return response(404, {message: "Klubben hittades inte"});
+      if (!spectatorPasswordAccepted(event, club)) {
+        const admin = await authorize(event, clubId, requestedClubId);
+        if (!admin || admin === PASSWORD_REQUIRED) return response(401, {
+          message: "Ange klubbens åskådarlösenord",
+          requiresPassword: true,
+        });
+      }
+      const input = bodyOf(event);
+      const subscription = method === "PUT"
+        ? validSubscription(input.subscription)
+        : {endpoint: String(input.endpoint || "")};
+      if (!subscription?.endpoint) {
+        return response(400, {message: "Ogiltig notisprenumeration"});
+      }
+      const key = {PK: clubPushPk(clubId), SK: `SUB#${tokenHash(subscription.endpoint)}`};
+      if (method === "DELETE") {
+        await db.send(new DeleteCommand({TableName: TABLE_NAME, Key: key}));
+        return response(200, {subscribed: false});
+      }
+      const mode = String(input.mode || "");
+      if (!CLUB_PUSH_MODES.includes(mode)) {
+        return response(400, {message: "Ogiltigt notisval"});
+      }
+      await db.send(new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          ...key,
+          subscription,
+          mode,
+          updatedAt: now(),
+          expiresAt: Math.floor(Date.now() / 1000) + CLUB_PUSH_SUBSCRIPTION_SECONDS,
+        },
+      }));
+      return response(200, {subscribed: true, mode});
     }
 
     if (resource === "/clubs/{clubId}/tournaments/{tournamentId}/push-subscription" &&
