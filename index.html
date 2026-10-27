@@ -1628,12 +1628,33 @@
   .choices button small{display:block; font-size:15px; font-weight:600; color:var(--muted); margin-top:4px;}
   .choices button.sel{border-color:var(--ball); background:#FFF3E3;}
   .choices .drawbtn{grid-column:1 / -1; background:#FBF6E7; min-height:78px; font-size:30px;}
-  #shareBox{
+  #shareBox,#mcpUrl{
     width:100%; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
     font-size:14px; line-height:1.45; padding:14px;
     border:2px solid var(--grid-line); border-radius:var(--radius);
     resize:none; word-break:break-all; background:#F8FAFB; color:var(--ink);
     -webkit-user-select:text; user-select:text;
+  }
+  .mcpsteps{margin:6px 0 0; padding-left:22px; line-height:1.5;}
+  .mcpsteps li{margin:0 0 8px;}
+  .mcpexamples{margin:6px 0 0; padding:0; list-style:none; display:grid; gap:6px;}
+  .mcpexamples li{
+    background:#F8FAFB; border:1px solid var(--grid-line); border-radius:12px;
+    padding:8px 12px; font-style:italic;
+  }
+  .modal h3.mcphead{margin:18px 0 4px; font-size:18px;}
+  .mcpsettings{display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 14px; margin:6px 0 0; align-items:start;}
+  .mcpsettings textarea{display:block;}
+  .mcpsettings dt{font-weight:800;}
+  .mcpsettings dd{margin:0;}
+  .mcpclient{border:1px solid var(--grid-line); border-radius:12px; margin:0 0 8px; background:#fff;}
+  .mcpclient summary{padding:10px 14px; cursor:pointer; font-weight:800;}
+  .mcpclient[open] summary{border-bottom:1px solid var(--grid-line);}
+  .mcpclient > :not(summary){margin:10px 14px;}
+  .mcpclient .mcpsteps{padding-left:22px;}
+  @media (max-width:560px){
+    .mcpsettings{grid-template-columns:1fr; gap:2px;}
+    .mcpsettings dd{margin-bottom:8px;}
   }
   /* ---------- Ball-point picker ---------- */
   .pgrid{grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; gap:12px;}
@@ -2215,9 +2236,10 @@
     <div class="clubactions">
       <button id="btnClubPageNew">＋ Ny tävling</button>
       <button class="secondary" id="btnClubPageImport" hidden>↥ Importera</button>
-      <button class="secondary" id="btnClubPageRecalculate">↻ Räkna om ranking</button>
+      <button class="secondary" id="btnClubPageRecalculate" hidden>↻ Räkna om ranking</button>
       <button class="secondary" id="btnClubPageCopy">⌁ Kopiera klubblänk</button>
       <button class="secondary" id="btnClubPageNotify" hidden>🔔 Notiser</button>
+      <button class="secondary" id="btnClubPageAssistant" hidden>AI-assistent</button>
       <button class="secondary" id="btnClubPageBack" style="display:none;">Till tävlingen</button>
     </div>
   </div>
@@ -2466,6 +2488,82 @@
     <div class="modalrow">
       <button class="btn-clear" id="btnCloseShare">Stäng</button>
       <button class="btn-close" id="btnCopyLink">Kopiera länk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="assistantOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assistantTitle">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="assistantTitle">Styr med en AI-assistent</div>
+    <p class="hint" style="margin:0 0 6px;">
+      Klubben har en MCP-server (Model Context Protocol). Koppla den till en
+      AI-assistent som stöder MCP – till exempel ChatGPT eller Claude – så kan du
+      skapa tävlingar och föra in resultat genom att prata eller skriva.
+    </p>
+
+    <h3 class="mcphead">MCP-inställningar</h3>
+    <dl class="mcpsettings">
+      <dt>Adress (URL)</dt>
+      <dd><textarea id="mcpUrl" readonly rows="3" aria-label="Klubbens MCP-adress"></textarea></dd>
+      <dt>Transport</dt>
+      <dd>Fjärrserver via HTTP (Streamable HTTP)</dd>
+      <dt>Autentisering</dt>
+      <dd>Ingen – adressen är nyckeln</dd>
+      <dt>Namn</dt>
+      <dd>Valfritt, till exempel <strong>Matchprotokoll</strong></dd>
+    </dl>
+    <p class="hint" style="margin:6px 0 0;">
+      Adressen ger samma åtkomst som klubblänken och fungerar även om klubben har
+      åskådarlösenord. Dela den bara med dem som ska få föra protokoll.
+    </p>
+
+    <h3 class="mcphead">Lägg till i din assistent</h3>
+    <details class="mcpclient">
+      <summary>ChatGPT</summary>
+      <ol class="mcpsteps">
+        <li>Gå till <strong>Inställningar → Plugin → Browse Directory</strong>
+          på chatgpt.com.</li>
+        <li>Välj <strong>Add</strong>, ange namn och adress och välj
+          autentiseringen <strong>Ingen</strong>.</li>
+        <li>Välj kopplingen i <strong>＋</strong>-menyn i en ny chatt. Den följer
+          med kontot till mobilappen.</li>
+      </ol>
+    </details>
+    <details class="mcpclient">
+      <summary>Claude (webb, dator och mobil)</summary>
+      <ol class="mcpsteps">
+        <li>Gå till <strong>Inställningar → Kopplingar</strong> på claude.ai och
+          välj <strong>Lägg till anpassad koppling</strong>.</li>
+        <li>Ange namn och adress och spara.</li>
+        <li>Slå på kopplingen under verktygsmenyn i en chatt.</li>
+      </ol>
+    </details>
+    <p class="hint" style="margin:8px 0 0;">
+      Menyernas namn kan skilja sig något mellan versioner, och vissa assistenter
+      kräver ett abonnemang för egna kopplingar.
+    </p>
+
+    <h3 class="mcphead">Så pratar du med den</h3>
+    <ul class="mcpexamples">
+      <li>”Skapa Tisdagspingis med Anna, Bo, Cia och Dan, bäst av fem, och starta.”</li>
+      <li>”Anna vann mot Bo med 3–1.”</li>
+      <li>”Cia mot Dan: 11–7, 8–11, 11–9, 11–5.”</li>
+      <li>”Vilka matcher är kvar, och hur ser tabellen ut?”</li>
+      <li>”Rätta Bo mot Dan – Dan vann med 3–2.”</li>
+      <li>”Lägg till Eva och dela upp i två pooler med A- och B-slutspel.”</li>
+      <li>”Avsluta tävlingen.”</li>
+    </ul>
+    <p class="hint" style="margin:10px 0 0;">
+      Resultatet räknas från den först nämnda spelarens håll. Namn tolkas även
+      med små felstavningar; är ett namn tvetydigt frågar assistenten vilken
+      spelare du menar. Utan tävlingsnamn används den senast ändrade pågående
+      tävlingen. Innan något rensas eller en tävling avslutas ber assistenten dig
+      bekräfta. En tavla som redan är öppen visar nya resultat när sidan laddas om.
+    </p>
+
+    <div class="modalrow">
+      <button class="btn-clear" id="btnCloseAssistant">Stäng</button>
+      <button class="btn-close" id="btnCopyMcpUrl">Kopiera adressen</button>
     </div>
   </div>
 </div>
@@ -5349,6 +5447,9 @@ async function saveRemoteTournament(save = remoteSaveSnapshot(), options = {}){
   }
   if (clubSession !== club || activeTournament !== tournament) return;
   activeTournament = tournament;
+  // A new tournament gets its address with the first save.
+  if (currentRoute().kind === "club" && $("viewClub").style.display === "none")
+    showTournamentUrl(tournament);
   $("syncBanner").hidden = true;
   $("clubStatus").textContent = "Sparad";
   $("clubStatus").style.color = "var(--muted)";
@@ -5389,6 +5490,20 @@ function blankTournamentState(){
   };
 }
 
+/* A tournament's address is also its read-only spectator link, so a reload
+   only reopens it for editing in the tab that opened it from the club. */
+const editingKey = tournamentId => "matchprotokollet_editing_" + tournamentId;
+function showTournamentUrl(tournament){
+  if (!clubSession || !tournament?.tournamentId) return;
+  sessionStorage.setItem(editingKey(tournament.tournamentId), "1");
+  const route = currentRoute();
+  if (route.kind === "tournament" && route.tournamentId === tournament.tournamentId) return;
+  history.pushState(null, "", tournamentPath(
+    clubIdentifier(clubSession), tournament.tournamentId,
+    tournament.status === "finalized" && state.view === "result"
+  ));
+}
+
 function openTournament(tournament){
   activeTournament = tournament;
   state = Object.assign(blankTournamentState(), structuredClone(tournament.state || {}));
@@ -5399,6 +5514,7 @@ function openTournament(tournament){
   });
   kvSave(KEY, state);
   closeClub();
+  showTournamentUrl(tournament);
   refresh();
   if (state.phase === "play") setView(state.view || "grid");
 }
@@ -7005,11 +7121,7 @@ $("btnRankingAdjusted").addEventListener("click", () => {
 });
 $("btnClubPageBack").addEventListener("click", () => {
   if (activeTournament){
-    if (activeTournament.tournamentId)
-      history.pushState(null, "", tournamentPath(
-        clubIdentifier(clubSession), activeTournament.tournamentId,
-        activeTournament.status === "finalized" && state.view === "result"
-      ));
+    showTournamentUrl(activeTournament);
     refresh();
     if (state.phase === "play") setView(state.view || "grid");
   }
@@ -8375,6 +8487,34 @@ function openClubPushSettings(){
   $("clubPushOverlay").classList.add("open");
 }
 $("btnClubPageNotify").addEventListener("click", openClubPushSettings);
+
+/* ---------------- AI assistants (MCP) ----------------
+   The MCP endpoint takes the canonical club id, which works with and without
+   a spectator password. See README for the server side. */
+const mcpUrl = club => API_BASE + "/mcp/" + encodeURIComponent(club.clubId);
+$("btnClubPageAssistant").hidden = !API_BASE;
+$("btnClubPageAssistant").addEventListener("click", () => {
+  if (!clubSession) return;
+  $("mcpUrl").value = mcpUrl(clubSession);
+  $("btnCopyMcpUrl").textContent = "Kopiera adressen";
+  $("assistantOverlay").classList.add("open");
+});
+$("btnCloseAssistant").addEventListener("click", () => $("assistantOverlay").classList.remove("open"));
+$("assistantOverlay").addEventListener("click", e => {
+  if (e.target === $("assistantOverlay")) $("assistantOverlay").classList.remove("open");
+});
+$("btnCopyMcpUrl").addEventListener("click", async () => {
+  const box = $("mcpUrl");
+  let ok = false;
+  try{
+    await navigator.clipboard.writeText(box.value);
+    ok = true;
+  }catch(e){
+    box.focus(); box.select();                 // http:// and file:// block the clipboard API
+    try{ ok = document.execCommand("copy"); }catch(e2){}
+  }
+  $("btnCopyMcpUrl").textContent = ok ? "Kopierad!" : "Markera och kopiera själv";
+});
 $("btnClubPushOn").addEventListener("click", async () => {
   const target = clubPushTarget();
   if (!target) return;
@@ -8476,6 +8616,22 @@ window.addEventListener("popstate", () => location.reload());
     return;
   }
 
+  if (initialRoute.kind === "tournament" &&
+      sessionStorage.getItem(editingKey(initialRoute.tournamentId)) &&
+      await loadClubFromLink()){
+    const tournament = (clubSession.tournaments || []).find(candidate =>
+      candidate.tournamentId === initialRoute.tournamentId);
+    if (tournament){
+      openTournament(tournament);
+      if (initialRoute.view === "result" && tournament.status === "finalized") setView("result");
+      return;
+    }
+    state = blankTournamentState();
+    renderClubPortal();
+    history.replaceState(null, "", clubPath(clubIdentifier(clubSession)));
+    showClubPage();
+    return;
+  }
   if (await loadPublicTournamentFromLink()) return;
 
   const requestedClub = currentRoute().clubId;

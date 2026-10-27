@@ -108,8 +108,14 @@ Resources:
         UnsubscribeFromClub:
           Type: Api
           Properties: {Path: "/clubs/{clubId}/push-subscription", Method: DELETE}
+        Mcp:
+          Type: Api
+          Properties: {Path: "/mcp/{clubId}", Method: ANY}
 
 Outputs:
+  McpUrl:
+    Description: MCP server for ChatGPT and other assistants; replace {clubId} with the club's secret id
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/mcp/{clubId}"
   ApiUrl:
     Description: Set this as window.MATCHPROTOKOLLET_API in config.js
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod"

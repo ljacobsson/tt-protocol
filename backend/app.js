@@ -18,6 +18,8 @@ import webpush from "web-push";
 
 import {START_RATING, calculateRanking} from "./ranking.js";
 import {collectPages} from "./pagination.js";
+import {handleMcpRequest} from "./mcp.js";
+import {RuleError} from "./tournament.js";
 import {
   CLUB_PUSH_MODES,
   finishedMatchEvents,
@@ -39,6 +41,8 @@ const clubPk = clubId => `CLUB#${clubId}`;
 const aliasPk = alias => `ALIAS#${alias}`;
 const pushPk = (clubId, tournamentId) => `PUSH#${clubId}#${tournamentId}`;
 const PUSH_SUBJECT = process.env.PUSH_SUBJECT || "https://protokoll.pingis.net";
+/* Frontend origin for the tournament links the MCP tools hand out. */
+const APP_URL = process.env.APP_URL || "https://protokoll.pingis.net";
 const clubPushPk = clubId => `CLUBPUSH#${clubId}`;
 const PUSH_SUBSCRIPTION_SECONDS = 3 * 24 * 60 * 60;
 /* Club-wide subscriptions are renewed whenever the club is visited. */
@@ -626,6 +630,39 @@ async function saveTournament(clubId, payload, requestedId) {
   return {tournament, ranking};
 }
 
+const TOURNAMENT_VALIDATION_ERRORS = [
+  "Tävlingen måste ha ett namn",
+  "Ogiltigt speldatum",
+  "Ogiltig tävlingstyp",
+  "Ogiltig tävlingsstatus",
+];
+
+/* The MCP tools read and write the club through the same code as the API. */
+function mcpStore(clubId) {
+  return {
+    async loadClub() {
+      const items = await queryClub(clubId);
+      const meta = items.find(item => item.SK === "META");
+      return {
+        clubId: meta.clubId,
+        alias: meta.alias,
+        name: meta.name,
+        savedNames: meta.savedNames || [],
+        tournaments: items.filter(item => item.SK.startsWith("TOURNAMENT#")).map(withoutKeys),
+        players: items.filter(item => item.SK.startsWith("PLAYER#")).map(withoutKeys),
+      };
+    },
+    async saveTournament(payload, tournamentId) {
+      try {
+        return (await saveTournament(clubId, payload, tournamentId)).tournament;
+      } catch (error) {
+        if (TOURNAMENT_VALIDATION_ERRORS.includes(error.message)) throw new RuleError(error.message);
+        throw error;
+      }
+    },
+  };
+}
+
 export async function handler(event) {
   try {
     const method = event.httpMethod || "";
@@ -727,6 +764,29 @@ export async function handler(event) {
     const requestedClubId = params.clubId || "";
     const clubId = await resolveClubId(requestedClubId);
     if (!clubId) return response(404, {message: "Klubben hittades inte"});
+
+    /* The club link in the URL is the credential, as in the browser. Not
+       every MCP client can send custom headers, so a spectator password
+       comes as a query parameter. */
+    if (resource === "/mcp/{clubId}") {
+      const access = await authorize({headers: {
+        Authorization: `Bearer ${requestedClubId}`,
+        "X-Spectator-Password": event.queryStringParameters?.password || "",
+      }}, clubId, requestedClubId);
+      if (!access || access === PASSWORD_REQUIRED) {
+        return response(401, {message: "Använd klubbens hemliga länk-id i MCP-adressen"});
+      }
+      const reply = await handleMcpRequest(
+        {method, body: event.isBase64Encoded
+          ? Buffer.from(event.body || "", "base64").toString("utf8")
+          : event.body},
+        mcpStore(clubId),
+        {appUrl: APP_URL},
+      );
+      const result = response(reply.statusCode, reply.body);
+      Object.assign(result.headers, reply.headers);
+      return result;
+    }
     if (resource === "/clubs/{clubId}/tournaments/{tournamentId}/public" && method === "GET") {
       const [{Item: club}, {Item: tournament}] = await Promise.all([
         db.send(new GetCommand({
@@ -971,13 +1031,8 @@ export async function handler(event) {
         tournament: error.currentTournament || null,
       });
     }
-    if (error instanceof SyntaxError || [
-      "Tävlingen måste ha ett namn",
-      "Ogiltigt speldatum",
-      "Ogiltig tävlingstyp",
-      "Ogiltig tävlingsstatus",
-      "Ogiltig namnlista",
-    ].includes(error.message)) {
+    if (error instanceof SyntaxError ||
+        [...TOURNAMENT_VALIDATION_ERRORS, "Ogiltig namnlista"].includes(error.message)) {
       return response(400, {message: error.message});
     }
     console.error(error);

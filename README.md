@@ -130,6 +130,56 @@ exempel delad tredjeplats för semifinalförlorarna), och nästa platsnummer
 hoppas över enligt competition-ranking. Poolresultat med helt lika
 skiljekriterier visas också som delade placeringar.
 
+## Styra med en AI-assistent (MCP)
+
+Backenden har en MCP-server (Model Context Protocol) så att en AI-assistent
+som stöder MCP – till exempel ChatGPT, Claude, VS Code eller Cursor – kan
+sätta upp och föra protokoll med röst eller text, till exempel ”skapa en
+tävling med Anna, Bo, Cia och Dan i bäst av fem och starta den” eller ”Anna
+vann mot Bo med 3–1, 11–7, 8–11, 11–9, 11–5”. Knappen **AI-assistent** på
+klubbsidan visar klubbens adress och instruktioner för de vanligaste
+klienterna.
+
+MCP-inställningar:
+
+- **Adress:** `{ApiUrl}/mcp/{klubb}` där `{klubb}` är klubbens hemliga id eller
+  dess alias, till exempel `…/Prod/mcp/bbtk`. Med alias och åskådarlösenord
+  läggs lösenordet till som `?password=…`; det hemliga id:t (som klubbsidan
+  visar) fungerar alltid utan lösenord.
+- **Transport:** fjärrserver via Streamable HTTP, tillståndslös.
+- **Autentisering:** ingen – adressen ger samma åtkomst som klubblänken och ska
+  hanteras som en hemlighet.
+
+Exempel för Claude Code:
+
+```bash
+claude mcp add --transport http matchprotokoll "{ApiUrl}/mcp/{klubb}"
+```
+
+Klienter som läser en `mcp.json` (Cursor med flera):
+
+```json
+{"mcpServers": {"matchprotokoll": {"url": "{ApiUrl}/mcp/{klubb}"}}}
+```
+
+Verktygen listar klubbens tävlingar och ranking, visar en tävling med
+ställningar och matcher, skapar och ändrar tävlingar (spelare, pooler,
+spelläge, matchform, slutspel), startar dem, för in och rättar resultat
+(setsiffror eller bollpoäng, pool, slutspel och Davis Cup), registrerar set i
+Vinnaren står kvar och avslutar tävlingen. Utan angiven tävling används
+klubbens senast ändrade pågående tävling. Spelarnamn tolkas skiftlägesokänsligt
+och tål små felstavningar; vid tvetydiga namn frågar assistenten i stället för
+att gissa. Ändringar som rensar resultat och avslut med ospelade matcher måste
+bekräftas uttryckligen.
+
+Servern använder samma sparvägar som appen, så rankingomräkning, push-notiser
+och låsningen av avslutade tävlingar fungerar likadant. Varje ändring läser
+den senaste versionen och sparas villkorligt; om en annan enhet hann spara
+emellan görs ändringen om på den nya versionen. En enhet som redan har tavlan
+öppen ser ändringarna efter omladdning eller vid sin nästa sparning.
+Tävlingslogiken finns i `backend/tournament.js` och speglar `index.html`; de
+två måste hållas i takt.
+
 ## API
 
 Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
@@ -149,6 +199,8 @@ Alla klubb-anrop utom skapandet använder `Authorization: Bearer <klubb-id>`.
 - `PUT /clubs/{clubId}/tournaments/{tournamentId}/push-subscription`
   (`subscription`, valfria `playerIds`; kräver samma åtkomst som den publika vyn)
 - `DELETE /clubs/{clubId}/tournaments/{tournamentId}/push-subscription` (`endpoint`)
+- `POST /mcp/{clubId}` (MCP Streamable HTTP, tillståndslöst; åtkomst via
+  klubbidentifieraren i adressen och valfritt `?password=`)
 
 `{clubId}` kan även vara klubbens alias, till exempel `/clubs/bbtk`.
 
