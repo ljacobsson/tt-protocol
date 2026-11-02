@@ -614,6 +614,35 @@
     color:#fff; overflow-wrap:anywhere;
   }
   .clubtagline{margin:0; color:rgba(255,255,255,.82); font-size:16px;}
+  .clubbadgerow{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+  .clubpill{
+    display:inline-flex; align-items:center; gap:6px; min-height:30px; padding:0 12px;
+    border:1px solid rgba(255,255,255,.4); border-radius:999px;
+    background:rgba(255,255,255,.12); color:#fff; font-size:13px; font-weight:850;
+  }
+  .clubpill svg{width:14px; height:14px;}
+  .clubpill[aria-pressed="true"]{background:#fff; color:#9b4b00; border-color:#fff;}
+  .switchlist{display:grid; gap:8px; margin:8px 0 0;}
+  .switchrow{display:flex; align-items:center; gap:8px;}
+  .switchrow .switchopen{
+    flex:1; min-width:0; min-height:52px; padding:0 14px; border-radius:12px; text-align:left;
+    border:1px solid var(--grid-line); background:#fff; color:var(--ink); font-size:17px; font-weight:850;
+  }
+  .switchrow .switchopen small{display:block; color:var(--muted); font-size:13px; font-weight:700;}
+  .switchrow .switchopen:disabled{background:#F8FAFB; cursor:default;}
+  .switchfav{
+    display:grid; place-items:center; width:52px; height:52px; border-radius:12px;
+    border:1px solid var(--grid-line); background:#fff; color:var(--muted);
+  }
+  .switchfav svg{width:20px; height:20px;}
+  .switchfav[aria-pressed="true"]{color:var(--ball); border-color:var(--ball);}
+  .switchjoin{display:flex; gap:8px; margin-top:8px;}
+  .switchjoin input{
+    flex:1; min-width:0; min-height:50px; padding:0 14px; font:inherit; font-size:17px;
+    border:2px solid var(--grid-line); border-radius:12px; outline:0;
+  }
+  .switchjoin input:focus{border-color:var(--table);}
+  .switchjoin button{min-height:50px; padding:0 18px; border-radius:12px; font-size:16px; font-weight:900;}
   .clubactions{display:flex; flex-wrap:wrap; gap:10px;}
   .clubactions button{
     position:relative; z-index:1; min-height:54px; padding:0 19px; border-radius:13px;
@@ -1130,6 +1159,18 @@
   .landingerror:empty{display:none;}
   .nopass{display:flex; flex-wrap:wrap; gap:18px; margin-top:14px; font-size:14px; color:rgba(255,255,255,.8);}
   .nopass span::before{content:"✓"; color:#8EE5A7; font-weight:900; margin-right:6px;}
+  .joinclub{max-width:650px; margin-top:22px;}
+  .joinclub label{display:block; margin:0 0 8px 4px; font-size:15px; font-weight:800; color:rgba(255,255,255,.9);}
+  .joinrow{display:flex; gap:8px;}
+  .joinrow input{
+    flex:1; min-width:0; min-height:50px; padding:0 14px; font:inherit; font-size:17px;
+    border:1px solid rgba(255,255,255,.45); border-radius:12px; outline:0;
+    background:rgba(255,255,255,.95); color:var(--ink);
+  }
+  .joinrow button{
+    min-height:50px; padding:0 18px; border-radius:12px; font-size:16px; font-weight:900;
+    border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff;
+  }
   .productcard{
     position:relative; min-height:390px; padding:18px; overflow:hidden;
     border-radius:26px; color:var(--ink);
@@ -1916,6 +1957,15 @@
           <span>Inget lösenord</span>
           <span>Kom igång direkt</span>
         </div>
+        <div class="joinclub">
+          <label for="joinClubInput">Finns klubben redan? Öppna den med namnet eller länken.</label>
+          <div class="joinrow">
+            <input id="joinClubInput" maxlength="300" placeholder="Klubbens namn eller länk"
+                   autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+            <button id="btnJoinClub" type="button">Öppna</button>
+          </div>
+          <p class="landingerror" id="joinClubStatus"></p>
+        </div>
         <div class="landingsecondaryactions">
           <button class="demobutton" id="btnLoadLocalTournament" type="button">
             <span class="playicon" aria-hidden="true">
@@ -2229,7 +2279,11 @@
 <div id="viewClub" class="clubpage" style="display:none;">
   <div class="clubhero">
     <div class="clubidentity">
-      <span class="viewerbadge">KLUBB</span>
+      <div class="clubbadgerow">
+        <span class="viewerbadge">KLUBB</span>
+        <button class="clubpill" id="btnClubFavorite" type="button" aria-pressed="false"></button>
+        <button class="clubpill" id="btnClubSwitch" type="button">Byt klubb</button>
+      </div>
       <h2 id="clubPageTitle"></h2>
       <p class="clubtagline">Tävlingar, resultat och ranking – samlat på ett ställe.</p>
     </div>
@@ -2488,6 +2542,29 @@
     <div class="modalrow">
       <button class="btn-clear" id="btnCloseShare">Stäng</button>
       <button class="btn-close" id="btnCopyLink">Kopiera länk</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="switchClubOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="switchClubTitle">
+    <div style="font-size:24px; font-weight:900; margin-bottom:6px;" id="switchClubTitle">Byt klubb</div>
+    <p class="hint" style="margin:0;">
+      Klubbar du har öppnat på den här enheten. Stjärnan väljer vilken klubb som
+      öppnas när appen startar.
+    </p>
+    <div class="switchlist" id="switchClubList"></div>
+    <h3 class="mcphead">Öppna en annan klubb</h3>
+    <div class="switchjoin">
+      <input id="switchClubInput" maxlength="300" placeholder="Klubbens namn eller länk"
+             autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go"
+             aria-label="Klubbens namn eller länk">
+      <button class="btn-close" id="btnSwitchClubOpen" type="button">Öppna</button>
+    </div>
+    <p class="hint" id="switchClubStatus" style="margin:8px 0 0;"></p>
+    <div class="modalrow">
+      <button class="btn-ghost" id="btnSwitchClubNew">Skapa ny klubb</button>
+      <button class="btn-close" id="btnCloseSwitchClub">Stäng</button>
     </div>
   </div>
 </div>
@@ -2955,6 +3032,7 @@ function rememberClub(club){
 }
 
 function forgetClub(clubId){
+  if (favoriteClub()?.clubId === clubId) setFavoriteClub(null);
   const clubs = recentClubs().filter(club => club.clubId !== clubId);
   localStorage.setItem(RECENT_CLUBS_KEY, JSON.stringify(clubs));
   renderRecentClubs();
@@ -6457,6 +6535,7 @@ function renderClubPage(){
   $("clubPageTitle").textContent = clubSession.name;
   $("btnClub").textContent = clubSession.name;
   $("btnClubPageBack").style.display = activeTournament ? "" : "none";
+  renderClubFavorite();
   renderClubPushButton();
   renderClubStatistics();
   const ongoing = $("clubOngoingList"), past = $("clubPastList");
@@ -7794,6 +7873,127 @@ function aliasFromClubName(name){
     .slice(0, 32).replace(/-+$/g, "");
   return slug.length >= 2 ? slug : (slug ? slug + "-klubb" : "klubb");
 }
+/* ---------------- Finding, switching and favouring clubs ----------------
+   A home screen app starts with storage of its own, without the clubs the
+   browser remembers. A club can therefore be opened by its name (which gives
+   its alias, like when it was created) or a pasted club link, and one club
+   can be chosen to open whenever the app starts. */
+const FAVORITE_CLUB_KEY = "matchprotokollet_favorite_club_v1";
+const STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">' +
+  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+
+function favoriteClub(){
+  try{
+    const value = JSON.parse(localStorage.getItem(FAVORITE_CLUB_KEY) || "null");
+    return value && value.clubId ? value : null;
+  }catch(error){ return null; }
+}
+function setFavoriteClub(club){
+  if (club) localStorage.setItem(FAVORITE_CLUB_KEY, JSON.stringify({
+    clubId:String(club.clubId), alias:club.alias || null, name:String(club.name)
+  }));
+  else localStorage.removeItem(FAVORITE_CLUB_KEY);
+}
+const isFavoriteClub = club => favoriteClub()?.clubId === club.clubId;
+
+async function openClubByName(input, status){
+  const text = String(input || "").trim();
+  const linked = text.match(/\/clubs\/([^/?#\s]+)/);
+  const folded = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "");
+  if (!linked && !folded){
+    status.textContent = "Skriv klubbens namn eller klistra in klubblänken.";
+    return;
+  }
+  const identifier = linked ? decodeURIComponent(linked[1]) : aliasFromClubName(text);
+  status.textContent = "Letar efter klubben…";
+  try{
+    await api("/clubs/" + encodeURIComponent(identifier), {method:"GET", token:identifier});
+  }catch(error){
+    // A spectator password is asked for when the club page opens.
+    if (!error.requiresPassword){
+      status.textContent = error.status === 404
+        ? "Hittade ingen klubb som heter \u201d" + text + "\u201d. Kontrollera stavningen eller klistra in klubblänken."
+        : "Kunde inte öppna klubben: " + error.message;
+      return;
+    }
+  }
+  location.href = clubPath(identifier);
+}
+$("btnJoinClub").addEventListener("click", () =>
+  openClubByName($("joinClubInput").value, $("joinClubStatus")));
+$("joinClubInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") openClubByName($("joinClubInput").value, $("joinClubStatus"));
+});
+
+function renderClubFavorite(){
+  const favorite = !!clubSession && isFavoriteClub(clubSession);
+  const button = $("btnClubFavorite");
+  button.innerHTML = STAR_SVG;
+  button.append(favorite ? "Startsida" : "Gör till startsida");
+  button.setAttribute("aria-pressed", String(favorite));
+  button.title = favorite
+    ? "Klubben öppnas när appen startar. Tryck för att ta bort."
+    : "Öppna den här klubben när appen startar";
+}
+$("btnClubFavorite").addEventListener("click", () => {
+  if (!clubSession) return;
+  setFavoriteClub(isFavoriteClub(clubSession) ? null : clubSession);
+  renderClubFavorite();
+});
+
+function renderSwitchClubs(){
+  const list = $("switchClubList");
+  list.innerHTML = "";
+  const clubs = recentClubs();
+  if (clubSession && !clubs.some(club => club.clubId === clubSession.clubId)) clubs.unshift(clubSession);
+  clubs.forEach(club => {
+    const current = clubSession?.clubId === club.clubId;
+    const row = document.createElement("div");
+    row.className = "switchrow";
+    const open = document.createElement("button");
+    open.className = "switchopen";
+    open.textContent = club.name;
+    if (current){
+      open.disabled = true;
+      const note = document.createElement("small");
+      note.textContent = "Öppen nu";
+      open.appendChild(note);
+    }else open.addEventListener("click", () => openRecentClub(club));
+    const favorite = document.createElement("button");
+    favorite.className = "switchfav";
+    favorite.innerHTML = STAR_SVG;
+    const chosen = isFavoriteClub(club);
+    favorite.setAttribute("aria-pressed", String(chosen));
+    favorite.setAttribute("aria-label", chosen
+      ? club.name + " är startsida – tryck för att ta bort"
+      : "Gör " + club.name + " till startsida");
+    favorite.title = favorite.getAttribute("aria-label");
+    favorite.addEventListener("click", () => {
+      setFavoriteClub(chosen ? null : club);
+      renderSwitchClubs();
+      renderClubFavorite();
+    });
+    row.append(open, favorite);
+    list.appendChild(row);
+  });
+}
+$("btnClubSwitch").addEventListener("click", () => {
+  renderSwitchClubs();
+  $("switchClubInput").value = "";
+  $("switchClubStatus").textContent = "";
+  $("switchClubOverlay").classList.add("open");
+});
+$("btnSwitchClubOpen").addEventListener("click", () =>
+  openClubByName($("switchClubInput").value, $("switchClubStatus")));
+$("switchClubInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") openClubByName($("switchClubInput").value, $("switchClubStatus"));
+});
+$("btnSwitchClubNew").addEventListener("click", () => $("btnHome").click());
+$("btnCloseSwitchClub").addEventListener("click", () => $("switchClubOverlay").classList.remove("open"));
+$("switchClubOverlay").addEventListener("click", e => {
+  if (e.target === $("switchClubOverlay")) $("switchClubOverlay").classList.remove("open");
+});
+
 $("clubName").addEventListener("input", () => {
   $("clubAlias").value = aliasFromClubName($("clubName").value);
 });
@@ -8612,8 +8812,13 @@ window.addEventListener("popstate", () => location.reload());
   const initialRoute = currentRoute();
   normalizeLegacyRoute(initialRoute);
   if (initialRoute.kind === "landing" && !location.hash.startsWith("#t=")){
-    showLanding();
-    return;
+    // The favourite club is the start page; the home button still shows this one.
+    const favorite = favoriteClub();
+    if (!favorite){
+      showLanding();
+      return;
+    }
+    history.replaceState(null, "", clubPath(favorite.clubId));
   }
 
   if (initialRoute.kind === "tournament" &&

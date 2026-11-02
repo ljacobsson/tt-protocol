@@ -84,6 +84,14 @@ tävling, datum och exakt rankingförändring. Om periodtaket ±250 påverkat de
 faktiska förändringen framgår det separat. Oavgjorda matcher visas i samma
 historik som **±0** och räknas i spelarens match- och oavgjortstatistik.
 
+En klubb kan öppnas från startsidan med sitt namn eller en inklistrad
+klubblänk; namnet ger samma alias som när klubben skapades. Det behövs bland
+annat när appen har lagts till på hemskärmen, eftersom den då har en egen
+lagring utan webbläsarens sparade klubbar. **Gör till startsida** på klubbsidan
+gör att klubben öppnas direkt när appen startar, och **Byt klubb** listar
+enhetens övriga klubbar, låter dig välja startsida bland dem och öppna en
+annan klubb med namn eller länk.
+
 När en backendansluten tävling delas skapas en publik, skrivskyddad länk med
 klubb- och tävlings-id. Länken innehåller aldrig administratörshemligheten.
 Varje omladdning hämtar tävlingens senaste resultat från API:t med cache
